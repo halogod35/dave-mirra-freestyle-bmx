@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dmbmx"
+version = "0.1.0"
+description = "File tools for Dave Mirra Freestyle BMX (PC, 2000): lossless readers/writers, glTF export/import, save editor, exe patcher"
+readme = "README.md"
+license = "Unlicense"
+license-files = ["LICENSE"]
+# The library itself is standard library only (numpy is optional), so the Blender add-on can vendor it.
+dependencies = []
+
+[project.optional-dependencies]
+test = ["pytest", "pefile", "capstone"]
+zig = ["ziglang==0.17.1"]
+
+[project.scripts]
+dmbmx = "dmbmx.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["tools"]
+include = ["dmbmx*"]
+
+[tool.setuptools.package-data]
+"dmbmx.patch" = ["patches.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

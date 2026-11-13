@@ -1,0 +1,30 @@
+{
+  "exe": "NgBMX.exe",
+  "sha256": "97aa9077501f264a1f96fc2ff1ff8d4326be094dd98f2a647c913de9d60d09a2",
+  "image_base": "0x00400000",
+  "note": "DM-030: the PC build has no CRC/checksum on any game file; these patches are optional conveniences. Re-signing (dmbmx save fix-crc, dmbmx integrity resign-zsd) is the preferred route.",
+  "groups": {
+    "nocrc": ["save-size-check"],
+    "all": ["save-size-check", "assert-continue"]
+  },
+  "patches": [
+    {
+      "id": "save-size-check",
+      "va": "0x004121fd",
+      "file_offset": "0x000121fd",
+      "orig": "7542",
+      "new": "9090",
+      "reason": "memcard_LoadSave: 'jne +0x42' after 'cmp eax,0x235C' on SAVE.DAT u32 @4. NOPed, a save with any size field is copied in (the file must still be >= 0x235C bytes). The only check the game applies to SAVE.DAT; there is no CRC.",
+      "evidence": "docs/re/integrity-checks.md #2"
+    },
+    {
+      "id": "assert-continue",
+      "va": "0x0047ed10",
+      "file_offset": "0x0007ed10",
+      "orig": "8b442410",
+      "new": "c3909090",
+      "reason": "zAssertFail: return immediately instead of showing the '***ASSERT***' Yes/No/Cancel box. Same as always answering 'No' (continue). Silences e.g. 'Failed to create texture' (bad PNG CRC), 'ERROR - Size mismatch in decompressed data' (ZAL), 'Scene component file not found' (SCFI size). The failing operation still fails (missing texture, level not loaded); only the dialog goes away.",
+      "evidence": "docs/re/integrity-checks.md #8"
+    }
+  ]
+}

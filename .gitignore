@@ -1,0 +1,36 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+
+# Scratch output of the tools and tests (play-test packages, exports, logs)
+out/
+
+# Local Ghidra install and the Ghidra project for NgBMX.exe (see docs/tooling.md)
+.ghidra/
+*.gpr
+*.rep/
+
+# Never commit game data (copyrighted). Tests read it from your own install.
+*.zmd
+*.ZMD
+*.zal
+*.ZAL
+*.zsd
+*.ZSD
+*._sd
+*.dff
+*.exe
+*.dll
+SAVE.DAT
+PRISTINE.sha256
+*.glb
+*.gltf
+*.bik
+*.wav
+*.zip

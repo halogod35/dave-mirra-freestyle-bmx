@@ -1,0 +1,319 @@
+# Headers imported into the Ghidra program by tools/ghidra/ImportTypes.java (in this order),
+# into the data-type category /dmbmx. Preprocessor lines and GHIDRA-SKIP blocks are dropped.
+# "size <Type> <bytes>" lines are checked after the import (the script fails on a mismatch).
+rwtypes.h
+zmath.h
+zmem.h
+zlist.h
+zstring.h
+zfile.h
+zasset.h
+ziff.h
+zanim.h
+save.h
+rider.h
+physics.h
+contrler.h
+camera.h
+game.h
+zprop.h
+bmxprop.h
+replay.h
+fx.h
+ztaginf.h
+zscnpts.h
+zrwworld.h
+zscene.h
+zactor.h
+zprim.h
+zoverii.h
+overlay.h
+zsound.h
+gui.h
+ngif.h
+dyn.h
+zobj.h
+zpc.h
+ztools.h
+zglrw.h
+size zfileHandle 0x8
+size zfileDevice 0x40
+size zfileCallbackInfo 0x10
+size zfileCallback 0x8
+size zfileDeviceList 0x44
+size zramdiskFile 0x10
+size ZassetLib 0x128
+size ZalHeader 0x14
+size ZiffChunk 0x20
+size ZiffFile 0x108
+size ZiffHandler 0x10
+size ZiffGlobals 0x1C
+size ZanimNode 0x44
+size ZanimNodeTable 0x0C
+size ZanimContents 0x14
+size ZanimKey 0x14
+size ZanimChannel 0x10
+size ZanimDefName 0x24
+size ZanimNameList 0x0C
+size ZanimTrack 0x3C
+size ZanimObj 0x34
+size ZanimWeight 0x08
+size ZanimWeights 0x08
+size SaveGoalInfo 0x27
+size SaveRiderRecord 0x104
+size SaveBlockA 0xC3C
+size SaveRecordEntry 0x14
+size SaveProfile 0x4C
+size BmxRider 0xF70
+size BmxWheel 0x84
+size NgColFace 0x88
+size NgColEdge 0x38
+size NgColHit 0xD8
+size BmxProbe 0x30
+size RwRGBA 0x4
+size RwImage 0x1C
+size RwFileFunctions 0x28
+size RwV3d 0xC
+size RwMatrix 0x40
+size ZpropPdinRecord 0x38
+size ZpropPrblRecord 0x48
+size ZobjiHeader 0x8
+size ZpropDefInfo 0x4C
+size ZpropDef 0x54
+size ZpropInfo 0x2C
+size Zprop 0x34
+size ZtagVec 0x10
+size ZtagFace 0x6C
+size ZtagNode 0x34
+size ZtagHit 0x38
+size ZtagHitList 0x8
+size ZtagTagdRecord 0x8
+size ZtagTagfRecord 0x50
+size ZtagTagnRecord 0x28
+size ZscnSdptRecord 0x4C
+size ZscnPoint 0x50
+size ZscnptsGlobals 0x18
+size ZsdScfiRecord 0x28
+size ZrwWorldApi 0x2C
+size ZrwWorldStats 0x1C
+size ZrwWorldGlobals 0xAC
+size ZsceneDef 0x78
+size ZsceneEntry 0x10
+size ZsceneAnim 0xC
+size ZsceneLoadReq 0xC
+size ZsceneLoader 0x8
+size ZsceneKindInfo 0x8
+size ZsceneDefKey 0x10
+size ZsceneEntryKey 0xC
+size ZsceneGlobals 0x8C
+size ZsceneChunkHandler 0x8
+size ZmemBlock 0x08
+size ZmemPoolFuncs 0x08
+size ZmemPool 0x14
+size ZmemFreeNode 0x08
+size ZmemFreeList 0x20
+size ZmemGlobals 0x24
+size ZmemDMMHandle 0x10
+size ZmemDMMFree 0x0C
+size ZmemDMMGlobals 0x28
+size zListNode 0x08
+size zList 0x0C
+size zHeapList 0x10
+size ZstringSet 0x08
+size ZfxRegEntry 0x48
+size BmxTrickRec 0x10
+size BmxScoreBlock 0x80
+size BmxAreaStats 0x0E
+size BmxJudgeRun 0x0C
+size BmxContact 0x20C
+size BmxInput 0x28
+size BmxMotionSlot 0x10
+size BmxSigCombo 0x06
+size GoalObjective 0x14
+size GoalDef 0x54
+size GoalTierDef 0x150
+size GameReward 0x2
+size GameRewardTables 0xE0
+size GameLiveRecord 0x8
+size GameTrickInfo 0x4
+size Zquat 0x10
+size BmxActionBinding 0x08
+size ZInputDevice 0x74
+size BmxPad 0x3C
+size BmxCamParams 0x18
+size BmxCamera 0xB8
+size BmxCamView 0x68
+size BmxPropDef 0x0A
+size NgPropCol 0x1F4
+size BmxProp 0x84
+size BmxPropSwitch 0x0C
+size BmxPropState 0xB40
+size BmxReplayDesc 0x08
+size BmxReplay 0x40
+size BmxReplayRider 0x2DE8
+size FxParticle 0x34
+size FxDust 0x2C
+size FxShard 0x40
+size FxSkidCorner 0x10
+size FxSkidQuad 0x4C
+size FxRipple 0x24
+size FxPsxEffect 0x20
+size FxPsxBurst 0x40
+size FxBodyPoint 0x08
+size ZMotionSection 0x04
+size ZMotionState 0x17C
+size ZActorAnim 0xD60
+size ZactorFrame 0x18
+size ZactorBikeOffset 0x18
+size ZActor 0x278
+size ZactorBank 0x14
+size ZactorBankEntry 0x08
+size ZactorTag 0x14
+size ZprimAsset 0x10
+size ZprimState 0x54
+size ZprimFrame 0x10
+size ZprimGlyph 0x0A
+size ZoverPolyF4 0x24
+size ZoverPolyG4 0x30
+size ZoverPolyFT4 0x3C
+size ZoverPrim 0xA0
+size ZoverTexture 0x14
+size ZoverGlyph 0x08
+size ZoverFont 0x0C
+size ZoverFontHeader 0x0C
+size ZoverFontRecord 0x0D
+size ZoverSprite 0x14
+size OverlayScreen 0x10
+size OverlayItem 0x18
+size OverlayMenuEntry 0x04
+size OverlaySavePage 0x04
+size OverlayTrickEntry 0x02
+size OverlayScoreReq 0x08
+size OverlayMeterReq 0x0C
+size OverlayTimedText 0x04
+size OverlayMessage 0x08
+size OverlayFadeReq 0x06
+size OverlayFade 0x20
+size ZsndVoice 0x14
+size ZsndSample 0x18
+size ZsndSampleFile 0x08
+size ZsndTrackDef 0x10
+size ZsndKeymapKey 0x02
+size ZsndBankHeader 0x48
+size ZsndAsset 0x48
+size ZsndFileDesc 0x0C
+size ZsndcInitParams 0x14
+size ZsndcEffect 0x14
+size ZsndcChannel 0x48
+size ZsndcHandle 0x02
+size ZsndStreamFile 0x24
+size ZsndStreamQueue 0x0C
+size ZsndStream 0x44
+size ZsndSeqTrack 0x48
+size ZsndSeqNote 0x14
+size ZsndSeqEvent 0x10
+size ZsndSrc 0x28
+size GuiElement 0xF0
+size GuiToggleData 0x24
+size GuiStyle 0x18
+size GuiPad 0x20
+size GuiScrnHeader 0x2C
+size GuiEdef 0xD4
+size ZglVertex 0x1C
+size ZglLine 0xC
+size ZglTri 0x10
+size ZglQuad 0x14
+size ZfxParticle 0xA0
+size ZfxSystem 0x30
+size ZfxType 0x38
+size ZfxTexAnim 0x50
+size PsxPolyF3 0x70
+size PsxPolyF4 0x84
+size PsxPolyG4 0x90
+size PsxPolyFT4 0x9C
+size PsxGT4Corner 0xC
+size PsxPolyGT4 0xA4
+size PsxLineF2 0x5C
+size PsxLineG2 0x60
+size PsxClip 0x18
+size PsxVert3D 0x14
+size NgPropShapeInfo 0x14
+size NgPropShape 0x38
+size ZrwColTri 0x4C
+size ZrwColHit 0x5C
+size ZrwColTriList 0x8
+size ZbspSphereHit 0x1C
+size ZbspSphereResult 0x40
+size ZresImageDef 0x10
+size ZresMapHeader 0x8
+size ZresPlayerHeader 0x8
+size ZrollerPlayerDesc 0x4
+size ZrollerPlayer 0x10
+size ZrollerShadows 0x28
+size BmxIkTarget 0x20
+size BmxIk 0x1D8
+size DynParticleDesc 0x20
+size DynParticle 0xB4
+size DynSpring 0x20
+size DynLimitDesc 0x24
+size DynLimit 0x28
+size DynBody 0xE88
+size DynSlab 0x1C
+size ZobjLink 0x10
+size ZobjVtbl 0x24
+size ZObj 0x3C
+size ZobjCameraData 0x104
+size ZobjPEmitData 0x3C
+size PcGuid 0x10
+size PcJoyMapHeader 0x8
+size PcInputDevice 0x14
+size PcAviOptions 0x2C
+size PcMovie 0x28C
+size ZtokenFile 0x30C
+size ZfontPoint 0x1C
+size ZfontStroke 0xC
+size ZfontGlyph 0xC
+size Zfont 0x10
+size ZrwRamDiskFile 0xC
+size ZprofileBar 0x24
+size ZprofileLayout 0x30
+size ZprofileGlobals 0x68
+size ZheapItem 0x8
+size Zheap 0x10
+size ZtimerEvent 0x20
+size ZrwWorldApi 0x2C
+size ZrwWorldStats 0x1C
+size ZrwWorldGlobals 0xAC
+size ZglVertex 0x1C
+size ZglLine 0xC
+size ZglTri 0x10
+size ZglQuad 0x14
+size ZrwColTri 0x4C
+size ZrwColHit 0x5C
+size ZrwColTriList 0x8
+size ZglTexture 0x28
+size ZrwTxrGlobals 0x430
+size ZglTextureApi 0x3C
+size ZrwMadf 0x88
+size ZglMatPass 0xC
+size ZglMaterial 0x74
+size ZrwMatGlobals 0x24
+size ZglMaterialApi 0x3C
+size ZglModelDefEntry 0x14
+size ZglModelDef 0xBC
+size ZglModelPart 0x28
+size ZglModelLod 0xC
+size ZglModel 0x8C
+size ZglModelApi 0xA4
+size ZglLight 0xC
+size ZglLightApi 0x28
+size ZglCamera 0xC8
+size ZglCameraApi 0x3C
+size ZglColApi 0x10
+size ZglPrimApi 0x1C
+size ZglSystemApi 0x34
+size RwCollTri 0x28
+size RwIntersection 0x1C
+size ZglPoly 0xC
+size ZrwDbgShape 0x6C
+size ZrwShadow 0x18
