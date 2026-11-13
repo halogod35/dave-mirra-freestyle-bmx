@@ -1,4 +1,4 @@
-"""DM-020: BMP -> PNG conversion, PNG decoder, PNG -> BMP rebuild (synthetic images + corpus)."""
+"""BMP -> PNG conversion, PNG decoder, PNG -> BMP rebuild (synthetic images + corpus)."""
 import random
 import struct
 import zlib

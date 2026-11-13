@@ -2,10 +2,10 @@
  * NgEngine/Zge/zinput.c
  * Original: C:\NgEngine\Zge\zinput.c
  * Evidence: [V] path string referenced by 1 function(s); the others [I] (link order, the globals
- * 0x0065E2A8-0x0065E2AC, the ZInputDevice pool). DM-061 created zinputShutdown (0x00480340) and
+ * 0x0065E2A8-0x0065E2AC, the ZInputDevice pool). The ZGE object pass created zinputShutdown (0x00480340) and
  * zinputSetRumble (0x00480440).
  * 6 functions, VA 0x004802f0-0x0048044d.
- * DM-061 (draft). Non-matching C (AD-8). Types: contrler.h (ZInputDevice), zpc.h (pcinput).
+ * Draft. Non-matching C (AD-8). Types: contrler.h (ZInputDevice), zpc.h (pcinput).
  * Description: docs/re/input-camera.md 2.4.
  *
  * The platform-neutral input layer: a pool of two ZInputDevice records; each is backed by a pcinput

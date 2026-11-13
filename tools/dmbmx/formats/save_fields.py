@@ -1,4 +1,4 @@
-"""Named, range-checked fields of SAVE.DAT (DM-024 save editor).
+"""Named, range-checked fields of SAVE.DAT (the save editor).
 
 Every field has a dotted name pattern (``rider.<r>.bikes_unlocked``), a location,
 a type, an allowed range, an evidence tag ([V]/[I]) and the exe VA that shows it.
@@ -24,7 +24,7 @@ TIER_NAMES = ("amateur", "pro", "hardcore")
 CHEAT_NAMES = ("first person cam", "night vision", "super crash", "exorcist", "suspension",
                "silly grunt", "ghost rider", "sticky crash")
 CAMERA_NAMES = ("behind", "wide", "above", "first person")
-# DM-051 (docs/re/input-camera.md): controller configuration (STRS 0x23D-0x23F), keyboard layouts
+# docs/re/input-camera.md: controller configuration (STRS 0x23D-0x23F), keyboard layouts
 # (frontend 0x0055A43C, keymaps 0x0055BB98), and the logical button each control slot feeds
 # (contrlerUpdate 0x004080F0: control[k] = the device bits that act as button CONTROL_BITS[k]).
 CONTROLLER_CONFIG_NAMES = ("A", "B", "C")
@@ -95,7 +95,7 @@ FIELDS = (
     FieldDef("cheat_unlocked.<c>", "bool", 0, 1, "opt", 0, bit=lambda c: 1 << c, idx=(_r(0, 7),), tag="V",
              va="0x00440DC0, table 0x0055A3BC", doc="cheat unlocked", choices=CHEAT_NAMES),
     FieldDef("cheats_active", "u16", 0, 0xFFFF, "opt", 2, tag="V", va="0x00441180 (CHEATS menu), 0x00405780, 0x0041FC40",
-             doc="bit c = cheat c switched on (OPTIONS > CHEATS toggles it, DM-056); tested in-game"),
+             doc="bit c = cheat c switched on (OPTIONS > CHEATS toggles it); tested in-game"),
     FieldDef("volume_0c", "u8", 0, 18, "opt", 4, tag="V", va="0x0043F4E5, 0x00442CE0 (OPTIONS > AUDIO)",
              doc="SOUND FX volume (x7 -> sound cmd 0x3EA ch 0); default 18"),
     FieldDef("volume_0d", "u8", 0, 18, "opt", 5, tag="V", va="0x0043F4C8, 0x00442CE0 (OPTIONS > AUDIO)",

@@ -83,7 +83,7 @@ def check_import(path, root, frames, meshes, tex_dir, normals=False, bone_aim=Tr
     return (z, tuple(wind)) if normals else z
 
 
-# ----------------------------------------------------------------------------- bones (DM-065)
+# ----------------------------------------------------------------------------- bones
 
 def bone_targets(z, lod):
     """Reference for the bone rule (README "Bones"), from dmparse's world joints: per frame
@@ -162,7 +162,7 @@ def check_bones(z, lod, root, frames, meshes, aim=True):
             assert _close(p, m.transform.xf(m.verts[v - 1]), 1e-6 * SCALE), (m.name, v)
 
 
-# ----------------------------------------------------------------------------- flip normals to faces (DM-065)
+# ----------------------------------------------------------------------------- flip normals to faces
 
 def flip_ref(positions, normals, triangles):
     """Reference for "Flip normals to faces": negate a normal whose dot product with the sum of its
@@ -204,7 +204,7 @@ def _close(a, b, tol):
 
 def check_level(folder, root, world, props, tag_nodes, points, pano, tex_dir, centre=True, normals=False,
                 flip=False):
-    """Checks one imported level against dmbmx (DM-013). ``normals``: the import used exact normals:
+    """Checks one imported level against dmbmx. ``normals``: the import used exact normals:
     World, every prop (instances share their PropDef's modifier) and the Panorama go through
     check_normals against dmparse; the tags have none. Returns the dmbmx level; with ``normals`` also
     {part: (faces agreeing, faces checked)}."""
@@ -338,7 +338,7 @@ def check_level(folder, root, world, props, tag_nodes, points, pano, tex_dir, ce
     return b
 
 
-# ----------------------------------------------------------------------------- exact normals (DM-063)
+# ----------------------------------------------------------------------------- exact normals
 
 def unit(n):
     """Game normal scaled to length 1; None if missing or zero-length (what both importers apply)."""

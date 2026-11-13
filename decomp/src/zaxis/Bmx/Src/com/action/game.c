@@ -3,10 +3,10 @@
  * Original: C:\zaxis\Bmx\Src\com\action\game.c
  * Evidence: [V] path string 0x00554D04 referenced by 11 functions; the others [I] (link order between
  *           fx.c and memcard.c, the game globals 0x0056B6E8-0x0056BC33, the goal/reward tables).
- * 47 functions, VA 0x004099c0-0x00412011 (gameSetWord 0x0040BFD0 added by DM-058).
- * DM-046 (draft). Non-matching C (AD-8). Types: game.h, rider.h, save.h.
+ * 47 functions, VA 0x004099c0-0x00412011 (gameSetWord 0x0040BFD0 added by the dyn.c pass).
+ * Draft. Non-matching C (AD-8). Types: game.h, rider.h, save.h.
  * Behavioural reference: docs/formats/SAVE.md, tools/dmbmx/formats/save_fields.py; Python port of the
- * goal/reward/score logic: tools/dmbmx/formats/progress.py (tests/test_decomp_dm046.py).
+ * goal/reward/score logic: tools/dmbmx/formats/progress.py (tests/test_decomp_game.py).
  *
  * The game-flow layer between the menus and the rider simulation:
  *  - the game state machine (gameSetState / gameUpdate): game modes (single player = proquest /
@@ -27,9 +27,9 @@
 #include <stddef.h>
 #include <string.h>
 #include "decomp.h"
-#include "zmath.h"     /* DM-045 names; float arrays are passed where it declares RwV3d / RwMatrix */
-#include "physics.h"   /* DM-048: bmxphysGetState (BMXPHYS_*), bmxphysFindRespawnFace, bmxphysUpdate */
-#include "camera.h"    /* DM-051: cameraSetPlayer, cameraSetMode (CAM_MODE_*) */
+#include "zmath.h"     /* zmath names; float arrays are passed where it declares RwV3d / RwMatrix */
+#include "physics.h"   /* bmxphysGetState (BMXPHYS_*), bmxphysFindRespawnFace, bmxphysUpdate */
+#include "camera.h"    /* cameraSetPlayer, cameraSetMode (CAM_MODE_*) */
 
 #define GAME_SRC "C:\\zaxis\\Bmx\\Src\\com\\action\\game.c"
 #define FRAMES_PER_SECOND 30
@@ -956,7 +956,7 @@ GameLiveRecord *gameGetLiveRecord(uint32_t id)
 }
 
 /* The B-M-X game's word (overlymp.c's word entry): at most 8 letters, copied to g_gameWord.
- * Ghidra had missed the function (DM-054's discovered work; created by a DM-058 row). */
+ * Ghidra had missed the function (found during the overlay pass; created by a symbols.csv row). */
 /* VA 0x0040bfd0, 89 bytes, [V] direct, status draft */
 char *gameSetWord(const char *word)
 {

@@ -1,4 +1,4 @@
-"""DM-020: ZMD -> .glb export. Structural checks of our own .glb output for every ZMD in the
+"""ZMD -> .glb export. Structural checks of our own .glb output for every ZMD in the
 corpus, plus the lossless restore (export -> restore_zmd == original bytes).
 
 The Blender import check is a script (tools/blender/scripts/verify_glb.py), not part of pytest.
@@ -152,7 +152,7 @@ def test_export_structure_and_counts(path):
 
 @pytest.mark.parametrize("path", corpus_params(".zmd"))
 def test_export_restore_lossless(path):
-    """The extras + buffers are enough to rebuild the original file byte-for-byte (DM-021 baseline)."""
+    """The extras + buffers are enough to rebuild the original file byte-for-byte (the importer's baseline)."""
     data, m = _load(path)
     if m.empty:
         pytest.skip("empty file")

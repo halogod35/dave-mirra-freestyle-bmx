@@ -1,4 +1,4 @@
-"""CLI smoke tests for `dmbmx zal list|extract` (DM-010)."""
+"""CLI smoke tests for `dmbmx zal list|extract`."""
 import json
 
 import pytest

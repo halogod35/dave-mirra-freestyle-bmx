@@ -1,7 +1,7 @@
 # SAVE.DAT (`.\save\SAVE.DAT`)
 
-Owner: DM-012 / DM-024 (SK-SAVE); game-logic sections (2.2, 2.4, 7) DM-046. Code: `tools/dmbmx/formats/save.py`, `tools/dmbmx/formats/save_fields.py`, `tools/dmbmx/formats/progress.py` (Python port of game.c/comdata.c: goals, rewards, records), `tools/dmbmx/integrity/crc.py`, CLI `dmbmx save info|fix-crc|list-fields|get|set|unlock-all|complete-all`.
-Decompilation: `decomp/src/zaxis/Bmx/Src/com/action/game.c`, `comdata.c` (DM-046), types `decomp/include/game.h`, `save.h`.
+Game-logic sections (2.2, 2.4, 7) come from the decompiled game.c. Code: `tools/dmbmx/formats/save.py`, `tools/dmbmx/formats/save_fields.py`, `tools/dmbmx/formats/progress.py` (Python port of game.c/comdata.c: goals, rewards, records), `tools/dmbmx/integrity/crc.py`, CLI `dmbmx save info|fix-crc|list-fields|get|set|unlock-all|complete-all`.
+Decompilation: `decomp/src/zaxis/Bmx/Src/com/action/game.c`, `comdata.c`, types `decomp/include/game.h`, `save.h`.
 Exe: `C:\zaxis\Bmx\Src\com\action\memcard.c`; load `memcard_LoadSave` **0x00412190**, save `memcard_WriteSave` **0x00412340**.
 Tags: [V] verified (disassembly and/or code run over the real file), [I] inferred.
 
@@ -27,20 +27,20 @@ The copies are at 0x00412200-0x00412231 (load) and 0x0041236B-0x004123A0 (save).
 
 ### 2.1 Block A: options (file 0x08..0x0F, global 0x006955E0..E7)
 
-Defaults come from `comdataInitDefaults` 0x00407BA0 (DM-012's `save_InitDefaults`; the values the game uses when there's no save). [V] It clears bytes 0-2 of each goal info (byte0, tier, tier_goals_done) twelve times instead of the twelve goal entries (its inner loops never advance the pointer, 0x00407BDD), so the goal entries keep their zero `.bss` value. Field names are the `dmbmx save` names (section 6).
+Defaults come from `comdataInitDefaults` 0x00407BA0 (the save reader's `save_InitDefaults`; the values the game uses when there's no save). [V] It clears bytes 0-2 of each goal info (byte0, tier, tier_goals_done) twelve times instead of the twelve goal entries (its inner loops never advance the pointer, 0x00407BDD), so the goal entries keep their zero `.bss` value. Field names are the `dmbmx save` names (section 6).
 
 | Off | Type | Global | Default | Real save | Field / meaning | Tag |
 |---|---|---|---|---|---|---|
 | 0x08 | u16 | 0x006955E0 | 0 | 0 | `cheats_unlocked`: bit c = cheat c listed in the CHEATS menu (builder 0x00440DC0 walks table 0x0055A3BC: 0 First Person Cam, 1 Night Vision, 2 Super Crash, 3 Exorcist, 4 Suspension, 5 Silly Grunt, 6 Ghost Rider, 7 Sticky Crash). Set by reward type 10 (0x004111CF), the reward for finishing every level with riders 2-9 (table 0x00556968) | V |
-| 0x0A | u16 | 0x006955E2 | 0 | 0 | `cheats_active`: bit c = cheat c switched on: OPTIONS > CHEATS (0x00441180) toggles it for the unlocked cheats (DM-056); tested in-game (bit 3 at 0x0041FC40, bit 6 at 0x00405780) | V |
-| 0x0C | u8 | 0x006955E4 | 18 | 9 | `volume_0c`: SOUND FX volume 0..18 (OPTIONS > AUDIO, 0x00442CE0, DM-056); ×7 → sound cmd 0x3EA ch 0 (0x0043F4E5) | V |
+| 0x0A | u16 | 0x006955E2 | 0 | 0 | `cheats_active`: bit c = cheat c switched on: OPTIONS > CHEATS (0x00441180) toggles it for the unlocked cheats; tested in-game (bit 3 at 0x0041FC40, bit 6 at 0x00405780) | V |
+| 0x0C | u8 | 0x006955E4 | 18 | 9 | `volume_0c`: SOUND FX volume 0..18 (OPTIONS > AUDIO, 0x00442CE0, the front-end pass); ×7 → sound cmd 0x3EA ch 0 (0x0043F4E5) | V |
 | 0x0D | u8 | 0x006955E5 | 18 | 9 | `volume_0d`: MUSIC volume 0..18 (OPTIONS > AUDIO); ×7 → sound cmd 0x3EA ch 1 (0x0043F4C8) | V |
 | 0x0E | u8 | 0x006955E6 | 1 | 7 | `music_track`: soundtrack shown as text 0x102E+4v (artist) / 0x102F+4v (title) at 0x00416810. 0 = 59 Times the Pain … 7 = Sublime … 9 = Primer 55 | V (use), I (range) |
 | 0x0F | u8 | 0x006955E7 | 10 | 11 | `riders_unlocked`: selectable riders. 11 = + Slim Jim Guy (level 11 hardcore reward), 12 = + Amish Boy (all levels done with riders 0-9; also the cheat at 0x0044716E). Reward type 3 asserts "goal completion error - char" | V |
 
 ### 2.2 Block A: 12 rider career records (file 0x10 + r×0x104, global 0x006955E8 + r×0x104)
 
-[V] **One record per rider, not per level** (DM-012 guessed levels). Every accessor indexes it by `profile.rider`, as `*(u8*)(0x006952A3 + p*0x4C) * 0x104` (0x00411090, 0x00407FC0, 0x00410C60). Rider order (pointer table 0x0055DC50 and the default score names): 0 Dave Mirra, 1 Ryan Nyquist, 2 Troy McMurray, 3 Mike Laird, 4 Chad Kagy, 5 Tim Mirra, 6 Kenan Harkin, 7 Shaun Butler, 8 Leigh Ramsdell, 9 Joey Garcia, 10 Slim Jim Guy, 11 Amish Boy.
+[V] **One record per rider, not per level** (the save reader guessed levels). Every accessor indexes it by `profile.rider`, as `*(u8*)(0x006952A3 + p*0x4C) * 0x104` (0x00411090, 0x00407FC0, 0x00410C60). Rider order (pointer table 0x0055DC50 and the default score names): 0 Dave Mirra, 1 Ryan Nyquist, 2 Troy McMurray, 3 Mike Laird, 4 Chad Kagy, 5 Tim Mirra, 6 Kenan Harkin, 7 Shaun Butler, 8 Leigh Ramsdell, 9 Joey Garcia, 10 Slim Jim Guy, 11 Amish Boy.
 
 | Rec off | Type | Default | Field / meaning | Tag |
 |---|---|---|---|---|
@@ -60,7 +60,7 @@ Goal info (39 bytes, one per challenge level):
 | +0 | `byte0` | never written by game.c; 0 in the real save (comdataInitDefaults clears it) | I |
 | +1 | `tier` | current challenge tier: 0 amateur, 1 pro, 2 hardcore (texts 0x30-0x32). `gameAdvanceGoalTier` 0x0040CD40 recounts it at every run start: while the tier has 4 done goals it moves on, capped at 2 | V |
 | +2 | `tier_goals_done` | goals done in the current tier; 4 = tier complete (`gameIsTierComplete` 0x0040CF70) | V |
-| +3 + t×12 + g×3 | goal (t 0..2, g 0..3), 3 bytes | byte 0: 0x80 done, 0x40 done this session (set together with 0x80, cleared by `gameAdvanceGoalTier` at the next run start, so a save written at level end can still have it), low 6 bits = objectives done so far (incremented per objective; equals the goal's objective count when done) [V, DM-046]. Bytes 1-2: 4 nibbles, one per objective j (j odd = high nibble); the low 3 bits are its state, bit 3 a flag. States [V] (`gameUpdateObjectives` 0x0040EC40): 0 idle, 1 rider inside the objective's area, 2 active (its text and highlights shown), 3 pending (the trick is in the air; done if the set is landed), 4 done, 5 done and counted. `gameSetObjectiveState` 0x00410350 writes the whole nibble (clears the flag); the flag is set for every open objective at run start and cleared when the objective first becomes active ("not seen yet" [I]) | V |
+| +3 + t×12 + g×3 | goal (t 0..2, g 0..3), 3 bytes | byte 0: 0x80 done, 0x40 done this session (set together with 0x80, cleared by `gameAdvanceGoalTier` at the next run start, so a save written at level end can still have it), low 6 bits = objectives done so far (incremented per objective; equals the goal's objective count when done) [V, the game.c pass]. Bytes 1-2: 4 nibbles, one per objective j (j odd = high nibble); the low 3 bits are its state, bit 3 a flag. States [V] (`gameUpdateObjectives` 0x0040EC40): 0 idle, 1 rider inside the objective's area, 2 active (its text and highlights shown), 3 pending (the trick is in the air; done if the set is landed), 4 done, 5 done and counted. `gameSetObjectiveState` 0x00410350 writes the whole nibble (clears the flag); the flag is set for every open objective at run start and cleared when the objective first becomes active ("not seen yet" [I]) | V |
 
 What each goal asks for (the goal definitions 0x00555118), the reward tables and the order in which the game gives rewards: section 7.
 
@@ -68,14 +68,14 @@ What each goal asks for (the goal definitions 0x00555118), the reward tables and
 
 | Off | Type | Global | Default | Meaning | Tag |
 |---|---|---|---|---|---|
-| 0xC40 | u8 | 0x00696218 | 0 | `language`: passed to the frontend loader (0x0044D990, "FRONTEND: Failed to load frontend") and to 0x00401DD4 after load. 0 US English, 1 English, 2 French, 3 German: the frontend loads STRS 0x7919 + language (0x0044DAD0, DM-056) | V |
+| 0xC40 | u8 | 0x00696218 | 0 | `language`: passed to the frontend loader (0x0044D990, "FRONTEND: Failed to load frontend") and to 0x00401DD4 after load. 0 US English, 1 English, 2 French, 3 German: the frontend loads STRS 0x7919 + language (0x0044DAD0, the front-end pass) | V |
 | 0xC41 | 3 bytes | | | padding/unknown | I |
 
 ### 2.4 Block B: records/scores (file 0xC44, 12 levels × 24 entries × 20 bytes)
 
-- [V] Accessor `comdataGetRecordPtr` 0x00407D20 (DM-012's `save_GetRecordPtr`): entry `e` of the current level (`g_currentLevel`, byte 0x0056B614) at `0x00551FD8 + (level*24 + e) * 20`. Its live twin `gameGetLiveRecord` 0x0040BE50 has the same switch over 4 slots × 24 × 8 bytes at 0x0056B70C (slot 0 = the saved all-time value, loaded at level start by `gameInit`; 1 this game, 2 this round, 3 this run).
+- [V] Accessor `comdataGetRecordPtr` 0x00407D20 (the save reader's `save_GetRecordPtr`): entry `e` of the current level (`g_currentLevel`, byte 0x0056B614) at `0x00551FD8 + (level*24 + e) * 20`. Its live twin `gameGetLiveRecord` 0x0040BE50 has the same switch over 4 slots × 24 × 8 bytes at 0x0056B70C (slot 0 = the saved all-time value, loaded at level start by `gameInit`; 1 this game, 2 this round, 3 this run).
 - [V] Entry layout: `u32 value; u8 rider; u8 b5; u8 b6; char name[13]` (NUL-padded). [I] `rider` is the rider index: the default names per level are the riders' nicknames in rider order (MiracleBoy, Nor Cal, warpig, H breed, k a g y, turbo, Hark Dog, Lumber, CaptInsano, The Boss).
-- [V] **Record ids** (DM-046): `mode << 24 | sub << 22 | stat << 16 | slot << 12 | index`. `mode` is the game mode (text 0x3001 + mode: 0 single player, 1 best run, 2 high five, 3 B-M-X, 4 random spot, 5 wipeout, 6 longest grind, 7 highest walltap, 8 big air contest, 9 furthest jump, 10 longest manual, 11 death match); `sub` the sub-mode (single player: 0 proquest, 1 session, 2 free ride [I]; best run / death match: the time limit 30 s / 60 s / 2 min / 5 min, `gameSetState` 0x0040AA50); `stat` the statistic (text 0x1094 + stat: 0 total score, 1 best run, 2 trick set, 3 single trick, 4 big air, 5 highest mark, 6 longest grind, 7 longest jump, 8 longest manual, 9 longest skid).
+- [V] **Record ids**: `mode << 24 | sub << 22 | stat << 16 | slot << 12 | index`. `mode` is the game mode (text 0x3001 + mode: 0 single player, 1 best run, 2 high five, 3 B-M-X, 4 random spot, 5 wipeout, 6 longest grind, 7 highest walltap, 8 big air contest, 9 furthest jump, 10 longest manual, 11 death match); `sub` the sub-mode (single player: 0 proquest, 1 session, 2 free ride [I]; best run / death match: the time limit 30 s / 60 s / 2 min / 5 min, `gameSetState` 0x0040AA50); `stat` the statistic (text 0x1094 + stat: 0 total score, 1 best run, 2 trick set, 3 single trick, 4 big air, 5 highest mark, 6 longest grind, 7 longest jump, 8 longest manual, 9 longest skid).
 - [V] **The 24 entries** (`dmbmx.formats.progress.RECORD_ENTRIES`). Stats 2..9 always map to entries 16..23, whatever the mode; otherwise the mode decides:
 
   | Entry | Record | Entry | Record |
@@ -90,10 +90,10 @@ What each goal asks for (the goal definitions 0x00555118), the reward tables and
   | | | 22 | longest manual (stat 8; = the game) |
   | | | 23 | longest skid (stat 9) |
 
-  Values are points, or centimetres for stats 4-9 (the goal texts: 5,486 = "180 feet", 914 = "30 feet") [V]. `gameSubmitRecord` 0x0040E030 updates the live slots and shows "NEW HIGH SCORE!" etc. (text 0x1063 + message id); the name-entry overlay copies the beaten slot-0 values into the save [V] (DM-054, below).
+  Values are points, or centimetres for stats 4-9 (the goal texts: 5,486 = "180 feet", 914 = "30 feet") [V]. `gameSubmitRecord` 0x0040E030 updates the live slots and shows "NEW HIGH SCORE!" etc. (text 0x1063 + message id); the name-entry overlay copies the beaten slot-0 values into the save [V] (the overlay pass, below).
 - [I] Level order (texts 0x126-0x131; park = level / 3, as the park rewards use it): 0 Greenville Park, 1 Vail Trails, 2 Backyard Pools, 3 Lot 8, 4 Woodward Trails, 5 Titanic, 6 Eastwood, 7 Sleepy's Ditch, 8 San Jose, 9-11 Acclaim Max Games Street/Dirt/Vert. Levels 0-5 are challenge levels, 6-11 competitions.
 
-### 2.4a How records and the career reach SAVE.DAT (DM-054)
+### 2.4a How records and the career reach SAVE.DAT
 
 - [V] A run that beats an all-time record of the mode (live slot 0, flag bit 0) opens the NEW RECORD! name entry (overlay screen 17, `gameSetState`). On confirm, for every beaten stat 0..9 `overlayNameUpdate` (0x00418870) copies `value`, `rider` (player option +4), `b5` / `b6` (options +6 / +7) and the typed name into the block-B entry (`comdataGetRecordPtr`), and the name into `profile.name`. The RECORDS screen then shows the records with the PLYR full name of `rider` (entry rider x 5) next to the typed name.
 - [V] SAVE.DAT is written (`memcard_WriteSave` 0x00412340) automatically at every level end, after these screens: by `gameSetState(LEVEL_END)` itself when no record was beaten and no results are due, otherwise when leaving RECORDS (19), RESULTS (16, after the rewards), the competition STANDINGS after the last run, or the level-end CHALLENGES list (15). The memory-card SAVE screen of the PSX version is still in the code but unreachable on PC. Details: docs/re/hud.md.
@@ -106,12 +106,12 @@ Defaults from 0x00407C40-0x00407CB3.
 |---|---|---|---|---|
 | +0x00 | u8 | 3 | `flags`; bit 1 = `tutorial_hints` (shown on/off in the pause OPTIONS, 0x00416060; cleared by the level-2 unlock reward, 0x004111AC) | I |
 | +0x01 | u8 | profile index | `index`: the pad this player reads (`contrlerTestButtons` 0x00408590, `riderReadInput`) | V |
-| +0x02 | u8 | 0 | `controller_config` 0..2 = CONFIGURATION A/B/C (STRS 0x23D-0x23F): the action -> button table 0x00553EE0 (`contrlerTestAction` 0x004084B0 asserts < 3; copied to the rider at 0x004316F2). DM-051, docs/re/input-camera.md 3 | V |
+| +0x02 | u8 | 0 | `controller_config` 0..2 = CONFIGURATION A/B/C (STRS 0x23D-0x23F): the action -> button table 0x00553EE0 (`contrlerTestAction` 0x004084B0 asserts < 3; copied to the rider at 0x004316F2). The camera pass, docs/re/input-camera.md 3 | V |
 | +0x03 | u8 | 0 | `rider` 0..11 (selects the career record) | V |
 | +0x04 | u8 | 0 | `style` 0..4 (costume; argument 3 of `create rider` 0x004316C0) | V |
 | +0x05 | u8 | 0 | `bike` 0..4 (0x004316C0: below 4 → bike `rider*4 + n`; 4 = secret bike) | V |
 | +0x06 | u8 | 0 | `camera`: 0 behind, 1 wide, 2 above, 3 first person (text 0x1087+v at 0x00416060) | V |
-| +0x07 | char[13] | "player" (0x00553E84) | `name`, NUL-terminated. DM-012 read 29 bytes (to +0x23); but the CONTROLLER screen stores bindings from +0x14 on (below), so at most 12 characters are safe (`save_fields` limits it to 12; `save.py` still reads 29). The in-game name entry (overlay.c, DM-054) starts from this name, allows at most 10 characters (' ', A-Z, a-z) and writes the result back here [V] | V offset, V length used by the game |
+| +0x07 | char[13] | "player" (0x00553E84) | `name`, NUL-terminated. The save reader read 29 bytes (to +0x23); but the CONTROLLER screen stores bindings from +0x14 on (below), so at most 12 characters are safe (`save_fields` limits it to 12; `save.py` still reads 29). The in-game name entry (overlay.c, the overlay pass) starts from this name, allows at most 10 characters (' ', A-Z, a-z) and writes the result back here [V] | V offset, V length used by the game |
 | +0x14 | u32 ×4 | 0 | `dpad.<k>` up/down/left/right bindings of the CONTROLLER screen (rows 0-3; 0x00441CB0 shows them, 0x0044256B stores rows 0-10 to +0x14..+0x3F). Never applied: `contrlerUpdate` passes the d-pad through | V |
 | +0x24 | u32 ×7 | 0x80, 0x20, 0x40, 0x10, 0x100, 0x200, 0x4000 | `control.<k>`: the device buttons (PAD_* mask) that produce logical button k = Cross 0x80 (pedal/jump), Square 0x20 (trick), Circle 0x40 (modifier), Triangle 0x10 (grind), L1 0x100 (spin left), R1 0x200 (spin right), Start 0x4000 (pause). `contrlerUpdate` 0x004080F0: logical bit set when `device.buttons & control[k]`; the default is the identity. Pad i uses profile i's masks | V |
 | +0x40..+0x4A | | 0 | unknown | I |
@@ -129,9 +129,9 @@ Defaults from 0x00407C40-0x00407CB3.
 | any other byte changed | accepted, copied verbatim into the globals | V (static) |
 | temp alloc fails | returns -1 | V |
 
-Callers: 0x0043DD26 (start-up; stores `0x102 + (ret != 0)` in word 0x00691F00), 0x0043F3E0 (load menu: ret 0 → text 0x25E, ret -1 → text 0x272 then 0x261, other → text 0x261), 0x0043FA78. [V] 0x25E = "LOAD COMPLETE.", 0x261 = "LOAD FAILED.", 0x272 = "FILE MAY BE CORRUPTED.". DM-024 decoded the STRS table in `miscdata.zal` (`u16 count` at +6, then `count` u16 offsets, then the strings); DM-012 had guessed 0x25E = "LOADING...". Text ids ≥ 0x1000 select table `id >> 12` (lookup 0x004824F0).
+Callers: 0x0043DD26 (start-up; stores `0x102 + (ret != 0)` in word 0x00691F00), 0x0043F3E0 (load menu: ret 0 → text 0x25E, ret -1 → text 0x272 then 0x261, other → text 0x261), 0x0043FA78. [V] 0x25E = "LOAD COMPLETE.", 0x261 = "LOAD FAILED.", 0x272 = "FILE MAY BE CORRUPTED.". The save editor decoded the STRS table in `miscdata.zal` (`u16 count` at +6, then `count` u16 offsets, then the strings); the save reader had guessed 0x25E = "LOADING...". Text ids ≥ 0x1000 select table `id >> 12` (lookup 0x004824F0).
 
-**Re-signing** an edited save therefore means only: magic = 0x2A81511C, size = 0x235C, length exactly 0x235C (`dmbmx save fix-crc`, `Save.resign()`). In-game confirmation is pending (play-test DM-012-PT1); until then "the game accepts an edited save" is [I].
+**Re-signing** an edited save therefore means only: magic = 0x2A81511C, size = 0x235C, length exactly 0x235C (`dmbmx save fix-crc`, `Save.resign()`). In-game confirmation is pending (the manual in-game check `save-edit`); until then "the game accepts an edited save" is [I].
 
 ## 4. Codec
 
@@ -142,14 +142,14 @@ Callers: 0x0043DD26 (start-up; stores `0x102 + (ret != 0)` in word 0x00691F00), 
 ## 5. Open questions
 
 - Which of `volume_0c` / `volume_0d` is music and which is SFX, and their exact range (default 18).
-- DM-056 confirmed via the CHEATS menu code (0x00441180) that `cheats_active` bit c is cheat c switched on, and the `language` values (2.3). DM-051: the bits follow the cheat order (`CHEAT_NAMES`): bit 1 night vision (green overlay, `cameraDrawNightVision` 0x004074C0), bit 5 silly grunt (sound init in `actionLoad`), bit 6 ghost rider (rider actor hidden, `cameraUpdate`) [V code, I names].
-- Profile name length: 12 characters by the layout above [I]. DM-054: the in-game name entry (`overlayNameUpdate` 0x00418870) writes at most 10 characters here [V]; the frontend's own name editing is not checked. `save.py` (`PROFILE_NAME_LEN` = 29) should follow.
-- Objective nibble bit 3 ("not seen yet" [I]); goal-info byte 0 (never written by game.c); rider-record bytes +0x102/+0x103. (DM-046 settled the goal-entry low bits: objectives done.)
-- Score entries: `b5`/`b6` = bytes +6 / +7 of the player's option block (`zrollerGetPlayer(player)`; +7 is the bike [I], +6 unknown), copied by the name entry together with `rider` (+4) [V] (DM-054). (DM-046 settled the 24 categories, section 2.4.)
-- ~~Reward types 5, 6, 7~~: answered by DM-054 (section 7.2): RESULTS-screen texts only.
-- Whether `memcard_Stub0` (0x00412170, `return 0`) is the PC stub of a PSX "format card" or "delete" call.
+- The front-end pass confirmed via the CHEATS menu code (0x00441180) that `cheats_active` bit c is cheat c switched on, and the `language` values (2.3). The camera pass: the bits follow the cheat order (`CHEAT_NAMES`): bit 1 night vision (green overlay, `cameraDrawNightVision` 0x004074C0), bit 5 silly grunt (sound init in `actionLoad`), bit 6 ghost rider (rider actor hidden, `cameraUpdate`) [V code, I names].
+- Profile name length: 12 characters by the layout above [I]. The overlay pass: the in-game name entry (`overlayNameUpdate` 0x00418870) writes at most 10 characters here [V]; the frontend's own name editing is not checked. `save.py` (`PROFILE_NAME_LEN` = 29) should follow.
+- Objective nibble bit 3 ("not seen yet" [I]); goal-info byte 0 (never written by game.c); rider-record bytes +0x102/+0x103. (the game.c pass settled the goal-entry low bits: objectives done.)
+- Score entries: `b5`/`b6` = bytes +6 / +7 of the player's option block (`zrollerGetPlayer(player)`; +7 is the bike [I], +6 unknown), copied by the name entry together with `rider` (+4) [V]. (the game.c pass settled the 24 categories, section 2.4.)
+- ~~Reward types 5, 6, 7~~: answered (section 7.2): RESULTS-screen texts only.
+- Whether `memcard_Stub0` (0x00412170, `return 0`) is the PC stub of a PSX memory-card "format" or "delete" call.
 
-## 6. Editor (`dmbmx save`, DM-024)
+## 6. Editor (`dmbmx save`, the save editor)
 
 `tools/dmbmx/formats/save_fields.py` holds one `FieldDef` per field: a dotted name pattern, offset, type, allowed range, [V]/[I] tag, evidence VA and named values. That gives about 8,150 concrete fields; `rider.<r>.level.<L>.goal.<t>.<g>.objective.<j>` alone accounts for 3,456.
 
@@ -164,11 +164,11 @@ dmbmx save complete-all SAVE.DAT -o NEW.DAT              # every challenge + com
 - `set`, `unlock-all` and `complete-all` write a **new** file unless `--in-place` is given; an `-o` equal to the input is refused. The header is always re-signed (section 3), so there is no separate CRC step.
 - Values: decimal or `0x` hex, a named choice (`"Amish Boy"`, `wide`, `Sublime`), or for bools `on/off/true/false/1/0`. Out-of-range values, bad indices and unknown fields are refused with an error, and nothing is written.
 - `unlock-all` only raises, never lowers: `riders_unlocked` = 12, all 8 cheats, and for every rider levels 12, styles 5, bikes 5, plus `movie_unlocked` for riders 0, 1 and 11. These are exactly what the game's own cheats (0x0044716E) and final rewards set. Progress, goals, scores and names are not touched.
-- In-game confirmation: play-test DM-024-PT2 (`tools/testing/playtest/make_playtest_dm024.py`). Until it passes, "the game shows the unlocks" is [I].
+- In-game confirmation: the manual in-game check `unlock-all` (`tools/testing/playtest/make_playtest_unlock_all.py`). Until it passes, "the game shows the unlocks" is [I].
 
-## 7. Challenges, rewards and the career (DM-046)
+## 7. Challenges, rewards and the career
 
-Source: `game.c` (decompiled by DM-046), tables in the exe; Python port `tools/dmbmx/formats/progress.py`; tests `tests/test_decomp_dm046.py`.
+Source: `game.c` (decompiled by the game.c pass), tables in the exe; Python port `tools/dmbmx/formats/progress.py`; tests `tests/test_decomp_game.py`.
 
 ### 7.1 Goal definitions (`g_goalDefs` 0x00555118)
 
@@ -269,7 +269,7 @@ Competition levels 6..11 have no goals: two judged runs (`gameJudgeRun` 0x004105
 
 ### 7.2 Rewards (`g_rewards` 0x005568B8, `GameRewardTables`)
 
-[V] Pairs `{u8 type, u8 param}`: `levelTier[12][3][2]` (+0x00), `parkTier[4][3]` (+0x90), `final[4]` (+0xA8), `riderFinal[12][2]` (+0xB0). For a competition level the "tier" is the placing: 3rd = 0, 2nd = 1, 1st = 2. Types (`gameApplyReward` 0x00411090, jump table 0x004111E4; unlocks only raise): 1 bike (`bikes_unlocked = max(.., p+1)`, notice 0x40), 2 style (0x80), 3 rider (`riders_unlocked`), 4 level (`levels_unlocked`, notice 0x100; param 1 also switches the tutorial hints off), 8 movie (record flag bit 0), 9 per rider (`riderFinal[rider][p]`), 10 cheat bit p. Types 5, 6 and 7 change nothing in the save: 5 (params 0..7) sits on Greenville pro, Woodward amateur and the competitions' 3rd place, 6 (param = level 0..11) on every level's hardcore tier / 2nd place and on Slim Jim Guy's final reward (param 12), 7 on the Greenville and Woodward hardcore park rewards; the texts of those tiers promise "sponsorships and clothing" and "secret game features, hints". [V] (DM-054, `overlayAddReward` 0x004180F0, test_reward_texts) they are RESULTS-screen texts only: **5 = sponsor** ("NEW SPONSOR! You've earned a sponsorship from Fox Racing!", "NEW RESPECT!" magazine covers, the Slim Jim Guy's "SLIM JIM!" and Amish Boy's "AMISH!" lines: text 0x21D5 + 2 `g_rewardSponsor[rider][param]`, table 0x00556998, 12 x 8), **6 = a gameplay tip** ("TIP! To get big air press the Jump button ...", 0x2243 + 2 param; param 12 = the Slim Jim sweepstakes, 13 = a DMFB2 code text), **7 = the rider's signature trick** ("TRICKTIP! Mirra-only special trick: right, up right, right + Trick button!", 0x225F + 2 (2 rider + param)). docs/re/hud.md section 4.
+[V] Pairs `{u8 type, u8 param}`: `levelTier[12][3][2]` (+0x00), `parkTier[4][3]` (+0x90), `final[4]` (+0xA8), `riderFinal[12][2]` (+0xB0). For a competition level the "tier" is the placing: 3rd = 0, 2nd = 1, 1st = 2. Types (`gameApplyReward` 0x00411090, jump table 0x004111E4; unlocks only raise): 1 bike (`bikes_unlocked = max(.., p+1)`, notice 0x40), 2 style (0x80), 3 rider (`riders_unlocked`), 4 level (`levels_unlocked`, notice 0x100; param 1 also switches the tutorial hints off), 8 movie (record flag bit 0), 9 per rider (`riderFinal[rider][p]`), 10 cheat bit p. Types 5, 6 and 7 change nothing in the save: 5 (params 0..7) sits on Greenville pro, Woodward amateur and the competitions' 3rd place, 6 (param = level 0..11) on every level's hardcore tier / 2nd place and on Slim Jim Guy's final reward (param 12), 7 on the Greenville and Woodward hardcore park rewards; the texts of those tiers promise "sponsorships and clothing" and "secret game features, hints". [V] (the overlay pass, `overlayAddReward` 0x004180F0, test_reward_texts) they are RESULTS-screen texts only: **5 = sponsor** ("NEW SPONSOR! You've earned a sponsorship from Fox Racing!", "NEW RESPECT!" magazine covers, the Slim Jim Guy's "SLIM JIM!" and Amish Boy's "AMISH!" lines: text 0x21D5 + 2 `g_rewardSponsor[rider][param]`, table 0x00556998, 12 x 8), **6 = a gameplay tip** ("TIP! To get big air press the Jump button ...", 0x2243 + 2 param; param 12 = the Slim Jim sweepstakes, 13 = a DMFB2 code text), **7 = the rider's signature trick** ("TRICKTIP! Mirra-only special trick: right, up right, right + Trick button!", 0x225F + 2 (2 rider + param)). docs/re/hud.md section 4.
 
 [V] `gameAwardLevelProgress` 0x00410C60 at level end (proquest only): for the tier completed in this run (challenge levels: `tier_goals_done == 4` and a goal with 0x40; competitions: every placing above the stored one):
 1. `levelTier[level][tier]` (2 rewards);
@@ -287,7 +287,7 @@ What the tables unlock, per tier (P = park reward; types 5-7 left out):
 
 [V] Completing everything with every rider gives exactly what `unlock-all` (the game's cheats) unlocks: 12 riders, all 8 cheats, 12 levels / 5 styles / 5 bikes per rider, the three movies (test `test_complete_all_gives_exactly_what_unlock_all_unlocks`). Replaying the rewards for the progress stored in the real save reproduces its unlocks (exactly for the riders played without cheats: 3, 6 and 9).
 
-### 7.2a Trick ids in the objectives (DM-047)
+### 7.2a Trick ids in the objectives
 
 The trick parameters of the objectives (types 0, 1, 2, 3, 11, 14) are the trick ids the rider code
 selects from the stick: e.g. "pull a double backflip" (trick 8) = down, down + trick button; "do a
@@ -297,4 +297,4 @@ and tables are in ANIM.md section 8.2 (`dmbmx.formats.tricks.select_air_trick`, 
 
 ### 7.3 `dmbmx save complete-all`
 
-`complete_all()` marks, for every rider, every goal of every challenge level done (tier 2, `tier_goals_done` 4, goal bytes `0x80 | objectives`, objectives state 5) and 1st place in every competition, tier by tier, and applies the rewards exactly as `gameAwardLevelProgress` would (section 7.2). It only raises: done goals, higher tiers and better placings are kept; scores, names, profiles, options and the "trick landed" bits are not touched. In-game confirmation: play-test DM-046-PT1 (`tools/testing/playtest/make_playtest_dm046.py`); until then "the game shows everything complete" is [I].
+`complete_all()` marks, for every rider, every goal of every challenge level done (tier 2, `tier_goals_done` 4, goal bytes `0x80 | objectives`, objectives state 5) and 1st place in every competition, tier by tier, and applies the rewards exactly as `gameAwardLevelProgress` would (section 7.2). It only raises: done goals, higher tiers and better placings are kept; scores, names, profiles, options and the "trick landed" bits are not touched. In-game confirmation: the manual in-game check `complete-all` (`tools/testing/playtest/make_playtest_complete_all.py`); until then "the game shows everything complete" is [I].

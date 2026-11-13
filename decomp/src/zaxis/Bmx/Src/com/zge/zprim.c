@@ -5,7 +5,7 @@
  * zprimLoadFont, zprimLoadAsset and zprimMakeMaterial ("zprimReplaceVRAMGrey()" also names one
  * function); the rest [I]: "ZPRIM:" messages, link order 0x004779E0-0x0047C3C2 and the globals
  * 0x006783FC-0x00678433 that no other code touches.
- * 73 functions (DM-053; DM-061 created the two bare rets 0x00479240 / 0x00479260; DM-064 created 21
+ * 73 functions (the ZGE object pass created the two bare rets 0x00479240 / 0x00479260; the clean-up created 21
  * reached only through their /INCREMENTAL thunks: state, background, getters, the SPRITE2 RLE). Non-matching C (AD-8). Types: decomp/include/zprim.h.
  *
  * The 2D layer of the front end (frontend.c, guimain.c): a stack of draw states, an asset table for
@@ -23,7 +23,7 @@
 
 #define ZPRIM_FILE "C:\\zaxis\\Bmx\\src\\com\\zge\\zprim.c"
 
-/* other modules (current names until their cards land) */
+/* other modules (current names until they are decompiled) */
 int   psx2DInit(void);                                  /* PSX layer init (0 = ok) */
 void  psx2DShutdown(void);                                  /* PSX layer shutdown */
 void  psx2DBeginFrame(void);                                  /* begin a 2D frame */
@@ -196,7 +196,7 @@ void zprimSetClip(int x0, int y0, int x1, int y1)
 /* VA 0x00477df0, 98 bytes, [I] row, status draft */
 void zprimSetBaseState(void)
 {
-    /* (DM-064 created; no caller, thunk 0x00401906) Makes the current state the base state that
+    /* (new function; no caller, thunk 0x00401906) Makes the current state the base state that
      * zprimResetState returns to. */
     int held;
 
@@ -235,7 +235,7 @@ void zprimPushState(void)
 /* VA 0x00477fb0, 114 bytes, [I] row, status draft */
 void zprimDropState(void)
 {
-    /* (DM-064 created; no caller, thunk 0x0040224D) Pops the state stack but keeps the current
+    /* (new function; no caller, thunk 0x0040224D) Pops the state stack but keeps the current
      * attributes (they overwrite the saved state). */
     int held;
 
@@ -326,7 +326,7 @@ uint32_t zprimGetAttr(int attr)
 /* VA 0x004788c0, 133 bytes, [I] row, status draft */
 void zprimSetBackgroundPicture(ZprimAsset *picture)
 {
-    /* (DM-064 created; no caller, thunk 0x0040191A) The zprimSetAttr(ZPRIM_ATTR_BG_PICTURE) case as a
+    /* (new function; no caller, thunk 0x0040191A) The zprimSetAttr(ZPRIM_ATTR_BG_PICTURE) case as a
      * function; NULL is ignored. */
     int held;
 
@@ -341,7 +341,7 @@ void zprimSetBackgroundPicture(ZprimAsset *picture)
 /* VA 0x00478980, 153 bytes, [I] row, status draft */
 void zprimSetBackgroundSprite(ZprimAsset *sprite, int16_t type, uint16_t frame, int16_t x, int16_t y)
 {
-    /* (DM-064 created; no caller, thunk 0x00401294) Background = a sprite frame at (x, y): type 3
+    /* (new function; no caller, thunk 0x00401294) Background = a sprite frame at (x, y): type 3
      * keeps ZPRIM_ATTR_BG_3, anything else is BG_2. */
     int held;
     ZprimState *st;
@@ -372,7 +372,7 @@ void zprimSetFont(ZprimAsset *font)
 /* VA 0x00478ae0, 92 bytes, [I] row, status draft */
 ZprimAsset *zprimGetFont(void)
 {
-    /* DM-064 created; no caller, thunk 0x004014AB */
+    /* new function; no caller, thunk 0x004014AB */
     int held;
     ZprimAsset *font;
 
@@ -419,7 +419,7 @@ void zprimResetScale(void)
 /* VA 0x00478d00, 92 bytes, [I] row, status draft */
 ZprimAsset *zprimGetSprite(void)
 {
-    /* DM-064 created; no caller, thunk 0x00401DFC */
+    /* new function; no caller, thunk 0x00401DFC */
     int held;
     ZprimAsset *sprite;
 
@@ -440,7 +440,7 @@ void zprimSetRGB(uint32_t r, uint8_t g, uint8_t b, int attr)
 /* VA 0x00478dc0, 26 bytes, [V] direct, status draft */
 void zprimGetColor(void)
 {
-    /* DM-064 created; no caller, thunk 0x004011EA */
+    /* new function; no caller, thunk 0x004011EA */
     zAssertFail("ZPRIM: zprimGetColor not implemented\n", ZPRIM_FILE, 0x5F0, 0);
 }
 
@@ -542,14 +542,14 @@ fail:
 /* VA 0x004791c0, 12 bytes, [I] row, status draft */
 void zprimFreePicture(ZprimAsset *picture)
 {
-    /* DM-064 created; no caller, thunk 0x0040164A */
+    /* new function; no caller, thunk 0x0040164A */
     zprimFreeAsset(picture);
 }
 
 /* VA 0x004791e0, 31 bytes, [I] row, status draft */
 uint16_t zprimGetPictureWidth(ZprimAsset *picture)
 {
-    /* DM-064 created; no caller, thunk 0x00402356 */
+    /* new function; no caller, thunk 0x00402356 */
     uint16_t w = ((ZprimImage *)zprimLockAsset(picture))->width;
 
     zprimUnlockAsset(picture);
@@ -559,7 +559,7 @@ uint16_t zprimGetPictureWidth(ZprimAsset *picture)
 /* VA 0x00479210, 31 bytes, [I] row, status draft */
 uint16_t zprimGetPictureHeight(ZprimAsset *picture)
 {
-    /* DM-064 created; no caller, thunk 0x0040201D */
+    /* new function; no caller, thunk 0x0040201D */
     uint16_t h = ((ZprimImage *)zprimLockAsset(picture))->height;
 
     zprimUnlockAsset(picture);
@@ -569,14 +569,14 @@ uint16_t zprimGetPictureHeight(ZprimAsset *picture)
 /* VA 0x00479240, 1 bytes, [I] row, status draft */
 void zprimUnusedStub(void)
 {
-    /* a bare ret, never referenced (its /INCREMENTAL thunk 0x00401C08 has no caller); created by DM-061 */
+    /* a bare ret, never referenced (its /INCREMENTAL thunk 0x00401C08 has no caller); created by the ZGE object pass */
 }
 
 /* VA 0x00479260, 1 bytes, [I] row, status draft */
 void zprimCopyToPicture(ZprimAsset *sprite, ZprimAsset *picture, uint32_t x, uint32_t y)
 {
     /* a bare ret on PC: the PSX build copied a sprite into a picture's VRAM area here [I]. Only
-     * the unused guiDrawSpriteToBackdrop calls it; created by DM-061 (DM-056 discovered work) */
+     * the unused guiDrawSpriteToBackdrop calls it; created by the ZGE object pass (found during the front-end pass) */
 }
 
 /* dst's material becomes a copy of src's. */
@@ -752,7 +752,7 @@ ZprimAsset *zprimCreateSprite(uint16_t width, uint16_t height, uint16_t frames)
 /* VA 0x00479a80, 28 bytes, [I] row, status draft */
 void zprimTouchAsset(ZprimAsset *asset)
 {
-    /* (DM-064 created; no caller, thunk 0x00402117) Locks and unlocks the asset's DMM block without
+    /* (new function; no caller, thunk 0x00402117) Locks and unlocks the asset's DMM block without
      * touching it (a body compiled out [I]). */
     zmemDMMLock(asset->handle);
     zmemDMMUnlock(asset->handle);
@@ -761,7 +761,7 @@ void zprimTouchAsset(ZprimAsset *asset)
 /* VA 0x00479ab0, 169 bytes, [I] row, status draft */
 void zprimResetImage(ZprimAsset *asset, uint16_t width, uint16_t height, uint16_t bpp, uint16_t colours)
 {
-    /* (DM-064 created; no caller, thunk 0x0040168B) Rewrites a created image as one blank frame of
+    /* (new function; no caller, thunk 0x0040168B) Rewrites a created image as one blank frame of
      * width x height with a palette of `colours` entries (0x8000 each) right after the frame table.
      * Like the exe, the palette is written where the *old* palette offset pointed; the new offset is
      * 0x24. */
@@ -928,7 +928,7 @@ uint16_t zprimGetSpriteHeight(ZprimAsset *sprite, uint16_t frame)
 /* VA 0x0047a140, 127 bytes, [I] row, status draft */
 uint16_t zprimGetSpriteFrames(ZprimAsset *sprite)
 {
-    /* (DM-064 created; no caller, thunk 0x00401B72) Frame count of a sprite (NULL = the current
+    /* (new function; no caller, thunk 0x00401B72) Frame count of a sprite (NULL = the current
      * sprite; 0 if there is none). */
     int held;
     uint16_t n = 0;
@@ -947,7 +947,7 @@ uint16_t zprimGetSpriteFrames(ZprimAsset *sprite)
 /* VA 0x0047a1e0, 211 bytes, [I] row, status draft */
 void zprimDecompressFrame(ZprimAsset *src, uint16_t srcFrame, ZprimAsset *dst, uint16_t dstFrame)
 {
-    /* (DM-064 created; no caller, thunk 0x00401744) Decompresses frame srcFrame of a
+    /* (new function; no caller, thunk 0x00401744) Decompresses frame srcFrame of a
      * ZPRIM_TYPE_SPRITE2 image into frame dstFrame of a virtual sprite (zprimRleDecode). */
     ZprimImage *s = (ZprimImage *)zprimLockAsset(src);
     ZprimImage *d = (ZprimImage *)zprimLockAsset(dst);
@@ -967,7 +967,7 @@ void zprimDecompressFrame(ZprimAsset *src, uint16_t srcFrame, ZprimAsset *dst, u
 /* VA 0x0047a300, 31 bytes, [I] row, status draft */
 void *zprimGetFramePixels(ZprimImage *img, uint16_t frame)
 {
-    /* (DM-064 created; no caller, thunk 0x0040177B): the pixels of one frame of a locked image, NULL
+    /* (new function; no caller, thunk 0x0040177B): the pixels of one frame of a locked image, NULL
      * past the last frame */
     if (frame < img->count)
         return (uint8_t *)img + img->frame[frame].pixels;
@@ -977,7 +977,7 @@ void *zprimGetFramePixels(ZprimImage *img, uint16_t frame)
 /* VA 0x0047a330, 189 bytes, [I] row, status draft */
 int zprimRleDecode(const uint8_t *src, uint8_t *dst)
 {
-    /* (DM-064 created; zprimDecompressFrame's helper) The SPRITE2 pixel run-length format: u16 total
+    /* (new function; zprimDecompressFrame's helper) The SPRITE2 pixel run-length format: u16 total
      * size, then records 0x80 v n16 n copies of byte v 0x00 n16 n zero bytes 0x81..0xFF v (op - 0x80)
      * copies of v 0x01..0x7F literal: that many bytes follow Returns the bytes written. */
     const uint8_t *end = src + *(const uint16_t *)src;
@@ -1073,14 +1073,14 @@ static const ZprimGlyph *zprimFindGlyph(const ZprimFont *font, uint32_t c, uint3
 /* VA 0x0047a5e0, 12 bytes, [I] row, status draft */
 void zprimFreeFont(ZprimAsset *font)
 {
-    /* DM-064 created; no caller, thunk 0x00401654 */
+    /* new function; no caller, thunk 0x00401654 */
     zprimFreeAsset(font);
 }
 
 /* VA 0x0047a600, 1 bytes, [I] row, status draft */
 void zprimFontStub(void)
 {
-    /* DM-064 created: a bare ret, thunk 0x0040254F */
+    /* new function: a bare ret, thunk 0x0040254F */
 }
 
 /* VA 0x0047a620, 849 bytes, [I] row, status draft */
@@ -1140,7 +1140,7 @@ void zprimDrawTextFixed(const uint8_t *s, int x, int16_t y)
 /* VA 0x0047aa60, 1 bytes, [I] row, status draft */
 void zprimTextStub(void)
 {
-    /* DM-064 created: a bare ret, thunk 0x00401410 */
+    /* new function: a bare ret, thunk 0x00401410 */
 }
 
 /* VA 0x0047aa80, 922 bytes, [I] row, status draft */
@@ -1606,7 +1606,7 @@ ZprimAsset *zprimLoadScreen(uint32_t id, int keep)
 /* VA 0x0047bd00, 12 bytes, [I] row, status draft */
 void zprimFreeScreen(ZprimAsset *screen)
 {
-    /* DM-064 created; no caller, thunk 0x0040204A */
+    /* new function; no caller, thunk 0x0040204A */
     zprimFreeAsset(screen);
 }
 
@@ -1638,7 +1638,7 @@ void zprimDrawTextToSprite(ZprimAsset *font, const uint8_t *s, uint32_t x, uint3
     for (; *s != 0; s++) {
         const ZprimGlyph *g = &f->glyph[*s - f->glyph[0].code];
         /* [I] reads one byte per pixel with row bytes = width; the shipped font bitmaps are 4-bit
-         * (DM-066: row bytes = width / 2), so this path only suits 8-bit fonts */
+         * (row bytes = width / 2), so this path only suits 8-bit fonts */
         const uint8_t *src = (const uint8_t *)f + f->pixels + g->y * f->width + g->x;
 
         for (row = 0; row < g->h; row++, src += f->width) {
@@ -1661,7 +1661,7 @@ void zprimDrawTextToSprite(ZprimAsset *font, const uint8_t *s, uint32_t x, uint3
 /* VA 0x0047c010, 1 bytes, [I] row, status draft */
 void zprimScreenStub(void)
 {
-    /* DM-064 created: a bare ret, thunk 0x0040162C */
+    /* new function: a bare ret, thunk 0x0040162C */
 }
 
 /* VA 0x0047c030, 915 bytes, [V] direct, status draft */

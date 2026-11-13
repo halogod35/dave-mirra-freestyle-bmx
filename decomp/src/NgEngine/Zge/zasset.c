@@ -3,9 +3,9 @@
  * Original: C:\NgEngine\Zge\zasset.c
  * Evidence: [V] path string referenced by 4 function(s); the others [I] (link order, literals, calls)
  * 11 functions, VA 0x00480450-0x00480c36.
- * DM-061 drafted zasset_DumpLibraryInfo and created zassetSkipAsset / zassetLoadAlloc (hole after
+ * The ZGE object pass drafted zasset_DumpLibraryInfo and created zassetSkipAsset / zassetLoadAlloc (hole after
  * zassetLoadAsset).
- * DM-042 (draft). Non-matching C (AD-8). ZAL asset libraries; format: docs/formats/ZAL.md,
+ * Draft. Non-matching C (AD-8). ZAL asset libraries; format: docs/formats/ZAL.md,
  * Python reference: tools/dmbmx/formats/zal.py (the code below agrees with it; differences noted inline).
  *
  * Typical use: lib = zassetOpenLibrary(path); zassetFindAsset(lib, group, n);
@@ -14,7 +14,7 @@
  */
 #include "decomp.h"
 
-/* other modules: zfile.h/zengine.h via decomp.h (DM-041); the rest until their cards land */
+/* other modules: zfile.h/zengine.h via decomp.h; the rest until they are decompiled */
 void *memcpy(void *dst, const void *src, size_t n);   /* the exe uses zstring_00482a50 */
 int   zmem_00486290(void *pool);          /* number of live elements [I] */
 

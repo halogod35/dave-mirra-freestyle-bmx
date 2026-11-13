@@ -1,4 +1,4 @@
-"""DM-041: self-consistency of the decompiled memcard.c / zfile.c / zrwFile.c / zramdisk.c.
+"""Self-consistency of the decompiled memcard.c / zfile.c / zrwFile.c / zramdisk.c.
 
 No compiler on the build PC, so this checks what can be checked statically:
 - every function of the four files is draft (or better) and its C definition follows its VA comment;
@@ -34,7 +34,7 @@ def csv_rows():
 
 def test_all_draft_and_defined():
     rows = csv_rows()
-    assert len(rows) == 73   # DM-064: + zfileSetHeap / ClearHeap / GetSeparator, zramdiskShutdown
+    assert len(rows) == 73   # + zfileSetHeap / ClearHeap / GetSeparator, zramdiskShutdown
     for f in FILES:
         text = (SRC / f).read_text(encoding="utf-8")
         for r in (x for x in rows if x["file"] == f):

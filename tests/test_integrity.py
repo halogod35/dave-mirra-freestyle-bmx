@@ -1,4 +1,4 @@
-"""DM-030: PNG CRC helper, ZSD SCFI sizes, exe patcher, integrity CLI."""
+"""PNG CRC helper, ZSD SCFI sizes, exe patcher, integrity CLI."""
 import hashlib
 import json
 import struct

@@ -1,15 +1,15 @@
 # Animations: motion.zal motion bank, skeleton binding, replay.zal
 
-Owner: DM-016. Code: `tools/dmbmx/formats/motion.py` (bank, clip reader/writer, evaluator, rotations),
+Code: `tools/dmbmx/formats/motion.py` (bank, clip reader/writer, evaluator, rotations),
 `tools/dmbmx/formats/zal.py` (`ZalArchive.read(..., headerless=True)`), `tools/dmbmx/convert/anim_gltf.py`
 (glTF animations), CLI `dmbmx motion list|dump` and `dmbmx export --anims`. Blender check:
 `tools/blender/scripts/check_anim.py`. Tests: `tests/test_motion.py`. Probe: `tools/research/probe_motion.py`.
-Evidence tags as in CONTRIBUTING.md AD-5. The exe was read through the DM-002 Ghidra decompilation (`out/ghidra_c`).
+Evidence tags as in CONTRIBUTING.md AD-5. The exe was read through the Ghidra decompilation (`out/ghidra_c`).
 
 ## 1. The bank
 
 ```
-motion.zal             ZAL (DM-010), 1 group (id 0), LZO1X
+motion.zal             ZAL, 1 group (id 0), LZO1X
 └─ payload (202,116 B) headerless ZAL: u16 flags=1, u16 count=238, 238 x {u32 id, u32 offset, u32 size}, data
    └─ motion 1..238    one clip each; offsets count from byte 0 of the payload
 ```
@@ -21,10 +21,10 @@ motion.zal             ZAL (DM-010), 1 group (id 0), LZO1X
   "Code does not match motion asset file" if there are more than 0xEE). `rider.c` indexes that table by motion
   number (`&DAT_006962fc + id*4`). There are **no names or hashes** for motions. Scene.Txt's ANIM
   "MainBank" (zhash 0x004B0A2C) only names the bank. The exe has a table of 84 trick names
-  (0x00559390, "turndown" … "busdriver"); DM-046 found the trick → motion mapping (section 7).
+  (0x00559390, "turndown" … "busdriver"); the game.c pass found the trick → motion mapping (section 7).
 - [V] Everything round-trips byte-for-byte: motion.zal, the bank payload and all 238 clips.
 
-## 2. Clip format (decoder `zactorDecodeMotion`, VA 0x00472B10; C in DM-053's zactor.c)
+## 2. Clip format (decoder `zactorDecodeMotion`, VA 0x00472B10; C in decomp/src/.../zactor.c)
 
 ```
 0x00 u16  frames | 0x8000 (= a 100-byte block follows the section table; never set)
@@ -46,7 +46,7 @@ motion.zal             ZAL (DM-010), 1 group (id 0), LZO1X
 |---|---|---|
 | u32 mask | always | bits 28-31 = section; bit 0 = long header; bit 1 = translation; bit 2+i = channel i present |
 | u16 time | always | ms; a multiple of 34 |
-| u16 h, f32 value | mask bit 0 | [V] DM-053: `h` is never read; `value` (rider section only) is stored in the decoder state (+0x1C) and the returned frame (+0x14) and never read by any code. Both are 0 in every clip |
+| u16 h, f32 value | mask bit 0 | [V] `h` is never read; `value` (rider section only) is stored in the decoder state (+0x1C) and the returned frame (+0x14) and never read by any code. Both are 0 in every clip |
 | 3 × s16 translation | mask bit 1 | |
 | 3 × s16 per present channel | bits 2.. | 8-bit mode: 3 × s8 (deltas) / u8 (init) |
 
@@ -68,10 +68,10 @@ then every channel. The other init records use the generic layout (bit 2 = "all 
   Sprocket, RightPedal and LeftPedal one full revolution about X while y/z stay 0. That is the crank axis
   (bike +X = left), which confirms both the decoding and the axis order.
 
-### 2.1 The decoder in detail (DM-053)
+### 2.1 The decoder in detail
 
 Source: `decomp/src/zaxis/Bmx/Src/com/zge/zactor.c` (`zactorDecodeMotion`, types `decomp/include/zactor.h`);
-a literal Python port is in `tests/test_decomp_dm053.py`.
+a literal Python port is in `tests/test_decomp_zactor_zprim.py`.
 
 - [V] **Agreement:** the port and `Motion.sample()` give identical rider/bike angles, height, root motion
   and bike translation on **all 2,301 frames of all 238 clips**, plain and mirrored (motion flag 8), and on
@@ -87,7 +87,7 @@ a literal Python port is in `tests/test_decomp_dm053.py`.
   frameMs); per frame step (header frameMs) the decoder applies the *one* group of records that share the
   time of the next pending record, if that time is <= the clock, then adds every channel's current delta.
   Once the stream reaches its terminator the next call returns NULL (rider.c ends the clip).
-  `Motion.sample()` now does the same (DM-053 fix; identical on the shipped bank): before, it applied
+  `Motion.sample()` now does the same (a fix from the zactor.c decomp; identical on the shipped bank): before, it applied
   records only at exactly k x frameMs, kept stepping after the stream ended, stepped sections with flag
   0x02 and did not wrap 8-bit init angles (u8 << 8) to s16.
 - [V] **Section flag 0x02:** no init record, and the section is never stepped (its records are still
@@ -119,20 +119,20 @@ a literal Python port is in `tests/test_decomp_dm053.py`.
 - [V] Euler → quaternion (`zquatFromEuler` 0x004832B0): half angles via the 8192-entry sine table (`sin`
   table at 0x0065E2BC, `cos` = the same table + 1/4 period). The result is **q = qz · qy · qx** (x applied
   first), quaternion layout (x, y, z, w), Hamilton product (`zquatMul` 0x00483070 = a·b). `zquatToMatrix`
-  0x00483470 builds the standard column-vector rotation in the RW "right/up/at" layout. [V] DM-045: the
+  0x00483470 builds the standard column-vector rotation in the RW "right/up/at" layout. [V] The
   half angles are truncated to binary angles and the table steps by 8 units, so the game's quaternions
   differ from exact maths by up to 1.7e-3 per component (all 43,895 channel frames of the bank checked,
-  `tests/test_decomp_dm045.py`).
-- [V] **DM-045: the node quaternion is not the frame rotation.** `zrwModelUpdate` (the model update)
+  `tests/test_decomp_zmath.py`).
+- [V] **The node quaternion is not the frame rotation.** `zrwModelUpdate` (the model update)
   builds every animated frame's RW matrix with `zrwModelQuatToRwMatrix` 0x00487E70, which first maps
   q = (x, y, z, w) to (x, −y, −z, w): the frame rotation is **F·R(q)·F** with F = diag(1, −1, −1) (the
   engine's Y-down axes → RenderWare), for rider and bike channels alike (the bind translation is added
-  unchanged). Since DM-019 dmbmx does the same (`motion.engine_to_model`, applied by `channel_rotation` to
-  every rider and bike channel); DM-016/017 put q in directly (§3.1).
+  unchanged). dmbmx now does the same (`motion.engine_to_model`, applied by `channel_rotation` to
+  every rider and bike channel); the first motion reader and the legacy arm table put q in directly (§3.1).
 - Arm corrections. Here Cz(±90°) is a rotation about Z by ±0x4000, and Rx(180°) a rotation about X by 0x8000.
-  dmbmx (DM-019) uses NgIFzactor's literal table and then F; the DM-017 column is kept as `legacy=True`.
+  dmbmx uses NgIFzactor's literal table and then F; the legacy column is kept as `legacy=True`.
 
-| Channel | **NgIFzactor_ApplyMotionPose, used by dmbmx (then F·R·F)** | DM-017 legacy (no F) |
+| Channel | **NgIFzactor_ApplyMotionPose, used by dmbmx (then F·R·F)** | Legacy table (no F) |
 |---|---|---|
 | LeftUpArm | q · Cz(+90) | Rx(180) · q · Cz(+90) |
 | LeftLowArm, LeftHand | Cz(−90) · q · Cz(+90) | same |
@@ -143,7 +143,7 @@ a literal Python port is in `tests/test_decomp_dm053.py`.
   The rider bind skeleton is a T-pose (arms along ±X, identity local rotations). The ±90° corrections turn
   the motion data's arm axis into the model's arm axis.
 
-### 3.1 Hands-on-handlebars test (DM-017, DM-019, `tools/research/arm_pose_check.py`)
+### 3.1 Hands-on-handlebars test (`tools/research/arm_pose_check.py`)
 
 The test poses the bike with the clip's bike section and the rider with its rider section. It then places
 the rider by translation only, so that the mid-point of its feet sits on the mid-point of the pedal frames.
@@ -157,7 +157,7 @@ Both models share units and axes.
   | Arm table | hand → nearest Handlebars-mesh vertex | hand → bar-end centroid | hand gap |
   |---|---|---|---|
   | as decompiled | 0.66 | 0.69 | 0.54 |
-  | DM-017 | **0.13** | **0.21** | 0.54 (bar-end centroids ~0.6 apart) |
+  | Legacy table | **0.13** | **0.21** | 0.54 (bar-end centroids ~0.6 apart) |
 
   Legs and torso are unchanged. [V] 54 of the 61 in-game rider ZMDs have this exact skeleton; the Troy McMurray models differ by less than 0.002, and MikeLaird5 has a different frame list. DMbike01 and RNbike01 have identical frames. So the result carries over to the other riders.
   We searched systematically:
@@ -173,23 +173,23 @@ Both models share units and axes.
 - [V] **Bar ends vs grip frames:** the LeftGrip/RightGrip *frames* are not on the bar ends in the motion pose.
   They sit about 0.2 above the bar mesh (0.37-0.42 from the hands with any arm table), so they are not
   usable as hand targets.
-- [V] **Where the flip comes from (DM-045):** the F conjugation above. With F·R(q)·F on every animated
+- [V] **Where the flip comes from:** the F conjugation above. With F·R(q)·F on every animated
   frame (rider and bike) and NgIFzactor's arm table **as decompiled**, the hands land on the bar:
-  hand → bar mesh 0.13, hand → bar-end 0.16 (better than DM-017's 0.21), feet → pedals 0.10, head above
-  the hips in every frame of motion 8. Without F the same table gives 0.66/0.69, and DM-017's table *with*
+  hand → bar mesh 0.13, hand → bar-end 0.16 (better than the legacy table's 0.21), feet → pedals 0.10, head above
+  the hips in every frame of motion 8. Without F the same table gives 0.66/0.69, and the legacy table's table *with*
   F gives 0.68: the Rx(180) is the leading F of the shoulder's F·R·F, and the trailing F is invisible
   because the arm bones lie along ±X, which F leaves fixed. Torso and legs also change under F (median
-  joint shifts 0.03-0.15 relative to the hips), so DM-017's table is only an arm-local approximation of
-  the game's chain. `tests/test_decomp_dm045.py::test_F_conjugation_explains_the_arm_flip`.
-- [V] **DM-019 (dmbmx now uses F):** `tools/research/arm_pose_check.py` (motions 8/5/36/22/57/106, medians):
-  F + literal table: feet 0.098, hand → bar 0.132, hand → bar-end 0.158, hand gap 0.56; legacy DM-017:
+  joint shifts 0.03-0.15 relative to the hips), so the legacy table's table is only an arm-local approximation of
+  the game's chain. `tests/test_decomp_zmath.py::test_F_conjugation_explains_the_arm_flip`.
+- [V] **F conjugation (dmbmx now uses F):** `tools/research/arm_pose_check.py` (motions 8/5/36/22/57/106, medians):
+  F + literal table: feet 0.098, hand → bar 0.132, hand → bar-end 0.158, hand gap 0.56; legacy table:
   0.068 / 0.127 / 0.206 / 0.54; literal without F: 0.068 / 0.660 / 0.692. The feet are the one metric that
   got worse: with F the feet are ~0.37 apart (pedals ~0.2), knees out, so each foot sits ~0.09 off its pedal
   frame while pedalling (max 0.12 in motion 8). [I] Whether the game shows the same knees-out stance needs
   an in-game screenshot; the conversion itself is [V] code.
 - [V] The Hips channel already stands the skeleton up in a Y-up model space: Hips up ≈ (−0.10, 0.99, −0.04)
-  in motion 1, frame 0. The bind Hips frame instead rotates Y→Z (DM-020 export.md §2), so the exporter
-  **removes** the DM-020 upright root rotation when it adds rider animations.
+  in motion 1, frame 0. The bind Hips frame instead rotates Y→Z (export.md §2), so the exporter
+  **removes** the exporter's upright root rotation when it adds rider animations.
 
 ## 4. glTF export (`dmbmx export <zmd> <out.glb> --anims all|1,5,10-12`)
 
@@ -200,11 +200,10 @@ Both models share units and axes.
 - [V] Blender 5.3 headless (`tools/blender/scripts/check_anim.py`) imports the clips as actions. For every frame
   of motions 1, 2, 3, 8, 15 and 59 the skinned mesh stays finite, and its bounding box stays within 1.0× of
   the rest diagonal (no explosion). This is a pytest (`test_blender_anim_check`) when Blender is installed.
-- [V] **Pose (DM-019):** the tracks carry the engine's F·R(q)·F with the literal arm table: legs pedal,
-  the hands are on the grips. Renders: `out/dm019/frf_strip.png` (DM-019 worktree): rows are clips 8, 15
+- [V] **Pose:** the tracks carry the engine's F·R(q)·F with the literal arm table: legs pedal,
+  the hands are on the grips. Renders: `out/frf/frf_strip.png`: rows are clips 8, 15
   and 59; columns are Blender frames 0/8/16/24 side-on and frame 0 front 3/4 (`tools/blender/scripts/render_pair.py`
-  per view, tiled by `tools/blender/scripts/compose_strip.py`). The DM-017 strip is `out/pose/arm_pose_strip.png`
-  in the DM-017 worktree.
+  per view, tiled by `tools/blender/scripts/compose_strip.py`). The legacy strip is `out/pose/arm_pose_strip.png`.
 
 ## 5. replay.zal (demo replays)
 
@@ -212,7 +211,7 @@ Both models share units and axes.
   It loads it into a replay buffer created with size 0x2800, and asserts "replay data too big for demo replay"
   if the asset is larger.
 - [V] Shapes: 7 × 9,986 bytes (0x2702), 15 × 4,156 (0x103C), 1 × 6,204 (0x183C), 1 × 6,184 (0x1828).
-- [V] (DM-052) Each record is the save area of a `bmxreplay` buffer (from header +0x0C on): 0x34 header
+- [V] Each record is the save area of a `bmxreplay` buffer (from header +0x0C on): 0x34 header
   bytes, the input event stream, then the snapshot blocks. 7 records are the PC recorder's (0x2702 bytes:
   0x1000 stream + 2 x 0xB40 prop state + 2 x 0x27 goal info), 16 a console recorder's (0x3C header), 1 is
   unknown. The stream is 3-byte events `kind << 5 | delta, u16` (buttons XOR mask / stick bytes).
@@ -220,25 +219,25 @@ Both models share units and axes.
 
 ## 6. Open questions
 
-1. ~~Which motion id belongs to which trick~~: answered by DM-046, section 7; the riding states,
-   manual, fast plant and wall tap by DM-047, section 8.1.
-2. Arm pose: explained by DM-045 and applied in dmbmx by DM-019 (§3, §3.1). Open: an in-game screenshot
+1. ~~Which motion id belongs to which trick~~: answered in section 7; the riding states,
+   manual, fast plant and wall tap in section 8.1.
+2. Arm pose: explained by the zmath.c decomp and applied in dmbmx (§3, §3.1). Open: an in-game screenshot
    to confirm the knees-out leg stance that F produces (feet ~0.09 off the pedal frames).
 3. ~~Record `value` (f32) and `h` (u16), section flags 0x80, header bits 0-3 / 8-14 (0x9823)~~: answered by
-   DM-053 (section 2.1): none of them is read by the PC build; they carry no meaning for the game.
-4. ~~Root-motion scale~~: answered by DM-047 (section 8.3): engine (ZGE) units = 100 x model units,
+   The zactor.c decomp (section 2.1): none of them is read by the PC build; they carry no meaning for the game.
+4. ~~Root-motion scale~~: answered (section 8.3): engine (ZGE) units = 100 x model units,
    axes F = diag(1, -1, -1). Still open: the constant rider-root offset (-0.25 in y) is only fitted.
-5. ~~replay.zal input-stream encoding~~: answered by DM-052 (docs/formats/REPLAY.md). Still open there: the
+5. ~~replay.zal input-stream encoding~~: answered (docs/formats/REPLAY.md). Still open there: the
    console-layout records' stream semantics.
-6. Wheel spin (DM-047 section 8.5): the spin velocity comes from physics.c (DM-048); the factor from
+6. Wheel spin (section 8.5): the spin velocity comes from physics.c; the factor from
    wheel speed to spin is not decoded yet.
 
-## 7. Trick → motion map (DM-046)
+## 7. Trick → motion map
 
 [V] The rider code (`rider.c` 0x004348xx-0x00435xxx) requests a motion by writing its number to
 `BmxRider` +0xB9C; the number indexes `g_motionTable` (0x006962FC, filled 1-based from the bank, so
 it is the motion id of section 1). For a trick it comes from two u16 tables and two formulas
-(`tools/dmbmx/formats/tricks.py`, checked against the exe by `tests/test_decomp_dm046.py`):
+(`tools/dmbmx/formats/tricks.py`, checked against the exe by `tests/test_decomp_game.py`):
 
 - air trick t (ids 0..26): `g_trickMotion[t]` (0x00558FF8) = start, +1 = hold, +2 = release
   (roles [I], from the rider state that requests them). The flip variants reuse the base trick's clip (e.g. turndown backflip = 25,
@@ -247,10 +246,10 @@ it is the motion id of section 1). For a trick it comes from two u16 tables and 
 - modifier m (0..37, name `g_trickNames[46 + m]`): `g_modMotion[m]` (0x00559030) = 73 + 3m, +1, +2;
 - grind / stall t (0x1B..0x29): 3t + 0x6A enter, 3t + 0x6B hold, 3t + 0x6C exit (187..231);
 - manual / nose wheelie (0x2C/0x2D): 19 enter (20 when the take-off clip 15 is playing), 20 hold, 21
-  exit [V] (DM-047, `riderManual`); fast plant / wall tap (0x2A/0x2B) go through the stall state with the
-  grind formula: 232-234 and 235-237 [V] (DM-047, `riderStall`).
+  exit [V] (`riderManual`); fast plant / wall tap (0x2A/0x2B) go through the stall state with the
+  grind formula: 232-234 and 235-237 [V] (`riderStall`).
 
-Which trick the input selects: section 8.2 (DM-047).
+Which trick the input selects: section 8.2.
 
 | Id | Name (g_trickNames) | Kind | Motions (start, hold, end) |
 |---|---|---|---|
@@ -339,9 +338,9 @@ Which trick the input selects: section 8.2 (DM-047).
 | mod 36 | barspin seat grab | modifier | 181, 182, 183 |
 | mod 37 | busdriver | modifier | 184, 185, 186 |
 
-### 7.1 How the game shows trick names (DM-054)
+### 7.1 How the game shows trick names
 
-[V] (overlay.c, `tests/test_decomp_dm054.py`) The names in the table above are `g_trickNames`
+[V] (overlay.c, `tests/test_decomp_overlay.py`) The names in the table above are `g_trickNames`
 (0x00559390). The **TRICK LIST** screen prints them as they are (tiny font, coloured by kind) with the
 input underneath as button-font glyphs (texts 0x10BB + trick, 0x10E9 + modifier, e.g. "x C" = down +
 modifier button); a trick or modifier with flag 0x10 in `g_trickFlags` / `g_modFlags` (a rider's
@@ -364,11 +363,11 @@ can-can". The opposite / alley-oop / half-cab words only appear in the HUD (`ful
 modifier is shown in upper case in another palette, and the B-M-X target list (overlymp.c) uses the
 short form (`full` = 0).
 
-## 8. The rider state machine, trick selection, root motion and wheels (DM-047)
+## 8. The rider state machine, trick selection, root motion and wheels
 
-Source: `decomp/src/zaxis/Bmx/Src/com/action/rider.c` (34 functions, decompiled by DM-047), types in
+Source: `decomp/src/zaxis/Bmx/Src/com/action/rider.c` (34 functions, decompiled), types in
 `decomp/include/rider.h`; Python port of the selection `tools/dmbmx/formats/tricks.py`; checks
-`tests/test_decomp_dm047.py` (tables and immediates read back from the exe).
+`tests/test_decomp_rider.py` (tables and immediates read back from the exe).
 
 ### 8.1 Which motion plays in which state
 
@@ -398,7 +397,7 @@ the computed manual entry and the idle clip passed in a register):
 
 [V] Motions **1, 3, 6, 7, 9, 12, 16 and 238 are never requested**: rider.c and physics.c are the only
 users of `g_motionTable`, and only rider.c writes the motion slots. The crash state (6) plays no clip:
-the rag doll (`dyn.c`, DM-058; docs/re/physics.md 7) poses the rider.
+the rag doll (`dyn.c`, docs/re/physics.md 7) poses the rider.
 
 The procedures (state[0] / state[1]): riding = coast, pedal, skid, crouch, turnaround, (5 empty);
 air = idle, trick, modifier-only trick; grind; stall (incl. plants); manual; landing; crash = start,
@@ -468,7 +467,7 @@ is called again in the same frame. The physics contact state (`physics_00420c90`
   DMbike01 axle frames along the bike (+0.539 / -0.364 model units).
 - [V] Fit against the feet-on-pedals placement (all 1,246 on-pedal frames of the bank, DaveMirra1 on
   DMbike01): rider root - bike root = F(-b) / 100 + (0.007, -0.251, 0.044) leaves a median residual of
-  0.054. Scales 1/200 and 1/50 give 0.076 and 0.28, so DM-016's 1/200 guess is out. With the constant
+  0.054. Scales 1/200 and 1/50 give 0.076 and 0.28, so the first motion reader's 1/200 guess is out. With the constant
   calibrated per clip the median is 0.023. `dmbmx.convert.combo` now uses this for the frames where
   the feet leave the pedals (`fill="engine"`, export.md section 7).
 
@@ -483,11 +482,11 @@ everything else plays unmirrored. The other motion flags: 2 = restart (and clear
 
 ### 8.5 Wheels
 
-[V] The clips do not spin the wheels. Physics (`physics_0041FC40`, DM-048's module) keeps one record
+[V] The clips do not spin the wheels. Physics (`physics_0041FC40` in physics.c) keeps one record
 per wheel (front +0xC88, rear +0xD0C, stride 0x84): angle (s16 at +0x6A) += spin velocity (+0x6C)
 every frame. It writes the angles into the bike actor's BackWheel / FrontWheel channels (rear ->
 BackWheel, front -> FrontWheel, Euler x). The cheat "Exorcist" (cheat 3) copies the front wheel's angle
 to the rider's head. The spin velocity is zeroed while skidding (0x00426F67) and scaled by 0.99 in
 some contact states; [I] otherwise it follows the wheel speed (radius 24.645 engine units). The exact
 speed-to-spin factor is in physics.c (open question 6). The crank (Sprocket channel) is pure animation,
-so DM-018's crank x 2.75 stand-in stays a heuristic.
+so the combo exporter's crank x 2.75 stand-in stays a heuristic.

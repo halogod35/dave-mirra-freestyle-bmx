@@ -124,7 +124,7 @@ If the export fails, the message says what to fix (for example "3 vertices are n
    ```
    It ends with "OK: N files match" (N = the number of files in your manifest).
 
-The game doesn't check model files with a checksum (DM-030), so edited models load as long as they are valid.
+The game doesn't check model files with a checksum, so edited models load as long as they are valid.
 
 ## 6. Troubleshooting
 
@@ -154,7 +154,7 @@ The game doesn't check model files with a checksum (DM-030), so edited models lo
   JOINTS/WEIGHTS, indices per material slot) and every image from Blender. Frame/bone/mesh transforms
   are written only when they differ from the transform recorded at import (`dmbmx_rest`). It then calls
   `dmbmx.convert.gltf_import.import_glb`, so BinMesh, Bone and bounding-sphere regeneration, texture
-  re-encoding and all refusals are the DM-021 importer's (docs/tools/import.md).
+  re-encoding and all refusals are the glTF importer's (docs/tools/import.md).
 - **Exactness:**
   - Positions are float32 in Blender, so they are exact.
   - Blender stores custom normals as 16-bit, so the original normals are kept in the point attribute

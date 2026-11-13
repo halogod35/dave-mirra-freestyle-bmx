@@ -2,17 +2,17 @@
  * NgEngine/Zge/Pc/pcinput.c
  * Original: C:\NgEngine\Zge\Pc\pcinput.c
  * Evidence: [V] path string referenced by 3 function(s); the others [I] (the globals
- * 0x00674028-0x00674050, the enum callback passed by pcinputInit). DM-061 created 0x00493220
+ * 0x00674028-0x00674050, the enum callback passed by pcinputInit). The ZGE object pass created 0x00493220
  * (the DirectInput enum callback) and 0x00493240 (pcinputShutdown).
  * 11 functions, VA 0x00493160-0x00493cde.
- * DM-061 (draft): 0x00493160-0x004937EF. DM-064 moved DM-059's drafts 0x004937F0-0x00493CDE in from
+ * Draft: 0x00493160-0x004937EF. The clean-up moved the ZglRw pass's drafts 0x004937F0-0x00493CDE in from
  * gap_pcinput__zrwCol.c (device release, acquire / unacquire on window activation, the per-frame
  * poll, a stub and the key-layout setter) [I]: they use the pcinput globals 0x00674028-0x00674153.
  * Non-matching C (AD-8). Types: zpc.h, contrler.h. Description: docs/re/input-camera.md 2.4.
  *
  * DirectInput 7: one shared keyboard device (non-exclusive, foreground) and, per pad, the first
- * attached joystick (exclusive, foreground; axes -127..127, dead zone 10 %). DM-059 renamed the poll
- * 0x00493910 (DM-057: zglRunCallbacks) to pcinputPollDevices: it polls the DirectInput devices.
+ * attached joystick (exclusive, foreground; axes -127..127, dead zone 10 %). The ZglRw pass renamed the poll
+ * 0x00493910 (zglRunCallbacks) to pcinputPollDevices: it polls the DirectInput devices.
  */
 #include "decomp.h"
 #include "zobj.h"
@@ -255,7 +255,7 @@ DIDevice7 *pcinputCreateDevice(HWND hwnd, PcGuid guid, const void *format, uint3
 /* VA 0x004937f0, 59 bytes, [I] row, status draft */
 int pcinputReleaseDevice(struct ZInputDevice *dev)
 {
-    /* zinputClose; DM-059 */
+    /* zinputClose */
     PcInputDevice *pd = (PcInputDevice *)dev->platform;
     DIDevice7 *joy = (DIDevice7 *)pd->joystick;
 
@@ -271,7 +271,7 @@ int pcinputReleaseDevice(struct ZInputDevice *dev)
 /* VA 0x00493830, 96 bytes, [I] row, status draft */
 int pcinputAcquireAll(void)
 {
-    /* MainWndProc: window activated; DM-059 */
+    /* MainWndProc: window activated */
     ZmemFreeNode *node;
 
     if (!g_pcinputInitialised)
@@ -290,7 +290,7 @@ int pcinputAcquireAll(void)
 /* VA 0x00493890, 120 bytes, [I] row, status draft */
 int pcinputUnacquireAll(void)
 {
-    /* MainWndProc: window deactivated; DM-059 */
+    /* MainWndProc: window deactivated */
     ZmemFreeNode *node;
 
     if (!g_pcinputInitialised)
@@ -314,7 +314,7 @@ int pcinputUnacquireAll(void)
 /* VA 0x00493910, 924 bytes, [I] row, status draft */
 int pcinputPollDevices(void)
 {
-    /* (NgApp: once per frame; DM-059) For every device: clear the state, read the joystick (axes ->
+    /* (NgApp: once per frame; the ZglRw pass) For every device: clear the state, read the joystick (axes ->
      * channels 4..7 scaled by 1/127, buttons through the joystick map's (button, channel) pairs), the
      * keyboard (DIK codes through the keymap, read once per frame for all pads), then build the PAD_*
      * button word from the channels: held, changed, released. */
@@ -391,7 +391,7 @@ int pcinputPollDevices(void)
 /* VA 0x00493cb0, 3 bytes, [I] row, status draft */
 int pcinputStub(struct ZInputDevice *device)
 {
-    /* zinput: a stub that returns 0; DM-059 */
+    /* zinput: a stub that returns 0 */
     (void)device;
     return 0;
 }
@@ -399,7 +399,6 @@ int pcinputStub(struct ZInputDevice *device)
 /* VA 0x00493cc0, 31 bytes, [I] row, status draft */
 int zinputSetKeyLayout(struct ZInputDevice *device, const void *layout)
 {
-    /* DM-059 */
     if (device->platform == 0 || device == 0)      /* sic: the record is read before the NULL test */
         return 0;
     ((PcInputDevice *)device->platform)->keymap = (const uint8_t *)layout;

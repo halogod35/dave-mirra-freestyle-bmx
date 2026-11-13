@@ -5,8 +5,8 @@
  *           contrlerTestAction (0x2E2-0x2E4), contrlerTestButtons (0x2F8), contrlerGetStick (0x30B)
  *           and contrlerGetPad (0x346); the other five [I] (between them in link order, and they
  *           use the same pad array 0x0056B628).
- * 11 functions, 1702 bytes, VA 0x00408030-0x004088c5 (DM-064 created contrlerClearAll 0x00408390).
- * DM-051 (draft). Non-matching C (AD-8). Types: contrler.h. Description: docs/re/input-camera.md.
+ * 11 functions, 1702 bytes, VA 0x00408030-0x004088c5 (the clean-up created contrlerClearAll 0x00408390).
+ * Draft. Non-matching C (AD-8). Types: contrler.h. Description: docs/re/input-camera.md.
  *
  * Two pads (g_pads), one per player profile. Each frame contrlerUpdate reads the engine input
  * device of each pad, remaps the seven configurable buttons through the profile's control[] masks
@@ -155,7 +155,7 @@ uint32_t contrlerUpdate(void)
 /* VA 0x00408390, 55 bytes, [I] row, status draft */
 void contrlerClearAll(void)
 {
-    /* (DM-064 created: no caller, thunk 0x00401889) Clears both pads' input (held, changed, sticks,
+    /* (new function: no caller, thunk 0x00401889) Clears both pads' input (held, changed, sticks,
      * previous sticks) and the menu repeat timer. */
     BmxPad *pad;
     int i;

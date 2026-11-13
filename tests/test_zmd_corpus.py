@@ -1,4 +1,4 @@
-"""ZMD corpus tests (DM-011): byte-identical round-trip through the object model,
+"""ZMD corpus tests: byte-identical round-trip through the object model,
 per-chunk re-encode checks, geometry/skeleton/texture invariants. Skips without the install."""
 import struct
 

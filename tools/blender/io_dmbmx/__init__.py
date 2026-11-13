@@ -1,4 +1,4 @@
-"""Dave Mirra Freestyle BMX (.zmd) import/export for Blender 5.3 (DM-022).
+"""Dave Mirra Freestyle BMX (.zmd) import/export for Blender 5.3.
 
 File > Import > Dave Mirra ZMD (.zmd), File > Export > Dave Mirra ZMD (.zmd), and a "Dave Mirra" tab
 in the 3D View sidebar (N) with Export / Replace Texture buttons. User guide: docs/tools/blender-addon.md.

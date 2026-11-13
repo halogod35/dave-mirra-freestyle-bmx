@@ -1,4 +1,4 @@
-"""dmbmx.formats.replay on synthetic records (no game data; DM-052)."""
+"""dmbmx.formats.replay on synthetic records (no game data)."""
 import struct
 
 import pytest

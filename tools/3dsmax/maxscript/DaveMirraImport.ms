@@ -3,7 +3,7 @@
 --   Import ZMD...            riders, bikes, shadows, sfx (.zmd); "Motion ids" keys clips from motion.zal
 --   Import Level (.ZSD)...   a level folder: world, props, tags (hidden), scene points, panorama
 --   "Exact normals" puts the game's vertex normals on the meshes (Edit_Normals modifier; slower)
--- Spec: ../SPEC.md. The parsing functions below mirror ../parser/dmparse.py line by line; each
+-- Spec: ../../../docs/formats/SPEC.md. The parsing functions below mirror ../parser/dmparse.py line by line; each
 -- one names its Python counterpart in a "mirrors dmparse.<function>" comment. Model data stays in game space; one root
 -- Dummy carries the axis change (game Y-up -> Max Z-up) and the rider upright correction (SPEC 2.5).
 -- Textures are written to a folder you choose, else %TEMP%\DaveMirraTextures\<model>; never into the game.
@@ -520,7 +520,7 @@ fn DM_rootMatrix z lod upright =
     toMax
 )
 
--- ============================================================================ bones aimed at their children (DM-065)
+-- ============================================================================ bones aimed at their children
 
 global DM_BONE_MIN = 0.02        -- shortest bone, game units (2 cm)
 global DM_BONE_DEFAULT = 0.05    -- a lone bone, and the "game frame orientation" mode
@@ -1938,7 +1938,7 @@ fn DM_matrixToRw m9 =
 )
 
 -- mirrors dmparse.prop_matrix_to_rw: a prop's stored rows are its RW rotation rows unchanged (the game
--- renders props through its mirrored quaternion converter, SPEC 2.6, DM-065)
+-- renders props through its mirrored quaternion converter, SPEC 2.6)
 fn DM_propMatrixToRw m9 = (#([m9[1], m9[2], m9[3]], [m9[4], m9[5], m9[6]], [m9[7], m9[8], m9[9]]))
 
 -- ---------------------------------------------------------------------------- level scene

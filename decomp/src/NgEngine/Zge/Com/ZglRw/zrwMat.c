@@ -5,8 +5,8 @@
  *           0x184, AddTexture 0x1A5, ColourPass 0x1C6, GetTexture 0x27B, GetRaster 0x2DE,
  *           CurrentMadfFlag0 0x315); "RwMat:" / "zrwMat..." / "ZGLMAT:" messages; the material
  *           driver table 0x00561018 (15 slots, all in this file).
- * 25 functions, VA 0x004892B0-0x00489CAC (DM-059 created 8).
- * DM-059 (draft). Non-matching C (AD-8). Types: zglrw.h. Description: docs/re/zrw.md 4,
+ * 25 functions, VA 0x004892B0-0x00489CAC (8 new functions).
+ * Draft. Non-matching C (AD-8). Types: zglrw.h. Description: docs/re/zrw.md 4,
  * docs/formats/TEXTURE.md 2.
  *
  * ZGL materials: up to six texture passes plus the MADF words of a MATI chunk. The IFF handlers
@@ -98,7 +98,7 @@ int zrwMat_Init(void)
     return 1;
 }
 
-/* VA 0x004894d0, 39 bytes, [I] DM-059 created, status draft (slot 1) */
+/* VA 0x004894d0, 39 bytes, [I] new function, status draft (slot 1) */
 int zrwMatShutdown(void)
 {
     if (g_zrwMat.initialized) {
@@ -117,7 +117,7 @@ static ZglMaterial *zrwMatNewObject(void)
     return mat;
 }
 
-/* VA 0x00489500, 47 bytes, [I] DM-059 created, status draft (slot 2) */
+/* VA 0x00489500, 47 bytes, [I] new function, status draft (slot 2) */
 ZglMaterial *zrwMatCreate(void)
 {
     return zrwMatNewObject();
@@ -151,7 +151,7 @@ void zrwMatSetTexture(ZglMaterial *mat, ZglTexture *tex, uint32_t pass)
         RpMaterialSetTexture(mat->rpMaterial, zrwTxrGetRwTexture(tex));
 }
 
-/* VA 0x00489610, 103 bytes, [I] DM-059 created, status draft (slot 4) */
+/* VA 0x00489610, 103 bytes, [I] new function, status draft (slot 4) */
 void zrwMatAddTexture(ZglMaterial *mat, ZglTexture *tex)
 {
     if (mat->numPasses > 5) {
@@ -165,7 +165,7 @@ void zrwMatAddTexture(ZglMaterial *mat, ZglTexture *tex)
         RpMaterialSetTexture(mat->rpMaterial, zrwTxrGetRwTexture(tex));
 }
 
-/* VA 0x00489680, 51 bytes, [I] DM-059 created, status draft (slot 6; the pass is ignored) */
+/* VA 0x00489680, 51 bytes, [I] new function, status draft (slot 6; the pass is ignored) */
 void zrwMatSetColour(ZglMaterial *mat, int pass, const RwRGBA *colour)
 {
     (void)pass;
@@ -219,7 +219,7 @@ ZglMaterial *zrwMatCreateFromImage(void *buf, int len, const char *name, int typ
     return mat;
 }
 
-/* VA 0x004897c0, 228 bytes, [I] DM-059 created, status draft (no direct caller found) */
+/* VA 0x004897c0, 228 bytes, [I] new function, status draft (no direct caller found) */
 ZglMaterial *zrwMatCreateProcedural(int width, int height, int depth, const char *name)
 {
     ZglTexture *tex;
@@ -236,7 +236,7 @@ ZglMaterial *zrwMatCreateProcedural(int width, int height, int depth, const char
     return mat;
 }
 
-/* VA 0x004898b0, 230 bytes, [I] DM-059 created, status draft (no direct caller found) */
+/* VA 0x004898b0, 230 bytes, [I] new function, status draft (no direct caller found) */
 ZglMaterial *zrwMatCreatePaletteFromMemory(const uint8_t *pixels, int width, int height,
                                            const RwRGBA *palette, const char *name)
 {
@@ -341,7 +341,7 @@ void zrwMatSetRpMaterial(ZglMaterial *mat, void *rpMaterial)
     mat->rpMaterial = rpMaterial;
 }
 
-/* VA 0x00489b90, 8 bytes, [I] DM-059 created, status draft (no caller found) */
+/* VA 0x00489b90, 8 bytes, [I] new function, status draft (no caller found) */
 void *zrwMatGetRpMaterial(ZglMaterial *mat)
 {
     return mat->rpMaterial;
@@ -364,7 +364,7 @@ ZglMaterial *zrwMat_CreateFromTexture(ZglTexture *tex)
     return zrwMatWrapTexture(tex);
 }
 
-/* VA 0x00489c90, 27 bytes, [I] DM-059 created, status draft (slot 14) */
+/* VA 0x00489c90, 27 bytes, [I] new function, status draft (slot 14) */
 void zrwMatPrintStats(void)
 {
     g_pfnDebugPrintf("ZGLMAT: Objects in use:%d\n", zmemFreeListGetUsedCount(g_zrwMat.pool));

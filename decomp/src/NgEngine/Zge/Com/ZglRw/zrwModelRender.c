@@ -3,12 +3,12 @@
  * Original: C:\NgEngine\Zge\Com\ZglRw\zrwModelRender.c
  * Evidence: [V] path string 0x00561824 (asserts of RenderShadowPass 0x312, Init 0x32F, Render 0x384,
  *           SetRenderMode 0x3C7); model driver slots 22-23; [I] the rest by link order, callers and
- *           the globals 0x00673E80-0x00673F6B. DM-059 moved here from ztaginf.c's hole the RW render
+ *           the globals 0x00673E80-0x00673F6B. The ZglRw pass moved here from ztaginf.c's hole the RW render
  *           callbacks 0x0048F3C0-0x0048FB50 (no ztaginf data; called from this file and zrwModel)
  *           and from gap_zrwModelRender__zobjLight the atomic render-callback helpers 0x0048FEC0-
  *           0x0048FF30.
- * 19 functions, VA 0x0048F3C0-0x0048FF4F (DM-059 created 10).
- * DM-059 (draft). Non-matching C (AD-8). Types: zglrw.h. Description: docs/re/zrw.md 2.4.
+ * 19 functions, VA 0x0048F3C0-0x0048FF4F (10 new functions).
+ * Draft. Non-matching C (AD-8). Types: zglrw.h. Description: docs/re/zrw.md 2.4.
  *
  * Model rendering = RpClumpRender of the clump (the world renders the clumps it holds). Extra atomic
  * render callbacks (RpAtomicSetRenderCallBack is inlined: atomic +0x4C):
@@ -55,19 +55,19 @@ static uint16_t      s_flatIndices[0x60];   /* 0x00673EA8 0,1,1,2,2,0,3,4,... li
 static int32_t       s_flatIndicesDirty = 1; /* 0x00561820 */
 static const RwRGBA  s_white[2] = { { 0xFF, 0xFF, 0xFF, 0xFF }, { 0xFF, 0xFF, 0xFF, 0xFF } }; /* 0x00561818 */
 
-/* VA 0x0048f3c0, 5 bytes, [I] DM-059 created, status draft (render mode 1) */
+/* VA 0x0048f3c0, 5 bytes, [I] new function, status draft (render mode 1) */
 void *zrwModelRenderNop(void *atomic)
 {
     return atomic;
 }
 
-/* VA 0x0048f3d0, 16 bytes, [I] DM-059 created, status draft (render mode 2) */
+/* VA 0x0048f3d0, 16 bytes, [I] new function, status draft (render mode 2) */
 void *zrwModelRenderFlatCB(void *atomic)
 {
     return zrwModelRenderImmediateCB(atomic, NULL);
 }
 
-/* VA 0x0048f3e0, 333 bytes, [I] DM-059 created, status draft (NgApp 0x0045AC40 installs it)
+/* VA 0x0048f3e0, 333 bytes, [I] new function, status draft (NgApp 0x0045AC40 installs it)
  * Billboard-style: the atomic's frame is rotated about y to face the camera's yaw, drawn with the
  * model colour and render state 0x2222 (no z-write [I]), then the colour is reset to white. */
 void *zrwModelRenderFacingCB(void *atomic)
@@ -110,7 +110,7 @@ void *zrwModelRenderColouredCB(void *atomic)
     return atomic;
 }
 
-/* VA 0x0048f570, 420 bytes, [I] DM-059 created, status draft
+/* VA 0x0048f570, 420 bytes, [I] new function, status draft
  * Untextured immediate-mode version: every triangle copied to an Im3D batch (positions only, up
  * to 6 triangles) and drawn as an indexed list with render state 0x1220. */
 void *zrwModelRenderImmediateCB(void *atomic, void *unused)
@@ -157,7 +157,7 @@ void *zrwModelRenderImmediateCB(void *atomic, void *unused)
     return atomic;
 }
 
-/* VA 0x0048f720, 869 bytes, [I] DM-059 created, status draft (an 0x2414-byte stack frame)
+/* VA 0x0048f720, 869 bytes, [I] new function, status draft (an 0x2414-byte stack frame)
  * The flattened copy of an MDEF-0x10 model: textured Im3D triangles of the geometry with the
  * frame's LTM moved to the camera position and 2 units down, far clip 300, z test/write off
  * (render states 4/6 [I]), one indexed batch per material run. */
@@ -238,7 +238,7 @@ void *zrwModelRenderProjectedCB(void *atomic)
     return atomic;
 }
 
-/* VA 0x0048fa90, 186 bytes, [I] DM-059 created, status draft
+/* VA 0x0048fa90, 186 bytes, [I] new function, status draft
  * RwFrameForAllChildren callback: a white-to-red line from the parent's position to this frame. */
 void *zrwModelDrawBoneCB(void *frame, RwV3d *parentPos)
 {
@@ -258,14 +258,14 @@ void *zrwModelDrawBoneCB(void *frame, RwV3d *parentPos)
     return frame;
 }
 
-/* VA 0x0048fb50, 29 bytes, [I] DM-059 created, status draft (no caller found) */
+/* VA 0x0048fb50, 29 bytes, [I] new function, status draft (no caller found) */
 int zrwModelRenderFlat(ZglModel *model)
 {
     RpClumpForAllAtomics(model->clump, (void *)zrwModelRenderImmediateCB, NULL);
     return 1;
 }
 
-/* VA 0x0048fb70, 75 bytes, [I] DM-059 created, status draft (model slot 23: debug skeleton) */
+/* VA 0x0048fb70, 75 bytes, [I] new function, status draft (model slot 23: debug skeleton) */
 void zrwModelRenderSkeleton(ZglModel *model)
 {
     void *root;
@@ -345,7 +345,7 @@ void zrwModelRender(ZglModel *model)
     RpClumpRender(clump);
 }
 
-/* VA 0x0048fe30, 98 bytes, [I] DM-059 created, status draft (no caller found)
+/* VA 0x0048fe30, 98 bytes, [I] new function, status draft (no caller found)
  * Global render mode for models loaded afterwards: 0 normal, 1 invisible, 2 flat. Returns the old. */
 int32_t zrwModelSetRenderMode(int32_t mode)
 {
@@ -362,7 +362,7 @@ int32_t zrwModelSetRenderMode(int32_t mode)
     return old;
 }
 
-/* VA 0x0048fea0, 20 bytes, [I] DM-059 created, status draft (RpAtomicSetRenderCallBack, inlined) */
+/* VA 0x0048fea0, 20 bytes, [I] new function, status draft (RpAtomicSetRenderCallBack, inlined) */
 void *zrwModelSetAtomicRenderCB(void *atomic, void *fn)
 {
     *(void **)((uint8_t *)atomic + 0x4C) = fn;
@@ -371,7 +371,7 @@ void *zrwModelSetAtomicRenderCB(void *atomic, void *fn)
 }
 
 /* VA 0x0048fec0, 31 bytes, [I] row, status draft
- * DM-057's name kept: it sets the render callback of every atomic of the model (it does not walk
+ * The NgIF pass's name kept: it sets the render callback of every atomic of the model (it does not walk
  * the materials). */
 void zrwModelForEachMaterial(void *model, void *fn)
 {

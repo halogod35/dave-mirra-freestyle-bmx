@@ -1,8 +1,8 @@
 # HUD and in-game overlays (overlay.c, overlymp.c, bmx/zoverii.c)
 
-DM-054. C: `decomp/src/zaxis/Bmx/Src/com/action/overlay.c` (122 functions), `overlymp.c` (11),
+C: `decomp/src/zaxis/Bmx/Src/com/action/overlay.c` (122 functions), `overlymp.c` (11),
 `decomp/src/zaxis/Bmx/Src/com/zge/bmx/zoverii.c` (18); types `decomp/include/overlay.h`, `zoverii.h`;
-checks `tests/test_decomp_dm054.py`. [V] = checked against the exe or the data by that test, [I] = inferred.
+checks `tests/test_decomp_overlay.py`. [V] = checked against the exe or the data by that test, [I] = inferred.
 
 85 of the overlay.c functions and 5 of overlymp.c were not functions in the Ghidra project: they are
 reached only through the two function tables below (and two ILT thunks). `decomp/symbols/symbols.csv` creates them.
@@ -13,7 +13,7 @@ reached only through the two function tables below (and two ILT thunks). `decomp
 |---|---|---|
 | `zoverii.c` | PSX-style primitive pools [V] | 4 pools (HUD shapes 16, HUD glyphs 128, menu shapes 28, menu glyphs 400), each double buffered, 0xA0 bytes per slot (`ZoverPrim`: a POLY_F4 / POLY_G4 / FT4-with-16-bit-UV body, `+0x9C` type, `+0x9D` flags, `+0x9E` next glyph). Handle = index \| class << 12 \| layer << 14. `zoveriiFlush` (once per frame, from `overlayDraw`) links the active layer's pools into the NgIFpsx ordering table, swaps buffers and copies every changed ("dirty") slot into the other buffer. Text = one textured quad per glyph, chained. Immediate draws (`zoveriiDrawRect/DrawText`) go straight to NgIFpsx. |
 | colours | `0x0BRRGGBB` [V] | B = semi-transparency mode 1..7 (0 opaque); the text call's last argument is a palette (CLUT) offset: the HUD uses palettes 2..6 of the small font for coloured text (trick names 5, hints 5, goals 6, messages 4). |
-| fonts | miscdata.zal 0x7531 small (82 chars, h 32), 0x7532 tiny (144, h 24, with accents), 0x7534 button glyphs (15: `wedcxzaqXT1SC2 `), 0x7535 icons (11: `LOCBWMTcpPR`) [V] | File: u8 count, u8 height at +4, then 13-byte records from +0xC (u8 char, u16 u at +1, v at +5, w at +9); the images are NgIFzres resources 0x30/0x32/0x33/0x34 = Material.ZAL 9/11/12/13 (DM-066: `tools/dmbmx/formats/hudfont.py`, `dmbmx gui hud-export/hud-import`; ZAL.md 3.1). |
+| fonts | miscdata.zal 0x7531 small (82 chars, h 32), 0x7532 tiny (144, h 24, with accents), 0x7534 button glyphs (15: `wedcxzaqXT1SC2 `), 0x7535 icons (11: `LOCBWMTcpPR`) [V] | File: u8 count, u8 height at +4, then 13-byte records from +0xC (u8 char, u16 u at +1, v at +5, w at +9); the images are NgIFzres resources 0x30/0x32/0x33/0x34 = Material.ZAL 9/11/12/13 (`tools/dmbmx/formats/hudfont.py`, `dmbmx gui hud-export/hud-import`; ZAL.md 3.1). |
 | texts | STRS 0x7D01 + language (ids 0x1000..), plus 0x7D05 + language (0x2000.., single player) or 0x7D09 + language (0x3000.., multiplayer) [V] | Loaded by `overlayLoadStrings`; a 0x2xxx id resolves only in single player, 0x3xxx only with two players. |
 
 ## 2. HUD items (`g_overlayItems[17]`, 0x00556F00: flags, init, draw, show, set, get) [V table, I names]
@@ -92,4 +92,4 @@ frames on the RUN FINISHED screen that follows.
   calls it [I].
 - `zoveriiShow` writes a glyph's semi-transparency byte to +0x2C (v3) instead of +0x38 (a bug [V]).
 - The button font has no glyphs for "3" / "4" (L2 / R2); no hint uses them [V].
-- 0x0040BFD0 (`gameSetWord`, "horse word too long") is a game.c function Ghidra had missed; DM-058 created it.
+- 0x0040BFD0 (`gameSetWord`, "horse word too long") is a game.c function Ghidra had missed; the dyn.c pass created it.

@@ -7,9 +7,9 @@
  *           (0x004147E0-0x0041FA0C, between overlymp.c and physics.c) and by the item / screen tables
  *           0x00556F00 / 0x00557098 that point at them.
  * 122 functions, 33470 bytes, VA 0x004147e0-0x0041fa0c.
- * DM-054 (draft). Non-matching C (AD-8). Types: overlay.h, zoverii.h. Notes: docs/re/hud.md.
+ * Draft. Non-matching C (AD-8). Types: overlay.h, zoverii.h. Notes: docs/re/hud.md.
  *
- * DM-054 created 85 functions Ghidra had missed in this range (decomp/symbols/symbols.csv): they are reached only
+ * The overlay pass created 85 functions Ghidra had missed in this range (decomp/symbols/symbols.csv): they are reached only
  * through the two function tables (HUD items, overlay screens) or through their ILT thunks.
  *
  * Coordinates are in the 640 x 480 PSX-style overlay space (x centre 0x13F/0x140).
@@ -1444,7 +1444,7 @@ static void overlayResultsPage(uint32_t page)
 static void overlayAddReward(int player, const GameReward *rw, int *idx, int *y, int single)
 {
     /* One reward line: an icon-font letter (with a shadow copy) and two lines of tiny text.
-     * The text says what the reward is (answers DM-046's open question on types 5-7):
+     * The text says what the reward is (answers the game.c pass's open question on types 5-7):
      *   1 bike 0x21BB, 2 outfit 0x21C5 (0x21CF for riders >= 10), 3 secret rider 0x21BD,
      *   4 level 0x21A1, 5 sponsor / magazine / Slim Jim / Amish texts 0x21D5 + 2 g_rewardSponsor
      *   [rider][param], 6 a TIP! 0x2243 (param 12, 13: the Slim Jim sweepstakes, the DMFB2 code),
@@ -3496,7 +3496,7 @@ void overlayFormatDistance(char *out, float cm)
 /* VA 0x0041eab0, 2656 bytes, [I] callers, status draft */
 void overlayTrickName(char *out, const BmxTrickRec *t, int full)
 {
-    /* The name of one trick of a set, as the HUD and the B-M-X target list show it (DM-054; ANIM.md
+    /* The name of one trick of a set, as the HUD and the B-M-X target list show it (ANIM.md
      * 7.1). Words joined with single spaces:
      *   [half-cab (full, flag 4; + spin if > 180) | spin "180".."extreme"]
      *   [opposite (full, flag 1)] [alley-oop (full, flag 2)]

@@ -1,4 +1,4 @@
-"""ZAL <-> directory (DM-023): `extract_dir` unpacks an archive, `pack_dir` rebuilds it.
+"""ZAL <-> directory: `extract_dir` unpacks an archive, `pack_dir` rebuilds it.
 
 Directory layout written by ``extract_dir``::
 

@@ -1,4 +1,4 @@
-"""zprim menu art: pictures, sprites and fonts in the GUI groups (Intwrap.zal). Spec: docs/formats/ZAL.md 3.3 (DM-066).
+"""zprim menu art: pictures, sprites and fonts in the GUI groups (Intwrap.zal). Spec: docs/formats/ZAL.md 3.3.
 
 The 35 GUI groups (``dmbmx.formats.scrn``) hold three kinds of 2D art besides the SCRN screens; the
 game reads them in place (``zprim.c``: zprimLoadPicture 0x00479010, zprimLoadSprite 0x00479660,

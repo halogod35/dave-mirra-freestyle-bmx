@@ -1,5 +1,5 @@
 /*
- * ziff.h - NgEngine IFF chunk reader (NgEngine/Zge/ziff.c) (DM-042).
+ * ziff.h - NgEngine IFF chunk reader (NgEngine/Zge/ziff.c).
  *
  * Chunks are { u32 id; u32 size; u8 data[size] } (LE), nested. A ZiffFile keeps a stack of up to
  * 8 open chunks (ziffChunkOpen 0x0049B130 asserts "Nested too deep" beyond that). Every open chunk
@@ -60,20 +60,20 @@ typedef char ziff_h_size_check[(sizeof(ZiffChunk) == 0x20 && sizeof(ZiffFile) ==
                                 sizeof(ZiffHandler) == 0x10 && sizeof(ZiffGlobals) == 0x1C) ? 1 : -1];
 
 void        ziffInit(void);
-int         ziffShutdown(void);                    /* 0x0049A740 (DM-064) */
+int         ziffShutdown(void);                    /* 0x0049A740 */
 ZiffFile   *ziffOpen(zfileHandle *file, uint32_t id, uint32_t size);
 void        ziffClose(ZiffFile *iff);
 int         ziffParse(ZiffFile *iff, void *user);
-void        ziffPrintContents(ZiffFile *iff);      /* 0x0049AA00 (DM-064) */
+void        ziffPrintContents(ZiffFile *iff);      /* 0x0049AA00 */
 ZiffHandler *ziffRegisterHandler(uint32_t id, ZiffHandlerFn fn);
-uint32_t    ziffChunkGetId(ZiffFile *iff);         /* 0x0049ABB0 (DM-064) */
+uint32_t    ziffChunkGetId(ZiffFile *iff);         /* 0x0049ABB0 */
 uint32_t    ziffChunkGetSize(ZiffFile *iff);
-int32_t     ziffChunkGetOffset(ZiffFile *iff);     /* 0x0049ABD0 (DM-064) */
+int32_t     ziffChunkGetOffset(ZiffFile *iff);     /* 0x0049ABD0 */
 uint32_t    ziffChunkRead(ZiffFile *iff, void *dest);
 uint32_t    ziffChunkReadData(ZiffFile *iff, void *dest, uint32_t n);
 void        ziffChunkReadLong(ZiffFile *iff, int32_t *dest);
 void        ziffChunkReadFloat(ZiffFile *iff, float *dest);
-int32_t     ziffChunkNext(ZiffFile *iff);          /* 0x0049AD30 (DM-064) */
+int32_t     ziffChunkNext(ZiffFile *iff);          /* 0x0049AD30 */
 int         ziffChunkFindFirst(ZiffFile *iff, uint32_t id);
 int         ziffChunkFindNext(ZiffFile *iff, uint32_t id);
 void        ziffReadChunkHeader(ZiffFile *iff);

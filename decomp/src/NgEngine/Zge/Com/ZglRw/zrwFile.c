@@ -3,7 +3,7 @@
  * Original: C:\NgEngine\Zge\Com\ZglRw\zrwFile.c
  * Evidence: [V] path string 0x00563058 referenced by every function here.
  * 17 functions, VA 0x0049e1f0-0x0049ea91 (+ the device table zrwFileDevice 0x00562FF8).
- * Decompiled by DM-041 (non-matching C, AD-8).
+ * Decompiled (non-matching C, AD-8).
  *
  * The "rw00" device: ordinary files through RenderWare's file interface (RwOsGetFileInterface),
  * so the engine and RenderWare share one set of stdio functions. File names are used as given

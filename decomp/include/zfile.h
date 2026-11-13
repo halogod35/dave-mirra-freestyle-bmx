@@ -1,6 +1,6 @@
 /*
  * zfile.h - NgEngine file system: devices, handles, callbacks (NgEngine/Zge/zfile.c).
- * DM-040 (first layout), DM-041 (slot names, callbacks, API).
+ * Layout, slot names, callbacks and API.
  *
  * The file system is a thin layer over "devices". A path may start with a 4-character device
  * name and a colon ("rw00:assets\x.zal", "rd00:<addr hex>:<size hex>"); without a prefix the

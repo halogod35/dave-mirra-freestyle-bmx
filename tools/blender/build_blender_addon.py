@@ -1,4 +1,4 @@
-"""Build the Blender add-on zip (DM-022): out/io_dmbmx.zip
+"""Build the Blender add-on zip: out/io_dmbmx.zip
 
 Usage (repo root or worktree):  tools/testing/py.sh tools/blender/build_blender_addon.py [--out out/io_dmbmx.zip]
 

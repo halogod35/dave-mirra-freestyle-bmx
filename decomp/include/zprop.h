@@ -1,6 +1,6 @@
 /*
  * zprop.h - NgEngine/Zge/ZgeMods/zprop.c: prop definitions (PropDef._sd) and placed props
- * (Prop._sd) (DM-043). File formats: docs/formats/LEVEL.md section 5.
+ * (Prop._sd). File formats: docs/formats/LEVEL.md section 5.
  *
  * Both lists are intrusive doubly linked lists (zList, zlist.h; appended by zListAddTail 0x0048C150). The
  * game code gets &node->info (zpropFindDef returns ZpropDefInfo *, NgIFzbsp walks

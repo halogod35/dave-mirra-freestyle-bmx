@@ -2,10 +2,10 @@
  * NgEngine/Zge/Pc/pcProfile.c
  * Original: C:\NgEngine\Zge\Pc\pcProfile.c
  * Evidence: [V] path string referenced by pcProfileInit; the others [I]: they use the counter
- * frequency 0x006764D8 or QueryPerformanceCounter (zprofile.c's callers). DM-061 created
+ * frequency 0x006764D8 or QueryPerformanceCounter (zprofile.c's callers). The ZGE object pass created
  * pcProfileShutdown / Start and moved TicksToUnits / Elapsed in from the pcProfile/end gap.
  * 5 functions, VA 0x004a45e0-0x004a46bb.
- * DM-061 (draft). Non-matching C (AD-8). Description: docs/re/zge.md 7.
+ * Draft. Non-matching C (AD-8). Description: docs/re/zge.md 7.
  */
 #include "decomp.h"
 #include "ztools.h"

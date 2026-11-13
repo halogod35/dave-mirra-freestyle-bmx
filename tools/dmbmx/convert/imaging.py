@@ -6,7 +6,7 @@ glTF only allows PNG/JPEG images, but ZMD ``TBMP`` textures are Windows ``.bmp``
 * :func:`bmp_to_png` keeps palettised images palettised (same indices, same bit depth),
   and writes 24/32-bit images as RGB/RGBA. Rows are stored with filter 0 (no prediction).
 * :func:`png_decode` decodes any non-interlaced PNG (all 5 filter types, bit depths 1-16,
-  all colour types). Enough for re-importing edited textures (DM-021).
+  all colour types). Enough for re-importing edited textures.
 * :func:`png_to_bmp` rebuilds a BMP from a PNG plus the original BMP header bytes
   (and any trailing bytes), so an unedited texture round-trips byte-for-byte.
 
@@ -318,7 +318,7 @@ def png_to_bmp(png: bytes, header: bytes, tail: bytes = b"") -> bytes:
     return header + pix + tail
 
 
-# ------------------------------------------------------------------------------- editing helpers (DM-021)
+# ------------------------------------------------------------------------------- editing helpers
 
 def png_to_rgba_rows(img: dict) -> list:
     """Rows of 8-bit RGBA bytes from a :func:`png_decode` result (any colour type / bit depth)."""

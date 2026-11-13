@@ -6,9 +6,9 @@
  *           every function works on g_bmxprops (0x00694460) / g_bmxpropTable (0x00557D28), and they
  *           are contiguous between physics.c and replay.c.
  * 18 functions, 5854 bytes, VA 0x0042de70-0x0042fca1.
- * DM-052 (draft). Non-matching C (AD-8). Types: bmxprop.h. Description: docs/re/props-replay-fx.md.
+ * Draft. Non-matching C (AD-8). Types: bmxprop.h. Description: docs/re/props-replay-fx.md.
  *
- * DM-052 created bmxpropDraw 0x0042EB50 (a "return 0" draw callback that bmxpropInit registers;
+ * The prop/replay/fx pass created bmxpropDraw 0x0042EB50 (a "return 0" draw callback that bmxpropInit registers;
  * Ghidra had not made it a function) with a decomp/symbols/symbols.csv row.
  *
  * Per level, up to 16 table slots (g_bmxpropTable[level][16]) name props to drive: movers (doors,
@@ -54,7 +54,7 @@ extern void (*g_zrwModelSetFlags)(void *model, uint32_t set, uint32_t clear);   
 /* ------------------------------------------------------------------ globals (this file) */
 BmxPropState g_bmxpropsStart;           /* 0x0056C4F8 state after bmxpropInit (bmxpropReset) */
 BmxPropState g_bmxprops;                /* 0x00694460 */
-/* g_bmxpropTable 0x00557D28: [14 levels][16] BmxPropDef, read back by tests/test_decomp_dm052.py and
+/* g_bmxpropTable 0x00557D28: [14 levels][16] BmxPropDef, read back by tests/test_decomp_prop_replay_fx.py and
  * listed in docs/re/props-replay-fx.md; e.g. Greenville Dirt: 12 movers (traffic 20-25 runs from
  * the start), Woodward Dirt: gates 20/21 open the fence pairs 1090/1080. */
 extern const BmxPropDef g_bmxpropTable[BMXPROP_LEVELS][BMXPROP_SLOTS];
@@ -98,7 +98,7 @@ static void propRiderUpdate(BmxProp *p, const BmxPropDef *d)
 
     for (s = 0; s < n; s++) {
         BmxRider *r = &g_riders[s];
-        RwV3d rel, l;      /* DM-064: was "d", which hid the BmxPropDef *d parameter */
+        RwV3d rel, l;      /* was "d", which hid the BmxPropDef *d parameter */
         int dx, dy, dz;
 
         if (!(r->stateFlags & 1))

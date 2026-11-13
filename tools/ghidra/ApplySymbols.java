@@ -1,6 +1,6 @@
 // Apply decomp/symbols/symbols.csv to the current program (AD-6). Idempotent.
 //
-// CSV columns: address,kind,name,type,source_file,confidence,card
+// CSV columns: address,kind,name,type,source_file,confidence
 //   address     0x%08x VA (lowercase)
 //   kind        func | data | label | struct | nofunc
 //   name        symbol name ("" = keep the current name, only update the comment/tags)
@@ -10,16 +10,15 @@
 //   source_file original source path relative to the source root (e.g. Bmx/Src/com/action/memcard.c),
 //               or lib:<library> (lib/<library> also accepted) for statically linked library code
 //   confidence  V | I
-//   card        DM-xxx that added the row
 //
-// Duplicate addresses: the LAST row for an address wins (rows from any card are accepted).
+// Duplicate addresses: the LAST row for an address wins (earlier rows are superseded).
 // struct rows are keyed by their name instead (their address column is not used; write 0x00000000).
 // For each row the script sets the name (USER_DEFINED), creates the function if needed, writes a
 // one-line "[symbols.csv] ..." plate comment (replacing an earlier one, other plate text is kept)
 // and, for lib:* source files, a function tag LIB_<library>. struct rows (name = type, type = header)
 // check that ImportTypes.java imported the type. A data row inside data that is already typed
 // (e.g. a field of a struct global) only gets its label.
-// nofunc rows (DM-064) remove a bogus function that Ghidra's analysis made inside another one (e.g. a
+// nofunc rows remove a bogus function that Ghidra's analysis made inside another one (e.g. a
 // switch case reached by a jump table): the function at the address is deleted, the function that
 // contains the address before it gets its body recomputed (so it takes the code back), and the name
 // stays as a code label. A nofunc row for an address with no function is a no-op (idempotent).
@@ -47,7 +46,7 @@ import ghidra.util.data.DataTypeParser;
 
 public class ApplySymbols extends GhidraScript {
 
-    static final String HEADER = "address,kind,name,type,source_file,confidence,card";
+    static final String HEADER = "address,kind,name,type,source_file,confidence";
     static final String TAG_PREFIX = "[symbols.csv] ";
 
     static List<String> parseCsvLine(String line) {
@@ -96,7 +95,7 @@ public class ApplySymbols extends GhidraScript {
             String l = lines.get(i);
             if (l.trim().isEmpty() || l.startsWith("#")) continue;
             List<String> f = parseCsvLine(l);
-            while (f.size() < 7) f.add("");
+            while (f.size() < 6) f.add("");
             long a;
             try { a = Long.decode(f.get(0).trim()); }
             catch (NumberFormatException e) { printerr("line " + (i + 1) + ": bad address " + f.get(0)); nErr++; continue; }
@@ -116,13 +115,13 @@ public class ApplySymbols extends GhidraScript {
             List<String> f = e.getValue();
             Address addr = toAddr(e.getKey());
             String kind = f.get(1).trim(), name = f.get(2).trim(), type = f.get(3).trim();
-            String src = f.get(4).trim(), conf = f.get(5).trim(), card = f.get(6).trim();
+            String src = f.get(4).trim(), conf = f.get(5).trim();
             try {
                 switch (kind) {
-                    case "func": applyFunc(addr, name, type, src, conf, card); nFunc++; break;
-                    case "data": applyData(addr, name, type, src, conf, card); nData++; break;
-                    case "label": applyLabel(addr, name, src, conf, card, CommentType.EOL); nLabel++; break;
-                    case "nofunc": removeFunc(addr, name, src, conf, card); break;
+                    case "func": applyFunc(addr, name, type, src, conf); nFunc++; break;
+                    case "data": applyData(addr, name, type, src, conf); nData++; break;
+                    case "label": applyLabel(addr, name, src, conf, CommentType.EOL); nLabel++; break;
+                    case "nofunc": removeFunc(addr, name, src, conf); break;
                     default: printerr(addr + ": unknown kind '" + kind + "'"); nErr++;
                 }
             } catch (Exception ex) {
@@ -158,7 +157,7 @@ public class ApplySymbols extends GhidraScript {
     }
 
     /** nofunc row: delete the function at addr and give its code back to the function before it. */
-    void removeFunc(Address addr, String name, String src, String conf, String card) throws Exception {
+    void removeFunc(Address addr, String name, String src, String conf) throws Exception {
         Function fn = getFunctionAt(addr);
         if (fn == null) { nUnchanged++; return; }
         Function outer = getFunctionContaining(addr.subtract(1));
@@ -166,16 +165,15 @@ public class ApplySymbols extends GhidraScript {
         if (outer != null && !CreateFunctionCmd.fixupFunctionBody(currentProgram, outer, monitor))
             println("warning: " + addr + ": could not recompute the body of " + outer.getName());
         if (getFunctionAt(addr) != null) { printerr(addr + ": function came back after removal"); nErr++; return; }
-        applyLabel(addr, name, src, conf, card, CommentType.PRE);
+        applyLabel(addr, name, src, conf, CommentType.PRE);
         nRemoved++;
         println("ApplySymbols: removed function " + addr + (outer != null ? " (body returned to " + outer.getName() + ")" : ""));
     }
 
-    String note(String src, String conf, String card) {
+    String note(String src, String conf) {
         StringBuilder sb = new StringBuilder(TAG_PREFIX);
         sb.append("source_file: ").append(src.isEmpty() ? "?" : src);
         sb.append(" | confidence: ").append(conf.isEmpty() ? "?" : conf);
-        sb.append(" | card: ").append(card.isEmpty() ? "?" : card);
         return sb.toString();
     }
 
@@ -201,7 +199,7 @@ public class ApplySymbols extends GhidraScript {
         return true;
     }
 
-    void applyFunc(Address addr, String name, String type, String src, String conf, String card) throws Exception {
+    void applyFunc(Address addr, String name, String type, String src, String conf) throws Exception {
         Function fn = getFunctionAt(addr);
         if (fn == null) {
             Function containing = getFunctionContaining(addr);
@@ -226,7 +224,7 @@ public class ApplySymbols extends GhidraScript {
                 new ApplyFunctionSignatureCmd(addr, sig, SourceType.USER_DEFINED).applyTo(currentProgram, monitor);
             }
         }
-        String c = mergeComment(fn.getComment(), note(src, conf, card));
+        String c = mergeComment(fn.getComment(), note(src, conf));
         if (!c.equals(fn.getComment())) { fn.setComment(c); changed = true; }
         // library tag
         String lib = null;
@@ -242,7 +240,7 @@ public class ApplySymbols extends GhidraScript {
         if (changed) nRenamed++; else nUnchanged++;
     }
 
-    void applyLabel(Address addr, String name, String src, String conf, String card, CommentType commentType) throws Exception {
+    void applyLabel(Address addr, String name, String src, String conf, CommentType commentType) throws Exception {
         boolean changed = false;
         if (!name.isEmpty()) {
             Symbol prim = currentProgram.getSymbolTable().getPrimarySymbol(addr);
@@ -259,7 +257,7 @@ public class ApplySymbols extends GhidraScript {
         }
         Listing listing = currentProgram.getListing();
         String old = listing.getComment(commentType, addr);
-        String c = mergeComment(old, note(src, conf, card));
+        String c = mergeComment(old, note(src, conf));
         if (!c.equals(old)) { listing.setComment(addr, commentType, c); changed = true; }
         if (changed) nRenamed++; else nUnchanged++;
     }
@@ -307,7 +305,7 @@ public class ApplySymbols extends GhidraScript {
             || (t instanceof Array && ((Array) t).getDataType() instanceof CharDataType);
     }
 
-    void applyData(Address addr, String name, String type, String src, String conf, String card) throws Exception {
+    void applyData(Address addr, String name, String type, String src, String conf) throws Exception {
         if (!type.isEmpty()) {
             Data inside = currentProgram.getListing().getDataContaining(addr);
             Data d = getDataAt(addr);
@@ -341,7 +339,7 @@ public class ApplySymbols extends GhidraScript {
                 }
             }
         }
-        applyLabel(addr, name, src, conf, card, CommentType.EOL);
+        applyLabel(addr, name, src, conf, CommentType.EOL);
     }
 
     /** struct rows: name = type name, type = header it is declared in. Types come from

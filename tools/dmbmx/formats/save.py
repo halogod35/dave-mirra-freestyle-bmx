@@ -1,6 +1,6 @@
 """SAVE.DAT (``.\\save\\SAVE.DAT``): the PC build of the PSX "memory card" save.
 
-Spec: docs/formats/SAVE.md (DM-012). Code: ``memcard.c`` in NgBMX.exe,
+Spec: docs/formats/SAVE.md. Code: ``memcard.c`` in NgBMX.exe,
 load = 0x00412190, save = 0x00412340.
 
 The file is a raw dump of three global blocks behind an 8-byte header. There is
@@ -33,7 +33,7 @@ MAGIC = 0x2A81511C
 SIZE = 0x235C
 
 OPTIONS_OFF, OPTIONS_LEN = 0x08, 0x08
-RIDERS_OFF, RIDER_LEN, RIDER_COUNT = 0x10, 0x104, 12   # per-rider career records (DM-024; DM-012 called them levels)
+RIDERS_OFF, RIDER_LEN, RIDER_COUNT = 0x10, 0x104, 12   # per-rider career records (formerly called levels)
 LEVEL_COUNT = 12
 LEVELS_OFF, LEVEL_LEN = RIDERS_OFF, RIDER_LEN          # deprecated aliases
 BLOCK_A_TAIL_OFF, BLOCK_A_TAIL_LEN = 0xC40, 4
@@ -152,7 +152,7 @@ class Save:
 
     @property
     def levels(self):
-        """Deprecated alias of ``riders`` (DM-012 mislabelled the per-rider records)."""
+        """Deprecated alias of ``riders`` (the per-rider records were first mislabelled as levels)."""
         return self.riders
 
     def is_valid(self):

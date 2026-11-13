@@ -1,4 +1,4 @@
-"""DM-013: `dmbmx level` CLI smoke tests."""
+"""`dmbmx level` CLI smoke tests."""
 import json
 import struct
 

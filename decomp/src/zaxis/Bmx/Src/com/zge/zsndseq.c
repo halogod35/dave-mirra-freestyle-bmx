@@ -4,8 +4,8 @@
  * Evidence: [V] path string 0x0055FEC8 (CRT assert()s "hTrack < kzsndSeqMaxTracks", "track",
  *           "Track[hTrack]", "noteEvent->flags & kzsndNoteEventFlagActive") in 13 functions;
  *           [I] the rest: between them, sharing the module's data 0x0064EB38-0x0064F9CB.
- *           zsndSeqInit (0x0047C4C0, DM-053's "probably zsndseq.c") clears exactly that data.
- * 28 functions, VA 0x0047C4C0-0x0047DE06. DM-055 (draft). Non-matching C (AD-8).
+ *           zsndSeqInit (0x0047C4C0, the zactor/zprim pass's "probably zsndseq.c") clears exactly that data.
+ * 28 functions, VA 0x0047C4C0-0x0047DE06. Draft. Non-matching C (AD-8).
  * Types: zsound.h. ZTRK byte code: docs/formats/AUDIO.md section 3.1; dmbmx.formats.audio has
  * a decoder/encoder (`dmbmx audio ztrk-dump`).
  *
@@ -19,7 +19,7 @@
  *  - marker (0x18): 1 = end of track (stop, or restart if looping); the track callback sees all;
  *  - jump (0x30): continue at start + u32.
  * The game uses it only for the level ambience (bmxsound: every track of SFXLEVnn.ZSD, started
- * with the level, paused with the game). DM-055 created zsndSeqStop, zsndSeqGroupMute,
+ * with the level, paused with the game). The sound pass created zsndSeqStop, zsndSeqGroupMute,
  * zsndSeqGetState, zsndSeqSetMode, zsndSeqSetLoop, zsndSeqPlayTrackDef, zsndSeqSetCallback (ILT
  * thunks only) and the four event handlers (reached through ZsndSeqEvent.handler).
  */

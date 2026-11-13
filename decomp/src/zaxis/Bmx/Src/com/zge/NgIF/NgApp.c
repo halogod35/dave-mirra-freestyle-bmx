@@ -5,10 +5,10 @@
  *           ngappFrame (0x86B, 0x91F); [V] ngappInit is called by App_Start (zrwZgl.c) and
  *           ngappFrame by App_Frame: the application hooks; [I] the rest by link order (between
  *           MissingZGE.c and NgIFfx.c) and their callers.
- * 28 functions, VA 0x0045a340-0x0045c93c (DM-057 absorbed the MissingZGE/NgApp gap and created 11
+ * 28 functions, VA 0x0045a340-0x0045c93c (the NgIF pass absorbed the MissingZGE/NgApp gap and created 11
  * functions Ghidra had not made: 0x0045A380, 0x0045A3A0, 0x0045A4D0, 0x0045AB50, 0x0045AB90,
  * 0x0045ABC0, 0x0045B4E0, 0x0045C150, 0x0045C690, 0x0045C6D0, 0x0045C6F0).
- * DM-057 (draft). Non-matching C (AD-8). Types / prototypes: ngif.h. Description: docs/re/ngif.md.
+ * Draft. Non-matching C (AD-8). Types / prototypes: ngif.h. Description: docs/re/ngif.md.
  *
  * The application: start-up (window title, memory, intro movies, sound, actors, front end), the
  * per-frame function that runs either the front end (g_ngappMode MENU) or the game (ACTION) and
@@ -334,7 +334,7 @@ void ngappPrintVersion(void)
     zstringCat(text, "Nov 22 2000");
     zstringCat(text, ",");
     zstringCat(text, "15:54:17");
-    g_pfnDebugPrintAt(0x140, 0, "%s", text);      /* "%s" at 0x00557430 (DM-064: not a colour) */
+    g_pfnDebugPrintAt(0x140, 0, "%s", text);      /* "%s" at 0x00557430 (not a colour) */
 }
 
 /* VA 0x0045ac40, 60 bytes, [I] strings, status draft */

@@ -1,4 +1,4 @@
-"""dmbmx export-combo: rider + bike in one animated .glb (DM-018). See docs/tools/export.md section 6."""
+"""dmbmx export-combo: rider + bike in one animated .glb. See docs/tools/export.md section 6."""
 import os
 from pathlib import Path
 

@@ -1,8 +1,8 @@
 /*
- * ztools.h - the small engine modules between zpanorama.c and the C runtime (DM-061):
+ * ztools.h - the small engine modules between zpanorama.c and the C runtime:
  *   ztoken.c     the script tokenizer (Scene.Txt, ZSD build files): #INCLUDE, #DEFINE, $symbols
  *   zFont.c      ZFNT glyph-set fonts
- *   zutil.c      the bounding-box helpers DM-044's zutil.c lacked
+ *   zutil.c      the bounding-box helpers missing from the first zutil.c pass
  *   zrwRamDisk.c a RenderWare file interface reading from registered memory blocks
  *   zprofile.c   the on-screen CPU profiler bars
  *   ztimer.c     timed callbacks on a binary heap
@@ -190,7 +190,7 @@ int       zfontLoadFile(const char *path);                         /* 0x004A2950
 int       zfontLoad(const void *data, uint32_t size);              /* 0x004A2990 */
 int       zfontLoadBody(void);                                     /* 0x004A29D4 (tail of zfontLoad) */
 
-/* zutil.c (DM-044's zutil.c has the others) */
+/* zutil.c (zutil.c has the others) */
 float    *zutilBBoxInit(float *box, const float *point);           /* 0x004A2C70 */
 float    *zutilBBoxAddPoint(float *box, const float *point);       /* 0x004A2CA0 */
 float    *zutilBBoxUnion(float *out, const float *a, const float *b); /* 0x004A2D20 */

@@ -1,8 +1,8 @@
 # Controls, the action loop and the camera (`action.c`, `contrler.c`, `camera.c`)
 
-DM-051. Sources: `decomp/src/zaxis/Bmx/Src/com/action/{action,contrler,camera}.c` (27 functions, VA
+Sources: `decomp/src/zaxis/Bmx/Src/com/action/{action,contrler,camera}.c` (27 functions, VA
 0x00403C30-0x004088C5), types `decomp/include/contrler.h` and `camera.h`, tests
-`tests/test_decomp_dm051.py`. Exe = the 2000-11-22 PC build. Evidence tags as in CONTRIBUTING.md AD-5:
+`tests/test_decomp_action_camera.py`. Exe = the 2000-11-22 PC build. Evidence tags as in CONTRIBUTING.md AD-5:
 **[V]** read from the code or the exe's tables (the test reads them back), **[I]** inferred.
 Nothing here is verified in-game.
 
@@ -79,10 +79,10 @@ Joystick maps (`pcinput` matches the device name; button numbers 1-based):
 | Gravis GrIP / GamePad Pro (0x00561ED8) | 4 | 1 | 3 | 2 | 5 | 6 | 7 | 8 | 10 | 9 |
 | Microsoft SideWinder game pad (0x00561F10) | 5 | 4 | 2 | 1 | 7 | 8 | - | - | 9 | 10 |
 
-### 2.4 The PC devices: `zinput.c` and `pcinput.c` (DM-061) [V code, I names]
+### 2.4 The PC devices: `zinput.c` and `pcinput.c` [V code, I names]
 
 Source: `decomp/src/NgEngine/Zge/zinput.c`, `Pc/pcinput.c`, types `contrler.h` (ZInputDevice) and
-`zpc.h` (PcInputDevice, PcJoyMapHeader); test `tests/test_decomp_dm061.py`.
+`zpc.h` (PcInputDevice, PcJoyMapHeader); test `tests/test_decomp_zobj.py`.
 
 - `zgeInit` -> `zinputInit` 0x004802F0 (pool of two ZInputDevice records) -> `pcinputInit` 0x00493160:
   `DirectInputCreateEx(hinstance, 0x0700, IID_IDirectInput7A)` on the ZGL window (zglGet 0x15), then
@@ -104,10 +104,10 @@ Source: `decomp/src/NgEngine/Zge/zinput.c`, `Pc/pcinput.c`, types `contrler.h` (
   - The devices are created as `IDirectInputDevice2A` (IID 0x0054F408) through `CreateDeviceEx`.
 - `zinputSetRumble` 0x00480440 calls 0x00493CB0, which returns 0: no force feedback on PC.
 - `pcinputShutdown` 0x00493240 unacquires everything, releases the keyboard and DirectInput.
-- The poll (0x00493910), the close (0x004937F0) and the layout setter (0x00493CC0) are in DM-059's
+- The poll (0x00493910), the close (0x004937F0) and the layout setter (0x00493CC0) are in the ZglRw pass's
   gap file after pcinput.c.
 
-**Default bindings** (unchanged from 2.1; the play-test request on DM-061's card asks the user to
+**Default bindings** (unchanged from 2.1; a manual in-game check should
 confirm them): pad 0 keyboard arrows + E/S/F/D (Tri/Sq/Ci/X), W/R (L1/R1), 3/4 (L2/R2, pcinput map
 only), Space (Start), Esc, Enter; pad 1 I/K/J/L, Z/X/C/V, B/M, N/H, Space; joystick buttons
 4/1/3/2 = Tri/Sq/Ci/X, 5/6 = L1/R1, 7/8 = L2/R2, 10 = Start, 9 = Select (SideWinder: 5/4/2/1,
@@ -150,7 +150,7 @@ reads 29 bytes). `save_fields`: `profile.<p>.control.<k>`, `.dpad.<k>`, `.contro
 looks up `g_contrlerActions` 0x00553EE0 `[3][21][3]` of (mask, test). `config` is the profile's
 **+0x02** byte, CONFIGURATION A/B/C (STRS 0x23D-0x23F), copied into the rider (`profileByte2`).
 rider.c is the only caller; the (action, status) pairs it asks are pinned by the test against the
-exe's call sites (DM-051 fixed one swapped pair in rider.c: turnaround is asked "pressed" and jump
+exe's call sites (the camera pass fixed one swapped pair in rider.c: turnaround is asked "pressed" and jump
 "held" at that site).
 
 | id | name | used by rider.c | config A | config B | config C |
@@ -208,7 +208,7 @@ the replay's end and shows its banner at frames 30 and 3450.
 
 ## 5. The camera (`camera.c`) [V code, I meanings]
 
-**Ownership:** camera.c is 0x004056C0-0x00407B85: DM-040 had put cameraInit / cameraUpdate /
+**Ownership:** camera.c is 0x004056C0-0x00407B85: the skeleton had put cameraInit / cameraUpdate /
 cameraApply in action.c and left five functions in a gap; all ten only use the camera globals, and the
 file's one assert (line 1183) needs ~1200 lines before 0x00407530, which cameraUpdate supplies.
 `cameraDrawNightVision` 0x004074C0 was missing from Ghidra (reached only through a callback pointer).
@@ -275,5 +275,5 @@ sound init by `actionLoad`.
 - ACT_05, ACT_12-15, ACT_20 and ACT_BAIL_B are never asked; ACT_BRAKE neither (braking reads the stick).
 - The PSX names of the buttons are inferred; confirming them needs the in-game CONTROLLER screen.
 - Profile name length (12 by the layout) is not checked against the name-entry code.
-- `zrollerStartCrossFade` (the cut flash) and `zsndSrcResetDoppler` (DM-055; called on every cut) are only named
+- `zrollerStartCrossFade` (the cut flash) and `zsndSrcResetDoppler` (called on every cut) are only named
   from their use here.

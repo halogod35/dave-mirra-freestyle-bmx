@@ -3,10 +3,10 @@
  * Original: C:\NgEngine\Zge\Com\ZglRw\zrwDbg.c
  * Evidence: [V] path string 0x00560150 (asserts of zrwDbgInit 0x33B, AddTextCallback 0x513);
  *           "zrwDbg:" / "ZrwDbg:" / "zdebugPrint:" messages; the debug driver table 0x00560030
- *           (20 slots g_pfnDebug*, all here; DM-059 moved slot 18 0x004802C0 from
+ *           (20 slots g_pfnDebug*, all here; the ZglRw pass moved slot 18 0x004802C0 from
  *           gap_zrwDbg__zinput.c).
- * 33 functions, VA 0x0047EE00-0x004802EC (DM-059 created 17).
- * DM-059 (draft). Non-matching C (AD-8). Types: zglrw.h, ngif.h. Description: docs/re/zrw.md 9.
+ * 33 functions, VA 0x0047EE00-0x004802EC (17 new functions).
+ * Draft. Non-matching C (AD-8). Types: zglrw.h, ngif.h. Description: docs/re/zrw.md 9.
  *
  * The debug driver: printf to the debugger (OutputDebugString, with an indent), on-screen text
  * (RtCharset, queued and drawn by the ZGL callback list 4 after the frame), and queued debug shapes
@@ -88,7 +88,7 @@ static void zrwDbgPrintStatsLine(void)
         zdebugPrint(0, -1, "PVS:Saved=%02d", g_zrwPvsVisible - g_zrwPvsTotal);
 }
 
-/* VA 0x0047ee00, 125 bytes, [I] DM-059 created, status draft (no caller found) */
+/* VA 0x0047ee00, 125 bytes, [I] new function, status draft (no caller found) */
 int zrwDbgPrintStats(void)
 {
     int32_t *s = (int32_t *)RwEngineGetMetrics();
@@ -260,7 +260,7 @@ int zrwDbgDrawText(const char *text, int x, int y)
     return RtCharsetPrint(s_charset, text, x, y);
 }
 
-/* VA 0x0047f660, 412 bytes, [I] DM-059 created, status draft (ZGL callback list 4: after the frame)
+/* VA 0x0047f660, 412 bytes, [I] new function, status draft (ZGL callback list 4: after the frame)
  * Stats line, text callbacks, the queued text (y < 0: rows below the previous line), then every
  * queued shape. */
 int zrwDbgRender(void)
@@ -308,13 +308,13 @@ int zrwDbgRender(void)
     return 1;
 }
 
-/* VA 0x0047f810, 24 bytes, [I] DM-059 created (follows a jump table), status draft (App_Reopen) */
+/* VA 0x0047f810, 24 bytes, [I] new function (follows a jump table), status draft (App_Reopen) */
 void zrwDbgCreateCharset(void)
 {
     s_charset = RtCharsetCreate(&g_zrwTextColour, &g_zrwClearColour);
 }
 
-/* VA 0x0047f830, 29 bytes, [I] DM-059 created, status draft (App_Reopen) */
+/* VA 0x0047f830, 29 bytes, [I] new function, status draft (App_Reopen) */
 void zrwDbgDestroyCharset(void)
 {
     if (s_charset != NULL)
@@ -343,7 +343,7 @@ int zrwDbgInit(void)
     return 1;
 }
 
-/* VA 0x0047f900, 63 bytes, [I] DM-059 created, status draft (slot 1) */
+/* VA 0x0047f900, 63 bytes, [I] new function, status draft (slot 1) */
 int zrwDbgShutdown(void)
 {
     if (s_renderCallback != NULL)
@@ -374,7 +374,7 @@ int zdebugPrint(int16_t x, int16_t y, const char *fmt, ...)
     return n;
 }
 
-/* VA 0x0047f9e0, 73 bytes, [I] DM-059 created, status draft (slot 3) */
+/* VA 0x0047f9e0, 73 bytes, [I] new function, status draft (slot 3) */
 void zrwDbgPrintFloat(int x, int y, const char *label, float f)
 {
     if (label == NULL)
@@ -398,7 +398,7 @@ void zrwDbgPrintMatrix(int x, int y, const char *label, const float *m)
     zdebugPrint((int16_t)x, -1, "% 10.4f,% 10.4f,% 10.4f", (double)m[12], (double)m[13], (double)m[14]);
 }
 
-/* VA 0x0047fb40, 130 bytes, [I] DM-059 created, status draft (slot 5: 4 floats) */
+/* VA 0x0047fb40, 130 bytes, [I] new function, status draft (slot 5: 4 floats) */
 void zrwDbgPrintVec4(int x, int y, const char *label, const float *v)
 {
     if (label == NULL)
@@ -409,7 +409,7 @@ void zrwDbgPrintVec4(int x, int y, const char *label, const float *v)
                     (double)v[1], (double)v[2], (double)v[3]);
 }
 
-/* VA 0x0047fbd0, 110 bytes, [I] DM-059 created, status draft (slot 6: 3 floats) */
+/* VA 0x0047fbd0, 110 bytes, [I] new function, status draft (slot 6: 3 floats) */
 void zrwDbgPrintVec3(int x, int y, const char *label, const float *v)
 {
     if (label == NULL)
@@ -419,7 +419,7 @@ void zrwDbgPrintVec3(int x, int y, const char *label, const float *v)
                     (double)v[2]);
 }
 
-/* VA 0x0047fc40, 102 bytes, [I] DM-059 created, status draft (slot 8: a 16-bit angle in degrees) */
+/* VA 0x0047fc40, 102 bytes, [I] new function, status draft (slot 8: a 16-bit angle in degrees) */
 void zrwDbgPrintAngle(int x, int y, const char *label, int16_t a)
 {
     double deg = (double)((float)a * 0.005493164f);
@@ -439,7 +439,7 @@ void zrwDbgPrintEuler(int x, int y, const char *label, const int16_t *a)
         zdebugPrint((int16_t)x, (int16_t)y, "%s% 10.4f,% 10.4f,% 10.4f", label, d0, d1, d2);
 }
 
-/* VA 0x0047fd90, 382 bytes, [I] DM-059 created, status draft (no caller found: the matrix printer
+/* VA 0x0047fd90, 382 bytes, [I] new function, status draft (no caller found: the matrix printer
  * with the first row at the given position and the rest at x = 0 when unlabelled) */
 void zrwDbgPrintMatrixAt(int x, int y, const char *label, const float *m)
 {
@@ -458,13 +458,13 @@ void zrwDbgPrintMatrixAt(int x, int y, const char *label, const float *m)
     zdebugPrint((int16_t)x, -1, "% 10.4f,% 10.4f,% 10.4f", (double)m[12], (double)m[13], (double)m[14]);
 }
 
-/* VA 0x0047ff10, 110 bytes, [I] DM-059 created, status draft (no caller found: copy of slot 6) */
+/* VA 0x0047ff10, 110 bytes, [I] new function, status draft (no caller found: copy of slot 6) */
 void zrwDbgPrintVec3b(int x, int y, const char *label, const float *v)
 {
     zrwDbgPrintVec3(x, y, label, v);
 }
 
-/* VA 0x0047ff80, 12 bytes, [I] DM-059 created, status draft (slot 9: stats for this frame) */
+/* VA 0x0047ff80, 12 bytes, [I] new function, status draft (slot 9: stats for this frame) */
 void zrwDbgShowStats(int8_t mode)
 {
     s_statsMode = mode + 1;
@@ -494,7 +494,7 @@ void zrwDbgAddLine(const RwV3d *a, const RwV3d *b, const RwRGBA *colour, uint16_
     *(uint16_t *)&s->data[9] = flags;
 }
 
-/* VA 0x00480010, 95 bytes, [I] DM-059 created, status draft (slot 12) */
+/* VA 0x00480010, 95 bytes, [I] new function, status draft (slot 12) */
 void zrwDbgAddAxes(const RwMatrix *m, uint16_t flags0, uint16_t flags1)
 {
     ZrwDbgShape *s = zrwDbgNewShape(0);
@@ -531,7 +531,7 @@ void zrwDbgAddSphere(const RwV3d *c, float radius, const RwRGBA *colour, uint16_
     *(uint16_t *)&s->data[6] = flags;
 }
 
-/* VA 0x00480170, 123 bytes, [I] DM-059 created, status draft (slot 16: box { max, min } + matrix) */
+/* VA 0x00480170, 123 bytes, [I] new function, status draft (slot 16: box { max, min } + matrix) */
 void zrwDbgAddBox(const float *box, const RwMatrix *m, const RwRGBA *colour, uint16_t flags)
 {
     ZrwDbgShape *s = zrwDbgNewShape(4);
@@ -557,7 +557,7 @@ void *zrwDbgAddTextCallback(int unused, void *fn, void *arg)
     return zrwZglAddCallbackToList(&s_textCallbacks, fn, arg, 0);
 }
 
-/* VA 0x00480230, 14 bytes, [I] DM-059 created, status draft (slot 11) */
+/* VA 0x00480230, 14 bytes, [I] new function, status draft (slot 11) */
 void zrwDbgRemoveTextCallback(void *node)
 {
     zrwZglRemoveCallback(node);
@@ -574,7 +574,7 @@ int zrwDbgPrintf(const char *fmt, ...)
     return 0;
 }
 
-/* VA 0x00480290, 40 bytes, [I] DM-059 created, status draft (slot 19) */
+/* VA 0x00480290, 40 bytes, [I] new function, status draft (slot 19) */
 void zrwDbgSetIndent(int n)
 {
     s_indent = n < 0 ? 0 : (n > 0x20 ? 0x20 : n);

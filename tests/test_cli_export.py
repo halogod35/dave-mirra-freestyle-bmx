@@ -1,4 +1,4 @@
-"""DM-020: `dmbmx export` CLI smoke tests (output into tmp_path)."""
+"""`dmbmx export` CLI smoke tests (output into tmp_path)."""
 import shutil
 import subprocess
 import sys

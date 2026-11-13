@@ -1,15 +1,15 @@
 /*
  * zmem.h - NgEngine memory manager (NgEngine/Zge/zmem.c) and the game's movable-block manager
- * (Bmx/src/com/zge/NgIF/NgIfzmemDMM.c) (DM-044).
+ * (Bmx/src/com/zge/NgIF/NgIfzmemDMM.c).
  *
  * zmem.c has four allocators [V offsets, I names; the terms follow the exe's own messages]:
  *  1. zmemAlloc/zmemFree: a 4-byte header { size:30, kind:2 } in front of every block; kind 2 =
  *     "dynamic" (platform malloc via g_zmemPlatformAlloc, or a redirect pool), kind 0 = "static".
  *  2. the static (temp) arena: one big zmemAlloc block, used as a stack (zmemTempAlloc/Mark/Release).
  *  3. "free lists" (fixed-size element allocators, 128 slots): "Free list pool has been exhausted."
- *     DM-041/042 called these zmemPool*; renamed by DM-044 to zmemFreeList*.
+ *     Formerly named zmemPool*; renamed to zmemFreeList*.
  *  4. "memory pools" (first-fit heaps with block headers, 128 slots): "zmemPoolFree(): Memory has
- *     been previously freed." DM-041 called these zmemHeap*; renamed by DM-044 to zmemPool*.
+ *     been previously freed." Formerly named zmemHeap*; renamed to zmemPool*.
  * NgIfzmemDMM.c ("DMM") is a handle-based, compactable heap on top of a temp block.
  */
 #ifndef ZMEM_H

@@ -17,10 +17,9 @@ Attribution passes (game/engine code only, i.e. below LIB_START):
   I  callers     all its callers belong to one module, and the function next to it is in that module
 Library code is tagged by VA range (see LIB_RANGES, documented in docs/re/libraries.md).
 
-Rows in symbols.csv from any card are kept verbatim. Only DM-002 rows are (re)generated: earlier
-generated rows (name "<file>_<va>" or empty name + lib: source, no type) are dropped and an
-auto row is added for an attributed function that has no row yet, and DM-002 rows with an empty
-source_file get it filled in.
+Hand-written rows in symbols.csv are kept verbatim. Only generated rows are (re)generated: earlier
+generated rows (func rows with no type and either the name "<file>_<va>" or an empty name and a
+lib: source) are dropped, and an auto row is added for every attributed function that has no row yet.
 """
 from __future__ import annotations
 
@@ -33,14 +32,11 @@ import re
 import sys
 from collections import Counter, defaultdict
 
-HEADER = ["address", "kind", "name", "type", "source_file", "confidence", "card"]
-CARD = "DM-002"          # generated rows from the DM-002 passes
-CARD40 = "DM-040"        # generated rows that need a DM-040 pass (seed/range/orphan/split)
-GEN_CARDS = (CARD, CARD40)
+HEADER = ["address", "kind", "name", "type", "source_file", "confidence"]
 
 # Statically linked code, by VA range [lo, hi). Order = link order. Evidence in docs/re/libraries.md.
 LIB_RANGES = [
-    # DM-061: starts at _fpmath 0x004A4A20 (fpinit.c: _fpmath, _cfltcvt_init, _set_new_mode)
+    # starts at _fpmath 0x004A4A20 (fpinit.c: _fpmath, _cfltcvt_init, _set_new_mode)
     (0x004A4A20, 0x004AF9D0, "lib:msvcrt", "MSVC static C runtime (LIBC), part 1"),
     (0x004AF9D0, 0x004AFC60, "lib:imports", "import-library jmp stubs (vfw32, kernel32 RtlUnwind, dinput)"),
     (0x004AFC60, 0x004B0F20, "lib:dinput", "dinput.lib c_dfDI* DIOBJECTDATAFORMAT tables (data in .text)"),
@@ -56,7 +52,7 @@ CODE_START = 0x00403C30  # first game function; 0x401000.. = /INCREMENTAL thunk 
 
 # zlib 1.1.3 inside the libpng range: these entry points and everything they call there.
 ZLIB_SEEDS = [0x005113F4, 0x00511454, 0x005114B0, 0x00511B60, 0x00511B90, 0x00518B10, 0x00518B20,
-              0x0051A1F0]  # adler32 (DM-030), reached through a function pointer
+              0x0051A1F0]  # adler32, reached through a function pointer
 
 PATH_RE = re.compile(r"^C:\\(zaxis|NgEngine)\\", re.I)
 
@@ -113,7 +109,7 @@ def load_functions(path):
     return funcs
 
 
-# Files whose __FILE__ string exists but is never referenced by code (DM-002). Their literal
+# Files whose __FILE__ string exists but is never referenced by code. Their literal
 # window (between the neighbouring path strings, minus the neighbours' own windows) still
 # identifies their functions. Value = address of the path string in .data.
 ORPHAN_PATHS = {
@@ -124,7 +120,7 @@ ORPHAN_PATHS = {
     "NgEngine/Zge/Com/ZglRw/zrwRamDisk.c": 0x005638B8,
 }
 
-# DM-040: string evidence for a file. A function that references a literal matching the regex
+# String evidence for a file. A function that references a literal matching the regex
 # belongs to the file (the original code prefixes messages with its function or module name).
 # An optional (lo, hi) limits the literal addresses that count.
 STRING_SEEDS = [
@@ -142,48 +138,59 @@ STRING_SEEDS = [
     # in zrwZgl.c also prints "Movie : Done Playing" etc.
     (r"^Movie : ", "NgEngine/Zge/Pc/pcmovie.c", (0x00563470, 0x00563724)),
 ]
-# DM-040: VA ranges [lo, hi) assigned as a whole (evidence in docs/re/module-map.md).
+# VA ranges [lo, hi) assigned as a whole (evidence in docs/re/module-map.md).
 RANGE_FILES = [
     # sin/cos/atan lookup tables + vector/matrix helpers between zasset.c and zobjCamera.c
-    # (DM-045: zmath.c ends at 0x00482082; 0x00482090.. are zobjCamera vtable methods, 0x00560518)
+    # (zmath.c ends at 0x00482082; 0x00482090.. are zobjCamera vtable methods, 0x00560518)
     (0x00480D20, 0x00482090, "NgEngine/Zge/zmath.c"),
-    # zcompres_* (DM-010 names, "ZCOMPRES:" messages) between zrwShadow.c and zrwModelCreate.c
+    # zcompres_* functions ("ZCOMPRES:" messages) between zrwShadow.c and zrwModelCreate.c
     (0x0049B8E0, 0x0049C570, "NgEngine/Zge/zcompres.c"),
-    # DM-042: 0x0049C570 is a list-callback dispatcher of zrwModelCreate.c, not compression code
+    # 0x0049C570 is a list-callback dispatcher of zrwModelCreate.c, not compression code
     (0x0049C570, 0x0049C600, "NgEngine/Zge/Com/ZglRw/zrwModelCreate.c"),
-    # DM-042: zanim node-table code (shares globals 0x006746C4/C8 with zanim.c), before ziff.c.
-    # DM-045: the whole file is 0x00498D80-0x0049A6CB (zanim.c asserts from 0x00498DD0 on; the
+    # zanim node-table code (shares globals 0x006746C4/C8 with zanim.c), before ziff.c.
+    # The whole file is 0x00498D80-0x0049A6CB (zanim.c asserts from 0x00498DD0 on; the
     # track pool 0x006746C4 code starts at 0x00498D80, right after zrwTxr.c's load-buffer code)
     (0x00498D80, 0x0049A6D0, "NgEngine/Zge/zanim.c"),
-    # DM-042: input pool code right after zinput.c, before zasset.c
+    # input pool code right after zinput.c, before zasset.c
     (0x00480370, 0x00480440, "NgEngine/Zge/zinput.c"),
-    # DM-044: zAssertFail 0x0047ED10 moved to zdebug.c (decomp/symbols/symbols.csv rows); the debug-draw code
-    # after zdebug.c stays with zrwDbg.c, as DM-040 had it (it was "between" zAssertFail and 0x0047F850)
+    # zAssertFail 0x0047ED10 moved to zdebug.c (decomp/symbols/symbols.csv rows); the debug-draw code
+    # after zdebug.c stays with zrwDbg.c, as the extended passes placed it (it was "between" zAssertFail and 0x0047F850)
     (0x0047EE00, 0x0047F850, "NgEngine/Zge/Com/ZglRw/zrwDbg.c"),
-    # DM-044: 0x0048C110-0x0048C230 (doubly linked list) moved to zList.c; the movie / app code
-    # before it stays with zrwZgl.c, as DM-040 had it
+    # 0x0048C110-0x0048C230 (doubly linked list) moved to zList.c; the movie / app code
+    # before it stays with zrwZgl.c, as the extended passes placed it
     (0x0048BC60, 0x0048C110, "NgEngine/Zge/Com/ZglRw/zrwZgl.c"),
 ]
-# Files that exist only through DM-040 inference (no path string in the exe); names follow the
+# Files that exist only through inference (no path string in the exe); names follow the
 # original style but are invented.
 NEW_FILES = {"Bmx/Src/com/menu/gui/guimain.c", "NgEngine/Zge/Pc/pcmovie.c", "NgEngine/Zge/zmath.c",
              "NgEngine/Zge/zcompres.c",
-             # DM-043: the Panorama object (SDPA handler), between pcmovie.c and the ztoken parser
+             # the Panorama object (SDPA handler), between pcmovie.c and the ztoken parser
              "NgEngine/Zge/ZgeMods/zpanorama.c",
-             # DM-056: the screen-file loader ("GUISFILE:" literals), between guimain.c and guitoggl.c
+             # the screen-file loader ("GUISFILE:" literals), between guimain.c and guitoggl.c
              "Bmx/Src/com/menu/gui/guisfile.c",
-             # DM-058: the crash rag doll + limb IK (no strings), between bmxsound.c and zoverii.c
+             # the crash rag doll + limb IK (no strings), between bmxsound.c and zoverii.c
              "Bmx/Src/com/zge/bmx/dyn.c",
-             # DM-061: the script tokenizer, the timer and its heap (no path strings)
+             # the script tokenizer, the timer and its heap (no path strings)
              "NgEngine/Zge/ztoken.c", "NgEngine/Zge/ztimer.c", "NgEngine/Zge/zheap.c"}
 
 
+def is_auto(r):
+    """A symbols.csv row this script generated (regenerated on every run, so stale ones vanish):
+    a func row with no type and either the name "<file>_<va>" or an empty name and a lib: source."""
+    if r[1] != "func" or r[3].strip():
+        return False
+    name, src = r[2].strip(), r[4].strip()
+    if not name:
+        return src.startswith("lib:")
+    return bool(src) and name == "%s_%08x" % (stem(src), int(r[0], 16))
+
+
 def load_anchors(symbols_path):
-    """{va: source_file} from hand-curated func rows of decomp/symbols/symbols.csv: any card except the
-    generator's own (DM-002/DM-040, whose source_file came from this script), non-library."""
+    """{va: source_file} from hand-curated func rows of decomp/symbols/symbols.csv (not the rows this
+    script generates, whose source_file came from the attribution itself), non-library."""
     anchors = {}
     for r in read_symbols(symbols_path):
-        if r[1] != "func" or r[6].strip() in GEN_CARDS:
+        if r[1] != "func" or is_auto(r):
             continue
         src = r[4].strip()
         if src and not src.startswith("lib"):
@@ -191,11 +198,12 @@ def load_anchors(symbols_path):
     return anchors
 
 
-def attribute(funcs, dm040=True, anchors=None):
+def attribute(funcs, extended=True, anchors=None):
     """Return {va: (source_file, confidence, method)} for game/engine functions.
 
     method: direct (V) | row | seed | range | strings | orphan | between | callers | split (all I).
-    `row` = another card's decomp/symbols/symbols.csv row names the source file (anchors, DM-040 level)."""
+    `row` = a hand-written decomp/symbols/symbols.csv row names the source file (anchors, extended passes).
+    extended=False runs only the basic passes (direct, strings, between, callers)."""
     code = [f for f in funcs if not f["thunk"] and f["va"] < LIB_START]
     byva = {f["va"]: f for f in code}
     mod = {}
@@ -242,13 +250,13 @@ def attribute(funcs, dm040=True, anchors=None):
         owin[m] = (lo, hi)
 
     # seeds and ranges (strong, position-independent evidence)
-    if not dm040:
+    if not extended:
         owin = {}
-    for f in (code if dm040 and anchors else []):
+    for f in (code if extended and anchors else []):
         if f["va"] not in mod and f["va"] in anchors:
             mod[f["va"]] = (anchors[f["va"]], "I", "row")
-    seeds = [] if not dm040 else [(re.compile(e[0]), e[1], e[2] if len(e) > 2 else (0, 1 << 32)) for e in STRING_SEEDS]
-    for f in (code if dm040 else []):
+    seeds = [] if not extended else [(re.compile(e[0]), e[1], e[2] if len(e) > 2 else (0, 1 << 32)) for e in STRING_SEEDS]
+    for f in (code if extended else []):
         if f["va"] in mod:
             continue
         hit = {m for a, t in f["strings"] for rx, m, (lo, hi) in seeds if lo <= a < hi and rx.match(t)}
@@ -317,7 +325,7 @@ def attribute(funcs, dm040=True, anchors=None):
                         changed = True
 
     def split():
-        """Pass 5 (DM-040): in each gap between files A and B, vote per function by call edges
+        """Pass 5: in each gap between files A and B, vote per function by call edges
         to A vs B, pick the split point that agrees with most votes, and assign the functions
         whose vote agrees with their side. Functions without a vote stay unassigned."""
         changed = False
@@ -356,7 +364,7 @@ def attribute(funcs, dm040=True, anchors=None):
         return changed
 
     fixpoint()
-    while dm040 and split():
+    while extended and split():
         fixpoint()
     return mod, code
 
@@ -383,7 +391,7 @@ def read_symbols(path):
         hdr = next(rd, None)
         if hdr != HEADER:
             sys.exit(f"error: {path}: header must be {','.join(HEADER)}")
-        return [r + [""] * (7 - len(r)) for r in rd if r and any(c.strip() for c in r)]
+        return [r + [""] * (len(HEADER) - len(r)) for r in rd if r and any(c.strip() for c in r)]
 
 
 def write_symbols(path, rows):
@@ -435,10 +443,6 @@ def main():
     funcs = load_functions(a.functions)
     fby = {f["va"]: f for f in funcs}
     mod, code = attribute(funcs, anchors=load_anchors(a.symbols))
-    mod02, _ = attribute(funcs, dm040=False)
-
-    def gen_card(va):
-        return CARD if mod02.get(va, (None,))[0] == mod[va][0] else CARD40
     zlib = split_png_zlib(funcs)
 
     # library classification of every non-thunk function
@@ -455,38 +459,20 @@ def main():
     # ---- merge into symbols.csv
     rows = read_symbols(a.symbols)
 
-    def is_auto(r):
-        """A row this script generated earlier (regenerated on every run, so stale ones vanish)."""
-        if r[6].strip() not in GEN_CARDS or r[1] != "func" or r[3].strip():
-            return False
-        name, src = r[2].strip(), r[4].strip()
-        if not name:
-            return src.startswith("lib:")
-        return bool(src) and name == "%s_%08x" % (stem(src), int(r[0], 16))
-
     n_old = len(rows)
     rows = [r for r in rows if not is_auto(r)]
     n_dropped = n_old - len(rows)
     have = {int(r[0], 16) for r in rows if r[1] != "struct"}
-    n_fill = n_new = 0
-    for r in rows:
-        va = int(r[0], 16)
-        if r[6].strip() in GEN_CARDS and r[1] == "func" and not r[4].strip():
-            if va in mod:
-                r[4] = mod[va][0]
-                n_fill += 1
-            elif va in lib:
-                r[4] = lib[va]
-                n_fill += 1
+    n_new = 0
     for va in sorted(set(mod) | set(lib)):
         if va in have:
             continue
         if va in mod:
             m, conf, _ = mod[va]
-            rows.append(["0x%08x" % va, "func", "%s_%08x" % (stem(m), va), "", m, conf, gen_card(va)])
+            rows.append(["0x%08x" % va, "func", "%s_%08x" % (stem(m), va), "", m, conf])
         else:
             # library: keep Ghidra's name (Function ID names like _strlen survive), tag only
-            rows.append(["0x%08x" % va, "func", "", "", lib[va], "I", CARD])
+            rows.append(["0x%08x" % va, "func", "", "", lib[va], "I"])
         n_new += 1
     text = write_symbols(a.symbols, rows)
 
@@ -521,9 +507,9 @@ def main():
     p()
     p("Sorted by first VA (= link order). `V` = functions that reference the path string themselves;")
     p("`I` = inferred, by method: `s` string in the file's .data string window, `b` between two functions of the file,")
-    p("`c` all callers in the file (DM-002); `e` seed string naming the file/function, `r` manual range, `o` literal")
-    p("in an orphan path string's window, `x` call-graph split of a gap, `w` another card's symbols.csv row names the file (DM-040). Files marked * have no path string")
-    p("in the exe; their name is invented in the original style (DM-040).")
+    p("`c` all callers in the file; `e` seed string naming the file/function, `r` manual range, `o` literal")
+    p("in an orphan path string's window, `x` call-graph split of a gap, `w` a hand-written symbols.csv row names the file. Files marked * have no path string")
+    p("in the exe; their name is invented in the original style.")
     p("Confidence: **high** = one contiguous run with >= 1 V function and at most 1/4 split/range; **medium** = has V, seed or orphan evidence; **low** = only placed by range/split/adjacency.")
     p()
     p("| # | Source file | VA range(s) | Funcs | V | I (s/b/c/e/r/o/x/w) | Bytes | Conf |")
@@ -548,7 +534,7 @@ def main():
     p("### Unattributed game/engine code (gaps between modules)")
     p()
     p("Each gap lies between the last function of the previous file and the first of the next one;")
-    p("its functions belong to one of the two neighbours or to a file with no path string (DM-040).")
+    p("its functions belong to one of the two neighbours or to a file with no path string.")
     p()
     p("| Gap VA range | Funcs | Bytes | Previous file | Next file |")
     p("|---|---:|---:|---|---|")
@@ -576,7 +562,7 @@ def main():
     print(f"functions={len(funcs)} thunks={n_thunk} game+engine={len(game)} attributed={n_game_attr} "
           f"(V={sum(1 for v in mod.values() if v[1] == 'V')}) modules={len(table)} gaps={len(gaps)} "
           f"libs={dict(sorted(libc.items()))}")
-    print(f"symbols.csv: {len(rows)} rows ({n_new} generated, {n_dropped} previous generated rows replaced, {n_fill} filled)")
+    print(f"symbols.csv: {len(rows)} rows ({n_new} generated, {n_dropped} previous generated rows replaced)")
     # order check: module first-VA order should follow the path-string order in .data
     if a.check:
         return

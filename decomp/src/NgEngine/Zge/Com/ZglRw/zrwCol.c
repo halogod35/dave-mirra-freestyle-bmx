@@ -3,11 +3,11 @@
  * Original: C:\NgEngine\Zge\Com\ZglRw\zrwCol.c
  * Evidence: [V] path string 0x00562070 (asserts of zrwColInit 0x1B9, zrwColLineTest 0x25B); the
  *           collision driver table 0x00562060 (4 slots); [I] the rest by link order and the globals
- *           0x00674158-0x006741B3. DM-059 moved here 0x00493CE0 / 0x00493D30 (triangle -> ZGL
+ *           0x00674158-0x006741B3. The ZglRw pass moved here 0x00493CE0 / 0x00493D30 (triangle -> ZGL
  *           material, from gap_pcinput__zrwCol) and created the triangle helpers 0x00494CD0-
  *           0x0049536F that follow the file's last function.
- * 22 functions, VA 0x00493CE0-0x0049536F (DM-059 created 14).
- * DM-059 (draft). Non-matching C (AD-8). Types: ngif.h (ZrwColTri, ZrwColHit, ZrwColTriList),
+ * 22 functions, VA 0x00493CE0-0x0049536F (14 new functions).
+ * Draft. Non-matching C (AD-8). Types: ngif.h (ZrwColTri, ZrwColHit, ZrwColTriList),
  * zglrw.h. Description: docs/re/zrw.md 5.
  *
  * Collision queries against the RenderWare world: the world sectors' own collision trees
@@ -67,7 +67,7 @@ static void zrwColToRw(RwV3d *out, const float *p)
     out->z = g_zrwWorldOrigin[2] - p[2] * g_zrwScale;
 }
 
-/* VA 0x00493ce0, 67 bytes, [I] DM-059 created, status draft (no caller found)
+/* VA 0x00493ce0, 67 bytes, [I] new function, status draft (no caller found)
  * The ZGL material of triangle `tri->index` of an atomic (texture owner plugin). */
 void *zrwColAtomicTriMaterial(void *atomic, const RwCollTri *tri)
 {
@@ -77,7 +77,7 @@ void *zrwColAtomicTriMaterial(void *atomic, const RwCollTri *tri)
     return tex == NULL ? NULL : zrwTxrGetOwnerOfRwTexture(tex);
 }
 
-/* VA 0x00493d30, 67 bytes, [I] DM-059 created, status draft (no caller found)
+/* VA 0x00493d30, 67 bytes, [I] new function, status draft (no caller found)
  * The same for a world-sector polygon: material = sector base (+4) + polygon byte 0 (+0xC). */
 void *zrwColSectorTriMaterial(void *sector, const RwCollTri *tri)
 {
@@ -99,7 +99,7 @@ int zrwColInit(void)
     return 1;
 }
 
-/* VA 0x00493de0, 49 bytes, [I] DM-059 created, status draft (slot 1) */
+/* VA 0x00493de0, 49 bytes, [I] new function, status draft (slot 1) */
 int zrwColShutdown(void)
 {
     if (s_col.initialized) {
@@ -175,7 +175,7 @@ int zrwColLineTest(const RwV3d *a, const RwV3d *b, uint32_t mode, void **exclude
     return 1;
 }
 
-/* VA 0x00494240, 95 bytes, [I] DM-059 created, status draft (world triangle callback: keep nearest) */
+/* VA 0x00494240, 95 bytes, [I] new function, status draft (world triangle callback: keep nearest) */
 void *zrwColWorldLineCB(void *isect, void *sector, RwCollTri *tri, float t, void *data)
 {
     (void)isect;
@@ -207,7 +207,7 @@ static int zrwColAtomicWanted(void *atomic, void **exclude)
     return 1;
 }
 
-/* VA 0x004942a0, 104 bytes, [I] DM-059 created, status draft (atomic callback of the line test) */
+/* VA 0x004942a0, 104 bytes, [I] new function, status draft (atomic callback of the line test) */
 void *zrwColAtomicLineCB(void *isect, void *sector, void *atomic, float dist, void **exclude)
 {
     (void)sector; (void)dist;
@@ -216,7 +216,7 @@ void *zrwColAtomicLineCB(void *isect, void *sector, void *atomic, float dist, vo
     return atomic;
 }
 
-/* VA 0x00494310, 95 bytes, [I] DM-059 created, status draft (triangle callback, keep nearest) */
+/* VA 0x00494310, 95 bytes, [I] new function, status draft (triangle callback, keep nearest) */
 void *zrwColAtomicTriLineCB(void *isect, RwCollTri *tri, float t, void *atomic)
 {
     (void)isect;
@@ -278,7 +278,7 @@ void *zrwColSphereTriCB(void *isect, void *sector, RwCollTri *tri, float dist, v
     return tri;
 }
 
-/* VA 0x00494750, 104 bytes, [I] DM-059 created, status draft (atomic callback of the sphere test) */
+/* VA 0x00494750, 104 bytes, [I] new function, status draft (atomic callback of the sphere test) */
 void *zrwColAtomicSphereCB(void *isect, void *sector, void *atomic, float dist, void **exclude)
 {
     (void)sector; (void)dist;
@@ -287,7 +287,7 @@ void *zrwColAtomicSphereCB(void *isect, void *sector, void *atomic, float dist, 
     return atomic;
 }
 
-/* VA 0x004947c0, 31 bytes, [I] DM-059 created, status draft */
+/* VA 0x004947c0, 31 bytes, [I] new function, status draft */
 void *zrwColAtomicTriSphereCB(void *isect, RwCollTri *tri, float dist, void *atomic)
 {
     return zrwColSphereTriCB(isect, NULL, tri, dist, atomic);
@@ -322,14 +322,14 @@ const RwRGBA *zrwColGetHitColour(ZrwColHit *hit)
 /* VA 0x00494c20, 21 bytes, [I] callers, status draft (the tag database: ztaginf) */
 int zrwColTagsInit(void)
 {
-    /* DM-064: returns ztaginfInit's failure (0), else 1 [V] (zgeInit tests it) */
+    /* returns ztaginfInit's failure (0), else 1 [V] (zgeInit tests it) */
     if (!ztaginfInit())
         return 0;
     s_tagsInitialized = 1;
     return 1;
 }
 
-/* VA 0x00494c40, 35 bytes, [I] DM-059 created, status draft */
+/* VA 0x00494c40, 35 bytes, [I] new function, status draft */
 int zrwColTagsShutdown(void)
 {
     if (s_tagsInitialized) {
@@ -352,7 +352,7 @@ int zrwColSphere(const float *centre, float radius, uint32_t mode, void **exclud
     return g_zglColApi.sphereTest(centre, radius, mode, exclude, out) != 0;
 }
 
-/* VA 0x00494cd0, 632 bytes, [I] DM-059 created, status draft (no caller found)
+/* VA 0x00494cd0, 632 bytes, [I] new function, status draft (no caller found)
  * Is p inside triangle v0 v1 v2 (normal n)? Projects on the plane of the normal's dominant axis and
  * checks that p is on the same side of every edge (|cross| < 1e-5 counts as on the edge). */
 int zrwColPointInTri(const float *v0, const float *v1, const float *v2, const float *n, const float *p)
@@ -380,7 +380,7 @@ int zrwColPointInTri(const float *v0, const float *v1, const float *v2, const fl
     return 1;
 }
 
-/* VA 0x00494f50, 407 bytes, [I] DM-059 created, status draft (no caller found)
+/* VA 0x00494f50, 407 bytes, [I] new function, status draft (no caller found)
  * p inside triangle a b c with normal n: every sub-triangle (a,b,p) (b,c,p) (c,a,p) has normal n. */
 int zrwColPointInTriByNormals(const RwV3d *a, const RwV3d *b, const RwV3d *c, const float *n, const RwV3d *p)
 {
@@ -397,7 +397,7 @@ int zrwColPointInTriByNormals(const RwV3d *a, const RwV3d *b, const RwV3d *c, co
     return 1;
 }
 
-/* VA 0x004950f0, 236 bytes, [I] DM-059 created, status draft
+/* VA 0x004950f0, 236 bytes, [I] new function, status draft
  * The point of segment a-b nearest to p. */
 void zrwColClosestPointOnSegment(float *out, const RwV3d *a, const RwV3d *b, const RwV3d *p)
 {
@@ -422,7 +422,7 @@ void zrwColClosestPointOnSegment(float *out, const RwV3d *a, const RwV3d *b, con
     }
 }
 
-/* VA 0x004951e0, 391 bytes, [I] DM-059 created, status draft (no caller found)
+/* VA 0x004951e0, 391 bytes, [I] new function, status draft (no caller found)
  * Sphere (centre c, radius r) against triangle v0 v1 v2 with normal n: the contact point (the
  * projection on the plane if inside, else a corner, else the nearest edge point within r), NULL
  * when the sphere misses. */
@@ -467,7 +467,7 @@ RwV3d *zrwColSphereTriContact(RwV3d *out, const RwV3d *c, float r, const RwV3d *
     return NULL;
 }
 
-/* the table's slots take void * results (DM-064: casts, the functions keep their real types) */
+/* the table's slots take void * results (casts, the functions keep their real types) */
 #define COL_LINE_SLOT(f)   ((int (__cdecl *)(const RwV3d *, const RwV3d *, uint32_t, void **, void *))(f))
 #define COL_SPHERE_SLOT(f) ((int (__cdecl *)(const float *, float, uint32_t, void **, void *))(f))
 const ZglColApi g_zglColApi = {                                             /* 0x00562060 */

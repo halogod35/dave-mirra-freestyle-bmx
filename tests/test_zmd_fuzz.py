@@ -1,4 +1,4 @@
-"""Fuzz the ZMD reader (DM-011, docs/testing.md section 4)."""
+"""Fuzz the ZMD reader (docs/testing.md section 4)."""
 import pytest
 
 from conftest import corpus_files

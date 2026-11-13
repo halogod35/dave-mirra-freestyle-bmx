@@ -3,9 +3,9 @@
  * Original: C:\zaxis\Bmx\Src\Pc\zge\sound\winStrm.c
  * Evidence: [V] path string 0x0055F2EC (CRT assert()s "fzsndStreamInitialized",
  *           "hResult == DS_OK", "dwLen2 == 0") in 18 functions; [I] the rest: between them, and they
- *           use the module's data 0x00601328-0x00601B83 (DM-053 moved zactorInit, which followed,
+ *           use the module's data 0x00601328-0x00601B83 (the zactor/zprim pass moved zactorInit, which followed,
  *           to zactor.c).
- * 27 functions, VA 0x00470AA0-0x004725D1. DM-055 (draft). Non-matching C (AD-8).
+ * 27 functions, VA 0x00470AA0-0x004725D1. Draft. Non-matching C (AD-8).
  * Types: zsound.h. Description: docs/re/sound.md section 3.
  *
  * Streamed audio ("zsndStream"): up to 8 streams, each its own DirectSound buffer (64 KB by
@@ -19,7 +19,7 @@
  *    play cursor; when a file runs out the rest of the buffer is filled with silence and the
  *    stream stops (or is destroyed: ZSND_STRM_AUTOFREE) once the play cursor gets there.
  *  - zsndStreamUpdate (per frame) runs volume fades, in a linear-dB approximation.
- * DM-055 created zsndStreamSetLoops, zsndStreamQueueFile, zsndStreamHold, zsndStreamGetCaps,
+ * The sound pass created zsndStreamSetLoops, zsndStreamQueueFile, zsndStreamHold, zsndStreamGetCaps,
  * zsndStreamPlayOnce and zsndStreamAllocQueue (only reached through ILT thunks; the game uses
  * none of them).
  */
@@ -752,7 +752,7 @@ void zsndStreamFreeQueue(ZsndStreamQueue *q)
 
 /* VA 0x004724c0, 274 bytes, [I] row, status draft
  * IMA-ADPCM, low nibble first; state carried in *pred / *step / *index. Ported 1:1 by
- * dmbmx.formats.audio.ima_decode (tests/test_decomp_dm055.py checks both on every music track). */
+ * dmbmx.formats.audio.ima_decode (tests/test_decomp_sound.py checks both on every music track). */
 void zsndImaDecode(int16_t *dst, const uint8_t *src, uint32_t n, int32_t *pred, int32_t *step, int32_t *index)
 {
     int32_t  p = *pred, st = *step, idx = *index, diff;

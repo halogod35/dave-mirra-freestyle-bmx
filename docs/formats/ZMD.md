@@ -1,6 +1,6 @@
 # ZMD: model file (riders, bikes, shadows, sfx)
 
-Owner: DM-011 (Agent C). Reader/writer: `tools/dmbmx/formats/zmd.py`. Chunk layer: `tools/dmbmx/core/chunks.py`.
+Reader/writer: `tools/dmbmx/formats/zmd.py`. Chunk layer: `tools/dmbmx/core/chunks.py`.
 Survey: `tools/research/survey_zmd.py`. Tests: `tests/test_zmd_*.py`, `tests/test_cli_zmd.py`.
 
 Evidence tags: **[V]** verified by code over all 117 corpus files (115 non-empty), **[I]** inferred.
@@ -127,7 +127,7 @@ struct { u32 firstVertex; u32 vertexCount; u32 boneId; } entry[size / 12];
 - [V] `boneId` matches the frame's `Animation(0x108)` id, which gives a vertex → frame mapping. `meshes()` returns `joints = [[frameIndex]]`, `weights = [[1.0]]`.
 - [V] **Bind pose = the frame hierarchy as stored, and vertices are in model space** (not bone-local): each bone's vertex centroid sits next to its joint's world position, e.g. Head vertices around y≈0.8 with the Head joint at y=0.686. `skeleton()` therefore gives `inverse_bind = inverse(world)`.
 - [V] DaveMirra.ZMD: 17 bones (`Skin, Hips, LeftUpLeg, Chest, RightUpLeg, RightLowLeg, RightFoot, Shoulders, Head, LeftUpArm, RightUpArm, RightLowArm, RightHand, LeftLowArm, LeftHand, LeftLowLeg, LeftFoot`). The in-game riders `*1..5` have 20 bones, and MikeLaird5 has 39. T-pose, about 1.95 units tall, Y up.
-- [I] There is no RpSkin/HAnim (0x116/0x11E) in any file. This is the older RW 3.0 "Bone" plugin. Animations live in `motion.zal` (DM-016) and presumably target frames by `boneId`.
+- [I] There is no RpSkin/HAnim (0x116/0x11E) in any file. This is the older RW 3.0 "Bone" plugin. Animations live in `motion.zal` and presumably target frames by `boneId`.
 
 Bikes are **not skinned**. They are 7 rigid atomics, each attached to its own frame (`BackWheel`, `FrontWheel`, `Sprocket`, `Handlebars`, pedals …). Their vertices are frame-local, so `meshes(world=True)` bakes the frame matrices. [V] With the frames applied, the parts assemble into a coherent bike in Blender (bind pose pitched about 15° nose-up relative to the root `Hipsdeck` frame [I]).
 
@@ -152,15 +152,15 @@ Bikes are **not skinned**. They are 7 rigid atomics, each attached to its own fr
 ```
 MADF (80 or 84 bytes):
   0x00 u32   nameOffset = 0x48 (always)
-  0x04 u8[64] material parameters (DM-014). Rider example: 0,0,0, 0.9,0.9,0.9, 0.5,0.5,0.5, 0.1,0.1,0.1, 0.25, 0,0,0 as f32 [I]
+  0x04 u8[64] material parameters. Rider example: 0,0,0, 0.9,0.9,0.9, 0.5,0.5,0.5, 0.1,0.1,0.1, 0.25, 0,0,0 as f32 [I]
   0x44 u32   name_id = name_hash(name)                       (324/324)
   0x48 char  name[], NUL, zero-padded to 4 bytes             e.g. "NAME_917_0", "TIRE", "SPARK"
 TBMP / TPNG: a complete .bmp / .png file, zero-padded to a multiple of 4 bytes.
 ```
 
 - [V] 215 TBMP: BMP size = the `bfSize` field. Formats: 24-bit 64², 128², 256², 32², 16²; one 8-bit 64², one 8-bit 32², one 4-bit 32². 109 TPNG: the data ends after `IEND`+CRC. Padding is 0 to 3 zero bytes in both cases.
-- [V] **How textures are referenced:** the RW `Texture` name string (e.g. `Name_917_0`, `tire`) equals the MADF name **case-insensitively** (MADF stores it upper-cased), and the MADF id is the name hash. For all 115 files, every RW texture name resolves to a MATI in the same file and every MATI is used. Textures do not come from `material.zal` (that ZAL presumably serves level geometry, DM-013/DM-014). `Zmd.texture(name)` performs the lookup.
-- MADF parameters, image constraints and the shared `Mati` class (`tools/dmbmx/formats/mati.py`, also used for level `Mat._sd`): see TEXTURE.md (DM-014).
+- [V] **How textures are referenced:** the RW `Texture` name string (e.g. `Name_917_0`, `tire`) equals the MADF name **case-insensitively** (MADF stores it upper-cased), and the MADF id is the name hash. For all 115 files, every RW texture name resolves to a MATI in the same file and every MATI is used. Textures do not come from `material.zal` (that ZAL presumably serves level geometry, the level reader/the texture work). `Zmd.texture(name)` performs the lookup.
+- MADF parameters, image constraints and the shared `Mati` class (`tools/dmbmx/formats/mati.py`, also used for level `Mat._sd`): see TEXTURE.md.
 
 ## 6. Name hash [V]
 
@@ -168,7 +168,7 @@ TBMP / TPNG: a complete .bmp / .png file, zero-padded to a multiple of 4 bytes.
 name_hash(s) = (toupper(s[-1]) << 16) + Σ_i (i+1) * toupper(s[i])      (32-bit)
 ```
 
-It matches 2205/2227 ids over MDEF names, MDEF entries and MADF names. All 22 misses are renamed copies that keep the original's id (`rider_shadow.zmd` `Hips01` has the id of `Hips`; `bike_hires` `wheel1`/`wheel2` have the id of `wheel`). Examples: `Head` → 0x4402A5, `RightHand` → 0x440CC8, `DAVEMIRRA` → 0x410D2A. [V] This is the engine's `zHashName` (VA 0x004828C0, DM-010: `dmbmx.core.hash.zhash`); `zmd.name_hash` delegates to it.
+It matches 2205/2227 ids over MDEF names, MDEF entries and MADF names. All 22 misses are renamed copies that keep the original's id (`rider_shadow.zmd` `Hips01` has the id of `Hips`; `bike_hires` `wheel1`/`wheel2` have the id of `wheel`). Examples: `Head` → 0x4402A5, `RightHand` → 0x440CC8, `DAVEMIRRA` → 0x410D2A. [V] This is the engine's `zHashName` (VA 0x004828C0, the ZAL reader: `dmbmx.core.hash.zhash`); `zmd.name_hash` delegates to it.
 
 **Bone naming** (`zmd.bone_name`, used by `skeleton()`): MDEF entry for the id, else reverse lookup over `extra_names` + `zmd.BONE_NAMES` (all MDEF base names in the corpus; 26 of them also occur as strings in NgBMX.exe and hash to frame ids [V]; collisions exist, e.g. `LeftGrip`/`tabletop`, `Hips`/`jHPS`, so MDEF wins), else `bone_0x%08X`. Frame id `0xFFFFFFFF` = no bone (bike frame 5, ShadowVolume helper) gives `frame_<i>`. [V] The only unresolved id in the corpus is `0x00440AE8` (DaveMirra_shadow LOD 1 root).
 
@@ -206,14 +206,14 @@ CLI: `dmbmx zmd info <f> [--tree]`, `dmbmx zmd dump-obj <f> <out.obj> [--lod N] 
 
 ## 9. Open questions
 
-1. ~~MLDF flags and the second u32~~ (DM-059, docs/re/zrw.md 2): the PC engine **ignores word 0** (7 / 3 / 0x1B); word 1 is
+1. ~~MLDF flags and the second u32~~ (the ZglRw pass, docs/re/zrw.md 2): the PC engine **ignores word 0** (7 / 3 / 0x1B); word 1 is
    the LOD switch distance as a float, 0 = the defaults 0 / 50 / 100 / 150 (every corpus file has 0) [V]. At most 4 MLODs
    are read. Nothing switches LODs: only LOD 0 is ever drawn [V: zrw code].
-2. ~~MDEF `params` f32[4] and `unk` u16~~ (DM-059): **not read** by the engine [V]. MDEF `kind` is a flag word: 2 = skinned
+2. ~~MDEF `params` f32[4] and `unk` u16~~: **not read** by the engine [V]. MDEF `kind` is a flag word: 2 = skinned
    (RpBone), set exactly for the models with Bone plugins [V]; the other bits (1, 4, 8, 0x10, 0x40, 0x80) are coded but unused
    by the corpus (zrw.md 2). Entry names keep at most 15 characters in the engine (byte 15 is forced to 0) [V].
-3. MADF parameter block: resolved in TEXTURE.md (DM-014).
-4. Atomic `flags` = 5 and `unused`, Morph plugin `u32 0`: standard RW meanings assumed [I]. DM-059: the engine overrides the
+3. MADF parameter block: resolved in TEXTURE.md.
+4. Atomic `flags` = 5 and `unused`, Morph plugin `u32 0`: standard RW meanings assumed [I]. The ZglRw pass: the engine overrides the
    atomic flags after loading (collision test on unless MDEF 0xC0; flag 0x80 for one-part models) [V].
 5. `MikeLaird5.ZMD`: 29 Bone entries for 39 frames (the extra frames are unskinned helpers?).
 6. Whether the game needs BinMesh tristrips (flags 1) or also accepts lists (flags 0 exists in 10 geometries) when importing new meshes.

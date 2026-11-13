@@ -1,4 +1,4 @@
-"""Render an animated rider .glb on an animated bike .glb (DM-017 arm-pose check).
+"""Render an animated rider .glb on an animated bike .glb (arm-pose check).
 
     blender -b --factory-startup --python tools/blender/scripts/render_pair.py -- rider.glb bike.glb out_prefix \
         --offsets offsets.json [--frames 0,8,16] [--view side|front34|front]

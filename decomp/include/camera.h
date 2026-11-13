@@ -1,5 +1,5 @@
 /*
- * camera.h - the game camera (Bmx/Src/com/action/camera.c) (DM-051).
+ * camera.h - the game camera (Bmx/Src/com/action/camera.c).
  *
  * One BmxCamera per player (g_cameras[2] 0x0056B448, stride 0xB8); only the camera of
  * g_cameraPlayer is updated and handed to the engine camera each frame. Offsets [V] (camera.c and

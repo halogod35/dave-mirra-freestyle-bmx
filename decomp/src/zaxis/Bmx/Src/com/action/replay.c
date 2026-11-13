@@ -8,9 +8,9 @@
  *           [I] bmxreplayEmpty1/2: two empty, unreferenced functions after the last assert of the
  *           file and before rider.c's first function (could as well be the start of rider.c).
  * 13 functions, 3381 bytes, VA 0x0042fce0-0x00430e50.
- * DM-052 (draft). Non-matching C (AD-8). Types: replay.h. Format: docs/formats/REPLAY.md.
+ * Draft. Non-matching C (AD-8). Types: replay.h. Format: docs/formats/REPLAY.md.
  *
- * DM-052 took in the prop/replay gap function (bmxreplayInit 0x0042FCE0) and created three
+ * The prop/replay/fx pass took in the prop/replay gap function (bmxreplayInit 0x0042FCE0) and created three
  * functions Ghidra had missed (decomp/symbols/symbols.csv rows): bmxreplayGetFrame 0x00430CF0 (reached only
  * through its ILT thunk, which nothing calls) and the two empty functions.
  *
@@ -33,7 +33,7 @@
 
 /* ------------------------------------------------------------------ other modules (current names) */
 void      gameResetRider(int player, int newRun);                /* 0x0040C190 game.c */
-/* zactorGetPos / SetPos / GetHeight / SetHeight / SetMatrix: zactor.h (DM-053) */
+/* zactorGetPos / SetPos / GetHeight / SetHeight / SetMatrix: zactor.h */
 
 /* ------------------------------------------------------------------ globals (this file) */
 BmxReplay *g_replays[REPLAY_MAX];       /* 0x0056D278 */

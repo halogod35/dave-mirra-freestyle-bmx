@@ -1,5 +1,5 @@
 /*
- * zobj.h - the ZGE object model (DM-061): NgEngine/Zge/zobj.c and the ZgeMods object types
+ * zobj.h - the ZGE object model: NgEngine/Zge/zobj.c and the ZgeMods object types
  * zobjModel.c, zobjLight.c, zobjCamera.c, zobjPEmit.c, plus the engine start-up (zge.c) and the
  * input front end (zinput.c).
  *
@@ -20,9 +20,9 @@
 
 /* zobj.flags */
 #define ZOBJ_TYPE_MASK   0x07u   /* zobjConstruct(type) */
-#define ZOBJ_TYPE_MODEL  0       /* zobjModelCreate (DM-059's gap file) */
+#define ZOBJ_TYPE_MODEL  0       /* zobjModelCreate (zobjModel.c) */
 #define ZOBJ_TYPE_LIGHT  1       /* zobjLightCreate */
-#define ZOBJ_TYPE_PEMIT  2       /* zobjPEmitCreate (DM-059's gap file) */
+#define ZOBJ_TYPE_PEMIT  2       /* zobjPEmitCreate (zobjPEmit.c) */
 #define ZOBJ_TYPE_CAMERA 3       /* zobjCameraCreate */
 #define ZOBJF_ACTIVE     0x08u   /* set by zobjConstruct; zobjSetActive; only active objects update */
 #define ZOBJF_FLAG10     0x10u   /* zobjSetFlag10; never read in the exe [V, static scan] */
@@ -208,7 +208,7 @@ RwV3d    *zgeVecFromRw(RwV3d *out, const RwV3d *v);                 /* 0x0049FB1
 
 /* ------------------------------------------------------------------ the renderer's function tables
  * (zrwModel.c 0x00560E94.., zrwLight.c 0x00563428.., zrwCam.c 0x00561D88..; zglrw.h has the whole tables
- * as structs: g_zglModelApi, g_zglLightApi, g_zglCameraApi, g_zglSystemApi (DM-059); these names are
+ * as structs: g_zglModelApi, g_zglLightApi, g_zglCameraApi, g_zglSystemApi; these names are
  * the single slots the zobj types call through; names [I] from the slot targets. */
 extern int   (__cdecl *g_zrwModelDestroy)(void *model);                          /* 0x00560E94 g_zglModelApi.release = zrwModelRelease */
 extern int   (__cdecl *g_zrwModelSync)(void *model);                             /* 0x00560E98 .update = zrwModelUpdate */

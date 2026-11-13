@@ -2,8 +2,8 @@
  * NgEngine/Zge/Com/ZglRw/zrwShadow.c
  * Original: C:\NgEngine\Zge\Com\ZglRw\zrwShadow.c
  * Evidence: [V] path string 0x00562BDC (assert of zrwShadowInit 0x29F); [I] the rest by link order
- *           and the globals 0x006746F0-0x0067520F (DM-059 created 4).
- * 5 functions, VA 0x0049B330-0x0049B87F. DM-059 (draft). Non-matching C (AD-8). Types: zglrw.h,
+ *           and the globals 0x006746F0-0x0067520F (4 new functions).
+ * 5 functions, VA 0x0049B330-0x0049B87F. Draft. Non-matching C (AD-8). Types: zglrw.h,
  * ngif.h (ZglVertex, ZglQuad). Description: docs/re/zrw.md 6.
  *
  * The blob shadow: a 6 x 6 grid of vertices (5 x 5 quads) laid out in a square of the given size
@@ -63,7 +63,7 @@ int zrwShadowInit(void)
     return 1;
 }
 
-/* VA 0x0049b3d0, 258 bytes, [I] DM-059 created, status draft (ZGL callback list 2)
+/* VA 0x0049b3d0, 258 bytes, [I] new function, status draft (ZGL callback list 2)
  * Draws the quads whose four corners hit the ground (missing corners skip the quad). */
 int zrwShadowDraw(void)
 {
@@ -93,7 +93,7 @@ int zrwShadowDraw(void)
     return 1;
 }
 
-/* VA 0x0049b4e0, 44 bytes, [I] DM-059 created, status draft (no caller found) */
+/* VA 0x0049b4e0, 44 bytes, [I] new function, status draft (no caller found) */
 int zrwShadowShutdown(void)
 {
     if (s_initialized) {
@@ -104,12 +104,12 @@ int zrwShadowShutdown(void)
     return 1;
 }
 
-/* VA 0x0049b510, 1 bytes, [I] DM-059 created, status draft (empty) */
+/* VA 0x0049b510, 1 bytes, [I] new function, status draft (empty) */
 void zrwShadowNop(void)
 {
 }
 
-/* VA 0x0049b520, 851 bytes, [I] DM-059 created, status draft (NgIFzroller 0x0046C680 calls it)
+/* VA 0x0049b520, 851 bytes, [I] new function, status draft (NgIFzroller 0x0046C680 calls it)
  * Builds this frame's shadow for one owner. */
 void zrwShadowUpdate(ZrwShadow *sh)
 {

@@ -2,10 +2,10 @@
  * NgEngine/Zge/zdebug.c
  * Original: C:\NgEngine\Zge\zdebug.c
  * Evidence: [V] path string 0x0055FFD8 (zdebugInit); [I] the rest by link order and globals
- *           (0x00650170-0x00650178 are used only here). zAssertFail was put in zrwDbg.c by the DM-040
+ *           (0x00650170-0x00650178 are used only here). zAssertFail was put in zrwDbg.c by the skeleton
  *           split; it sits between zdebug.c's functions and calls the handler zdebug.c owns.
  * 7 functions, VA 0x0047ec40-0x0047edfd.
- * Decompiled by DM-044 (non-matching C, AD-8). Declarations: decomp/include/zengine.h.
+ * Decompiled (non-matching C, AD-8). Declarations: decomp/include/zengine.h.
  *
  * The platform part (text output, debug drawing) is a table of 20 function pointers at 0x00560030
  * filled with zrwDbg.c functions; zdebug.c only calls through it. zAssertFail forwards to the
@@ -61,7 +61,7 @@ void zdebugCloseLog(void)
 int zdebugChecksum(const uint8_t *data, int len)
 {
     /* Plain byte sum. [V] Uncalled: nothing in the exe references 0x0047ECF0, so it is no
-     * integrity check (DM-030's scan was right to find none). */
+     * integrity check (the integrity-check survey was right to find none). */
     int sum = 0;
 
     while (len-- > 0)

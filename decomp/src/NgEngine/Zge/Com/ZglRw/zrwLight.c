@@ -2,9 +2,9 @@
  * NgEngine/Zge/Com/ZglRw/zrwLight.c
  * Original: C:\NgEngine\Zge\Com\ZglRw\zrwLight.c
  * Evidence: [V] path string 0x00563448 (assert of zrwLightInit 0xA9); the light driver table
- *           0x00563420 (10 slots, all here: DM-059 moved 0x0049F550-0x0049F840 from
+ *           0x00563420 (10 slots, all here: the ZglRw pass moved 0x0049F550-0x0049F840 from
  *           gap_zrwLight__zge.c and created the other 4).
- * 10 functions, VA 0x0049F4D0-0x0049F8FF. DM-059 (draft). Non-matching C (AD-8). Types: zglrw.h.
+ * 10 functions, VA 0x0049F4D0-0x0049F8FF. Draft. Non-matching C (AD-8). Types: zglrw.h.
  *
  * ZGL lights = RenderWare RpLights in the world (light list of 2), each with its own frame.
  */
@@ -42,7 +42,7 @@ int zrwLightInit(void)
     return 1;
 }
 
-/* VA 0x0049f520, 39 bytes, [I] DM-059 created, status draft (slot 1) */
+/* VA 0x0049f520, 39 bytes, [I] new function, status draft (slot 1) */
 int zrwLightShutdown(void)
 {
     if (s_initialized) {
@@ -109,7 +109,7 @@ int zrwLightSetFlags(ZglLight *l, uint32_t flags)
     return 1;
 }
 
-/* VA 0x0049f7d0, 100 bytes, [I] DM-059 created, status draft (slot 6: ZGE position) */
+/* VA 0x0049f7d0, 100 bytes, [I] new function, status draft (slot 6: ZGE position) */
 int zrwLightSetPosition(ZglLight *l, const float *pos)
 {
     RwV3d p;
@@ -131,14 +131,14 @@ int zrwLightSetDirection(ZglLight *l, const float *dir)
     return 1;
 }
 
-/* VA 0x0049f8a0, 44 bytes, [I] DM-059 created, status draft (slot 8: 16-bit angle) */
+/* VA 0x0049f8a0, 44 bytes, [I] new function, status draft (slot 8: 16-bit angle) */
 int zrwLightSetConeAngle(ZglLight *l, int16_t angle)
 {
     RpLightSetConeAngle(l->rpLight, (float)angle * 9.58738e-05f /* 2 pi / 65536 */);
     return 1;
 }
 
-/* VA 0x0049f8d0, 35 bytes, [I] DM-059 created, status draft (slot 9: ZGE units) */
+/* VA 0x0049f8d0, 35 bytes, [I] new function, status draft (slot 9: ZGE units) */
 int zrwLightSetRadius(ZglLight *l, float radius)
 {
     RpLightSetRadius(l->rpLight, g_zrwScale * radius);

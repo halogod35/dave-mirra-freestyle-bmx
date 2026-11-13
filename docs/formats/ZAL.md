@@ -1,6 +1,6 @@
 # ZAL: Z-Axis asset library (`*.zal`)
 
-Owner: DM-010. Code: `tools/dmbmx/formats/zal.py` (reader/writer), `tools/dmbmx/formats/zal_dir.py` (extract/pack), `tools/dmbmx/core/lzo.py` (LZO1X codec),
+Code: `tools/dmbmx/formats/zal.py` (reader/writer), `tools/dmbmx/formats/zal_dir.py` (extract/pack), `tools/dmbmx/core/lzo.py` (LZO1X codec),
 `tools/dmbmx/core/hash.py` (name hash), CLI `dmbmx zal list|extract|pack|replace`. Survey: `tools/research/survey_zal.py`.
 Evidence tags as in CONTRIBUTING.md AD-5. VAs are for the 2000-11-22 `NgBMX.exe`.
 
@@ -78,18 +78,18 @@ decompressed data").
 | Method | Codec | Status |
 |---|---|---|
 | 2 | **LZO1X** (decoder inlined at 0x0049C0AC; first byte > 17 = initial literal run, `0x11 0x00 0x00` end marker) | [V] all 1,298 compressed assets decode with the standard LZO1X rules to exactly `size` bytes and consume exactly `stored_size` bytes. `dmbmx.core.lzo.decompress` (pure Python, bounds-checked). |
-| 1 | **LZRW3-A** (Ross Williams 1991; DM-042). Decoder 0x0049BD10, encoder 0x0049B8E0 via `zcompresCompress` 0x0049C020 (accepts methods 0/1); 0x4010-byte work buffer = 4096 table pointers. Evidence: "123456789012345678" table init, 16-item control words OR 0x10000, 2-byte copy items (12-bit table index, length 3-18), 512 partitions x 8 slots with a 3-bit cycle, hash `-417*x` = 40543*x mod 2^13, 4-byte flag header (1 = stored) | [V] code; unused in the corpus. `dmbmx.core.lzrw3a` decodes it (transcribed from 0x0049BD10) and encodes it (decoder-exact table); `asset_data` / `set_data` support it. Not tested in-game. |
+| 1 | **LZRW3-A** (Ross Williams 1991; the zasset pass). Decoder 0x0049BD10, encoder 0x0049B8E0 via `zcompresCompress` 0x0049C020 (accepts methods 0/1); 0x4010-byte work buffer = 4096 table pointers. Evidence: "123456789012345678" table init, 16-item control words OR 0x10000, 2-byte copy items (12-bit table index, length 3-18), 512 partitions x 8 slots with a 3-bit cycle, hash `-417*x` = 40543*x mod 2^13, 4-byte flag header (1 = stored) | [V] code; unused in the corpus. `dmbmx.core.lzrw3a` decodes it (transcribed from 0x0049BD10) and encodes it (decoder-exact table); `asset_data` / `set_data` support it. Not tested in-game. |
 
-The game has no LZO compressor that we found ([I] the packer was an offline tool). DM-023 added a
+The game has no LZO compressor that we found ([I] the packer was an offline tool). The ZAL repacker added a
 pure-Python encoder, `dmbmx.core.lzo.compress(data, level=2)`. It is a greedy LZO1X-1 style encoder over a
 16-deep hash chain and emits only the standard instruction forms. [V] compress -> decompress is the
 identity for every compressed payload in the corpus. Output size compared with the original packer:
 material.zal +3.5%, motion.zal +4.4%, Intwrap nested archive +8.1% (level 1, the faster mode:
 +8.5% / +8.6% / +22.8%). The stream bytes differ from the original. [I] The game should accept any valid
 LZO1X stream, because the loader only decodes it and compares the decoded length with `size`. This is
-unverified until play-test DM-023-PT1 passes.
+unverified until the manual in-game check `zal-repack` passes.
 
-### 2.4 Integrity checks (DM-023)
+### 2.4 Integrity checks
 
 [V] ZAL files carry **no checksum**. Every header and table byte is accounted for in section 2 (reserved
 bytes are never read). The loader path (`zasset_OpenLibrary` 0x004804D0, `zasset_GetAssetSize` 0x00480850,
@@ -99,9 +99,9 @@ bytes are never read). The loader path (`zasset_OpenLibrary` 0x004804D0, `zasset
 (3) the decoded length against `size & 0xFFFFFF` ("ERROR - Size mismatch in decompressed data").
 Buffers are allocated from the table's size (0x0045B089 `malloc(zasset_GetAssetSize())` for Intwrap
 group 0), so a grown asset needs no fixed buffer change. [I] The game's custom heap may still have a
-total budget. For DM-030: no re-signing is needed for ZAL.
+total budget. For the integrity checks: no re-signing is needed for ZAL.
 
-### 2.5 Repacking (DM-023)
+### 2.5 Repacking
 
 - `ZalArchive.set_data(id, payload)` replaces one payload and re-encodes it (LZO1X if the archive is
   compressed). Other assets keep their stored bytes. Padding is reused only while the layout before an
@@ -113,29 +113,29 @@ total budget. For DM-030: no re-signing is needed for ZAL.
 - CLI: `dmbmx zal extract -r <zal> <dir>`, `dmbmx zal pack <dir> <out.zal>`,
   `dmbmx zal replace <zal> <id|name|outer/inner> <payload> <out.zal>` (e.g. `0/0xe009` for a nested group).
 
-### 2.6 Headerless (in-memory) form (DM-016)
+### 2.6 Headerless (in-memory) form
 
 [V] The payload of motion.zal group 0 is a ZAL **without** the 16-byte magic/reserved header: it has
 `u16 flags, u16 count` at offset 0, the group table at 4, and asset offsets relative to byte 0.
-`zactorOpenMemBank` 0x00475200 (zactor.c; DM-010 called it `zasset_OpenMemLibrary`) accepts this form when the
-magic is absent; DM-053: a first byte of 0xFF skips 8 more bytes.
+`zactorOpenMemBank` 0x00475200 (zactor.c; the ZAL reader called it `zasset_OpenMemLibrary`) accepts this form when the
+magic is absent; the zactor/zprim pass: a first byte of 0xFF skips 8 more bytes.
 `ZalArchive.read(data, headerless=True)` reads it, and `write()` keeps the form (`archive.headerless`).
 
 ## 3. Contents of the shipped archives
 
 | Archive | Opened by | Groups | Payloads |
 |---|---|---|---|
-| **Intwrap.zal** ("interface wrapper") | string `intwrap.zal` 0x0055BE48, "Interface asset wrapper does not exist!" | ids 0-4 | [V] group 0 = a nested compressed ZAL (35 groups, ids 0xE000-0xE022): the front end's art library "intart.zal" (zprim groups of pictures, sprites, fonts and `SCRN` screens; section 3.2, DM-056); groups 1-4 = 263,224-byte 8-bit 512x512 BMP files (`BM`, palette offset 0x436): [V] (viewed) 1 = RenderWare logo splash, 2 = "LOADING" screen, 3 = "LOADING DEMO" screen, 4 = Acclaim/Z-Axis legal text screen. |
-| **material.zal** | `Assets\Material.ZAL` in `zresOpenLibraries` 0x0046BCD0, handle `g_materialZal` 0x0067848C | ids 0-1261 (= index) | [V] every payload is a complete Windows **BMP file** (1,099 x 4-bit + 163 x 8-bit palettised; 0x96-0x1007C bytes). [V] no `MATI`/`MADF`/`TBMP`/`TPNG` chunks anywhere in it (raw or decompressed). Mapping from material id to textures/MATI records lives elsewhere (DM-014). |
-| **miscdata.zal** | `Assets\MiscData.ZAL`, handle `g_miscDataZal` 0x00678490 | ids 1, 0x7531-0x7535, 0x7919-0x791C, 0x7D01-0x7D0C | [V] id 1 = IFF `FORM` with `PLHD`/`PLYR` chunks (player data); 0x7531/0x7532/0x7534/0x7535 = the overlay fonts (3.1, DM-054); 0x7919-0x791C and 0x7D01-0x7D0C = `STRS` **string tables**, in sets of four language variants (two English, one French, one German; the order differs per set), e.g. 0x7919-0x791C pro-challenge texts, 0x7D01-0x7D04 park names, 0x7D05-0x7D08 level descriptions, 0x7D09-0x7D0C game-mode descriptions. [V] Ids are code constants: e.g. 0x0044DAFC calls `zasset_FindAsset(g_miscDataZal, 0x7919 + n, 0)`. **Note for the Director's MATI question:** [V] the 6 `MATI` byte matches in miscdata.zal are inside words of the localised strings ("AUTO**MATI**QUE", "FOR**MATI**ERT", "FOR**MATI**EREN", ...), not chunk tags; this archive contains no material chunks. |
-| **motion.zal** | `Assets\MOTION.ZAL` 0x00551ABC (ZARTVIEW "Failed to open motions"), Scene.Txt ANIM "MainBank" | id 0 | [V] one LZO1X group, 202,116 bytes decoded: the motion bank (starts `01 00 EE 00`, then a table of motion records). Format is DM-016. |
-| **replay.zal** | `Assets\Replay.ZAL`, handle `g_replayZal` 0x0068FFA8; "replay data not found in asset library" | ids 0-23 | [V] replay records (sizes 0x103C, 0x183C, 0x1828, 0x2702), asset id = rider + 2 x level; decoded by DM-052: docs/formats/REPLAY.md, `dmbmx.formats.replay` (round trip of all 24). |
+| **Intwrap.zal** ("interface wrapper") | string `intwrap.zal` 0x0055BE48, "Interface asset wrapper does not exist!" | ids 0-4 | [V] group 0 = a nested compressed ZAL (35 groups, ids 0xE000-0xE022): the front end's art library "intart.zal" (zprim groups of pictures, sprites, fonts and `SCRN` screens; section 3.2, the front-end pass); groups 1-4 = 263,224-byte 8-bit 512x512 BMP files (`BM`, palette offset 0x436): [V] (viewed) 1 = RenderWare logo splash, 2 = "LOADING" screen, 3 = "LOADING DEMO" screen, 4 = Acclaim/Z-Axis legal text screen. |
+| **material.zal** | `Assets\Material.ZAL` in `zresOpenLibraries` 0x0046BCD0, handle `g_materialZal` 0x0067848C | ids 0-1261 (= index) | [V] every payload is a complete Windows **BMP file** (1,099 x 4-bit + 163 x 8-bit palettised; 0x96-0x1007C bytes). [V] no `MATI`/`MADF`/`TBMP`/`TPNG` chunks anywhere in it (raw or decompressed). Mapping from material id to textures/MATI records lives elsewhere. |
+| **miscdata.zal** | `Assets\MiscData.ZAL`, handle `g_miscDataZal` 0x00678490 | ids 1, 0x7531-0x7535, 0x7919-0x791C, 0x7D01-0x7D0C | [V] id 1 = IFF `FORM` with `PLHD`/`PLYR` chunks (player data); 0x7531/0x7532/0x7534/0x7535 = the overlay fonts (3.1, the overlay pass); 0x7919-0x791C and 0x7D01-0x7D0C = `STRS` **string tables**, in sets of four language variants (two English, one French, one German; the order differs per set), e.g. 0x7919-0x791C pro-challenge texts, 0x7D01-0x7D04 park names, 0x7D05-0x7D08 level descriptions, 0x7D09-0x7D0C game-mode descriptions. [V] Ids are code constants: e.g. 0x0044DAFC calls `zasset_FindAsset(g_miscDataZal, 0x7919 + n, 0)`. **Note on the MATI question:** [V] the 6 `MATI` byte matches in miscdata.zal are inside words of the localised strings ("AUTO**MATI**QUE", "FOR**MATI**ERT", "FOR**MATI**EREN", ...), not chunk tags; this archive contains no material chunks. |
+| **motion.zal** | `Assets\MOTION.ZAL` 0x00551ABC (ZARTVIEW "Failed to open motions"), Scene.Txt ANIM "MainBank" | id 0 | [V] one LZO1X group, 202,116 bytes decoded: the motion bank (starts `01 00 EE 00`, then a table of motion records). Format is the first motion reader. |
+| **replay.zal** | `Assets\Replay.ZAL`, handle `g_replayZal` 0x0068FFA8; "replay data not found in asset library" | ids 0-23 | [V] replay records (sizes 0x103C, 0x183C, 0x1828, 0x2702), asset id = rider + 2 x level; decoded by the prop/replay/fx pass: docs/formats/REPLAY.md, `dmbmx.formats.replay` (round trip of all 24). |
 | **tables.zal** | `Assets\Tables.ZAL` | id 0 | [V] IFF `FORM{ ZMHD(8), ZMAP(0x960) }`: level table with level names and per-level ZAL file names ("ACCLAIM DIRT" / "ACCLDIRT.ZAL", "PROTOUR DIRT" / "PROTDIRT.ZAL", ...). |
 
 [V] The exe also names `system.zal`, `WSsnd.zal`, `geometry.zal`, `intart.zal` and per-level `*.ZAL`
 files (from tables.zal) that are **not** shipped with this PC build.
 
-### 3.1 Payload formats decoded by DM-060 (details: `tools/3dsmax/SPEC.md` section 7)
+### 3.1 Payload formats decoded by the 3ds Max importer (details: [SPEC.md](SPEC.md) section 7)
 
 - [V] **miscdata.zal id 1 = player table** `FORM{ PLHD(8), PLYR(60 x 24) }`. FORM here has no form-type
   word; its children are plain 4CC chunks with little-endian sizes.
@@ -151,8 +151,8 @@ files (from tables.zal) that are **not** shipped with this PC build.
   - Record: `u16[4], u32[13]` (values such as 1000/10000/20000, [I] score/goal thresholds), then
     `char name[20]` at 0x3C and `char zal[20]` at 0x50.
   - Read by level number in `zresGetMap`.
-- [V] **0x7531 / 0x7532 / 0x7534 / 0x7535 = the four overlay fonts** (DM-054, `zoveriiLoadFont` 0x00459FC0;
-  reader / writer `tools/dmbmx/formats/hudfont.py`, DM-066):
+- [V] **0x7531 / 0x7532 / 0x7534 / 0x7535 = the four overlay fonts** (the overlay pass, `zoveriiLoadFont` 0x00459FC0;
+  reader / writer `tools/dmbmx/formats/hudfont.py`, the menu-modding work):
   ```
   HudFont := u8 count, u8 pad[3], u8 height, u8 pad[7], Record[count]
   Record  := u8 char, u16 u, u16 0, u16 v, u16 0, u16 w, u16 0          (13 bytes)
@@ -172,13 +172,13 @@ files (from tables.zal) that are **not** shipped with this PC build.
   are). [V] The replay icons `p` / `P` / `R` (pause / play / record) sit at v = 48, below the end of the
   64x48 icon sheet; [I] what the game shows for them depends on how the driver pads the texture.
   `dmbmx gui hud-export / hud-import` (docs/tools/menu-modding.md): metrics JSON + the sheet as PNG.
-- [V] Which STRS sets the game loads in a level (DM-054, `overlayLoadStrings`): 0x7D01 + language (ids
+- [V] Which STRS sets the game loads in a level (`overlayLoadStrings`): 0x7D01 + language (ids
   0x1000..) and either 0x7D05 + language (single player, ids 0x2000..) or 0x7D09 + language (two players,
   ids 0x3000..).
 - [V] **STRS** = `"STRS", u16 baseTextId, u16 count, u16 offset[count]` (offsets from the chunk start),
   then NUL-terminated latin-1 strings. Text id = base + index. The base is 0, 0x1000, 0x2000 or 0x3000.
   - Example: table 0x7919, string 0x25E = "LOAD COMPLETE.".
-  - [V] (DM-066) The tables share strings: 16-23 % of the offsets point at a string another id already
+  - [V] The tables share strings: 16-23 % of the offsets point at a string another id already
     uses (an equal text, or the NUL of the previous one for an empty text). `tools/dmbmx/formats/strs.py`
     keeps the string area as it is; an edited text is appended at the end and only its id is moved, so
     an unedited table writes back byte for byte (all 16 tables).
@@ -190,7 +190,7 @@ files (from tables.zal) that are **not** shipped with this PC build.
     0x2C QUIT (`g_feMainItems` 0x0055A35C); OPTIONS 0x132 CONTROLLER, 0x133 CHEATS, 0x139 AUDIO.
     `dmbmx gui texts / text-set / text-import`.
 
-### 3.2 GUI groups and SCRN screens (Intwrap.zal group 0; DM-056)
+### 3.2 GUI groups and SCRN screens (Intwrap.zal group 0; the front-end pass)
 
 Code: `tools/dmbmx/formats/scrn.py` (reader / writer), tests `tests/test_scrn_*.py`; the game's reader is
 `guiLoadScreenFile` 0x00439A00 (`decomp/src/zaxis/Bmx/Src/com/menu/gui/guisfile.c`), the types are in
@@ -279,9 +279,9 @@ multiple of 4. Screens with elements: 0xA005 main menu (16), 0xA009 select (34),
 empty (backdrop-only groups). Most texts are placeholders that the frontend overwrites with STRS 0x7919
 texts at run time ("String to be preallocated", "5", "1"), so a mod changes menu text in miscdata.zal
 and layout here. An edited group goes back with `ZalArchive.set_data` on the nested archive (`dmbmx gui import`
-does this; section 3.3); [I] that the game accepts it waits for DM-066-PT1.
+does this; section 3.3); [I] that the game accepts it waits for the manual in-game check `menu-edit`.
 
-### 3.3 Menu art: zprim pictures, sprites and fonts (Intwrap.zal group 0; DM-066)
+### 3.3 Menu art: zprim pictures, sprites and fonts (Intwrap.zal group 0; the menu-modding work)
 
 Code: `tools/dmbmx/formats/zprim.py` (reader / writer, PNG export / import), `tools/dmbmx/formats/gui_dir.py` and
 `dmbmx gui` (export directory, docs/tools/menu-modding.md); tests `tests/test_zprim_*.py`,
@@ -385,9 +385,9 @@ line would be looked up with `zasset_FindAsset(lib, zhash(NAME), 0)`; not verifi
 - Pinned shape: group counts, compression flags, `reserved == 0`, material.zal = 1262 BMPs with ids 0..1261.
 - Reader rejects bad magic, truncated tables/data, overlapping or out-of-order assets with `FormatError`
   subclasses; fuzzed with `tests/fuzz.py` (tests/test_zal_fuzz.py).
-- DM-023: extract -> pack identical for all 6 files; the encoder round-trips every compressed payload;
+- The ZAL repacker: extract -> pack identical for all 6 files; the encoder round-trips every compressed payload;
   edited/replaced assets change only their own stream (tests/test_zal_repack.py, tests/test_lzo_encoder.py).
-- DM-066: every GUI picture / sprite / font, the 16 STRS tables and the 4 overlay fonts round-trip; PNG
+- The menu-modding work: every GUI picture / sprite / font, the 16 STRS tables and the 4 overlay fonts round-trip; PNG
   export -> import is identical; `dmbmx gui export` -> `import` rebuilds Intwrap.zal byte for byte, and an
   edited one parses and round-trips (tests/test_zprim_corpus.py, test_zprim_unit.py, test_cli_gui.py).
 
@@ -398,10 +398,10 @@ line would be looked up with `zasset_FindAsset(lib, zhash(NAME), 0)`; not verifi
 3. Ref mode (flags bit 13): record layout of the referenced file name not checked against data (none ships).
 4. The 8-byte pre-magic header variant: layout inferred from the loader only.
 5. Payload formats inside the archives (STRS tables, replay records, the motion bank, the
-   0x7531-0x7535 tables) belong to later cards (DM-014/DM-016 and successors). DM-054: 0x7531-0x7535 are fonts (3.1).
-   DM-056: the GUI groups and SCRN screens of Intwrap.zal (3.2). DM-066: the zprim pictures / sprites / fonts
+   0x7531-0x7535 tables) were left for later (texture and motion work). The overlay pass: 0x7531-0x7535 are fonts (3.1).
+   The front-end pass: the GUI groups and SCRN screens of Intwrap.zal (3.2). The menu-modding work: the zprim pictures / sprites / fonts
    inside them (3.3), the STRS tables and the overlay font files (3.1) all have readers / writers now.
-6. Does the game accept re-encoded LZO1X streams and grown archives? Pending play-test DM-023-PT1.
-7. Where are material.zal's 1262 textures used in game? DM-023-PT1 part B may tell. (DM-066: assets
+6. Does the game accept re-encoded LZO1X streams and grown archives? Pending the manual in-game check `zal-repack`.
+7. Where are material.zal's 1262 textures used in game? the manual in-game check `zal-repack` part B may tell. (assets
    9 and 11-13 are the overlay font sheets, resources 0x30-0x3A = assets 9-0x13 are the HUD pictures.)
 8. What the game shows for the replay icons `p` / `P` / `R`, whose glyphs lie below the 64x48 icon sheet (3.1).

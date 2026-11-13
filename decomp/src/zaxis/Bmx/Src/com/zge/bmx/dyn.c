@@ -1,7 +1,7 @@
 /*
  * zaxis/Bmx/Src/com/zge/bmx/dyn.c
  * Original: unknown (no path string; the file has no asserts). Name [I]: "dyn" after its functions
- *           (DM-047's prefix); it sits between bmxsound.c and zoverii.c in link order, which within a
+ *           (the rider.c pass's prefix); it sits between bmxsound.c and zoverii.c in link order, which within a
  *           directory is alphabetical (com\zge\bmx\).
  * Evidence: [I] one object file: the rag doll (0x00450060-0x00455DD0) and the limb IK (0x00455E60-
  *           0x00457897) share their helpers (dynCross, dynTranspose3, dynMul3, dynMatrixToEuler) and their
@@ -9,10 +9,10 @@
  *           its .data is 0x0055B958-0x0055B95F (gravity, grab height), right after bmxsound.c's and
  *           before zoverii.c's (0x0055B960); no call edges with the sound or overlay code.
  *           0x004578F0 (the last function of the old gap) is zoverii.c's zoveriiInit (its pools).
- * 74 functions, VA 0x00450060-0x00457897 (4 created by DM-058: dynBrace, dynSetLimitsOff,
+ * 74 functions, VA 0x00450060-0x00457897 (4 created by the dyn.c pass: dynBrace, dynSetLimitsOff,
  * dynSetLimitsOn, dynIkSetLooseGains; all four unreferenced, reachable only through their
  * incremental-link thunks).
- * DM-058 (draft). Non-matching C (AD-8). Types: dyn.h, rider.h (BmxIk). Notes: docs/re/physics.md 7.
+ * Draft. Non-matching C (AD-8). Types: dyn.h, rider.h (BmxIk). Notes: docs/re/physics.md 7.
  *
  * The crash rag doll. When the rider crashes (physics.c bmxphysStateInitCrash) the rider and the
  * bike each become a particle body: the rider 14 particles on the skeleton's joints, the bike 3.
@@ -1097,7 +1097,7 @@ void dynStartRider(void *body, ZActor *actor, const RwMatrix *m, const float *ve
 }
 
 /* ACT_RAGDOLL held: from now on the wrists catch the nearest edge in reach (dynGrabEdges), once per
- * crash. Undoes a tuck, the arm brace and the stick input. (DM-047: dynStart) */
+ * crash. Undoes a tuck, the arm brace and the stick input. (dynStart) */
 /* VA 0x004535d0, 148 bytes, [I] row, status draft */
 void dynGrab(void *body, void *actor)
 {
@@ -1158,14 +1158,14 @@ void dynGrabEdges(DynBody *b)
     }
 }
 
-/* (DM-047: dynIsRunning) */
+/* (dynIsRunning) */
 /* VA 0x00453870, 13 bytes, [I] row, status draft */
 int dynIsHanging(void)
 {
     return CUR(s_dynHanging);
 }
 
-/* Let go: both wrists move again, no more grabbing. (DM-047: dynStop) */
+/* Let go: both wrists move again, no more grabbing. (dynStop) */
 /* VA 0x00453890, 56 bytes, [I] row, status draft */
 void dynRelease(void *body, void *actor)
 {
@@ -1216,7 +1216,7 @@ void dynBracePose(DynBody *b)
 }
 
 /* Unreferenced: hold the arms out (dynBracePose each step), the elbow limits off. */
-/* VA 0x00453ab0, 130 bytes, [I] row (DM-058: created), status draft */
+/* VA 0x00453ab0, 130 bytes, [I] row (created), status draft */
 void dynBrace(void *body, void *actor)
 {
     DynBody *b = (DynBody *)body;
@@ -1231,7 +1231,7 @@ void dynBrace(void *body, void *actor)
     b->limit[s_limLElbow].strength = 0.0f;
 }
 
-/* Arm springs and elbow limits back to normal. (DM-047: dynRestoreLimbs) */
+/* Arm springs and elbow limits back to normal. (dynRestoreLimbs) */
 /* VA 0x00453b70, 136 bytes, [I] row, status draft */
 void dynUnbrace(void *body, void *actor)
 {
@@ -1287,7 +1287,7 @@ void dynTuckPose(DynBody *b)
 
 /* ACT_GO_LIMP: curl up. Stops grabbing and the arm brace, frees all limb springs and limits (their
  * weights 0) and pulls the limbs in (dynTuckPose) - unless a particle is touching something.
- * (DM-047: dynGoLimp) */
+ * (dynGoLimp) */
 /* VA 0x00453f80, 338 bytes, [I] row, status draft */
 void dynTuck(void *body, void *actor)
 {
@@ -1321,7 +1321,7 @@ void dynTuck(void *body, void *actor)
 
 /* All limits back to 1 (the knees' were 0.5 at creation), limb springs to 24, the neck spring
  * s_sprNeck[0] to 4.8 (it was created at 24: the index bug turns this into a weaker neck after the
- * first tuck [V]). (DM-047: dynRestoreJoints) */
+ * first tuck [V]). (dynRestoreJoints) */
 /* VA 0x00454140, 311 bytes, [I] row, status draft */
 void dynUntuck(void *body, void *actor)
 {
@@ -1356,7 +1356,7 @@ void dynClearLimits(DynBody *b)
 }
 
 /* Unreferenced: drop the limits (dynStepRider then clears them every step). */
-/* VA 0x004542f0, 31 bytes, [I] row (DM-058: created), status draft */
+/* VA 0x004542f0, 31 bytes, [I] row (created), status draft */
 void dynSetLimitsOff(void *body, void *actor)
 {
     (void)actor;
@@ -1365,7 +1365,7 @@ void dynSetLimitsOff(void *body, void *actor)
 }
 
 /* Unreferenced: the six limits back, every particle's bounce 0.6 and friction 1.0. */
-/* VA 0x00454320, 100 bytes, [I] row (DM-058: created), status draft */
+/* VA 0x00454320, 100 bytes, [I] row (created), status draft */
 void dynSetLimitsOn(void *body, void *actor)
 {
     DynBody *b = (DynBody *)body;
@@ -1876,7 +1876,7 @@ void dynIkSetGains(BmxIk *ik, float gain, float gain2)
 }
 
 /* Unreferenced. */
-/* VA 0x00455e90, 24 bytes, [I] row (DM-058: created), status draft */
+/* VA 0x00455e90, 24 bytes, [I] row (created), status draft */
 void dynIkSetLooseGains(BmxIk *ik)
 {
     dynIkSetGains(ik, 0.5f, 0.01f);
@@ -1889,7 +1889,7 @@ void dynIkSetDefaultGains(BmxIk *ik)
     dynIkSetGains(ik, 0.1f, 0.01f);
 }
 
-/* (DM-047: cameraInitRider) */
+/* (cameraInitRider) */
 /* VA 0x00455ef0, 1 bytes, [I] row, status draft */
 void dynIkReset(void *actor, BmxIk *ik)
 {
@@ -1898,7 +1898,7 @@ void dynIkReset(void *actor, BmxIk *ik)
 }
 
 /* The limb lengths from the rider model (riderCreate, with that player's part cache selected).
- * (DM-047: cameraMeasureRider) */
+ * (cameraMeasureRider) */
 /* VA 0x00455f10, 216 bytes, [I] row, status draft */
 void dynIkMeasure(void *actor, BmxIk *ik)
 {

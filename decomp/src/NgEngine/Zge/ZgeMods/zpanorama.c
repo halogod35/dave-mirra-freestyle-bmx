@@ -1,12 +1,12 @@
 /*
  * NgEngine/Zge/ZgeMods/zpanorama.c
  * Original: unknown (no path string; name invented in the original style)
- * Evidence: [I] new file (DM-043). The five functions share the global 0x0067537C (between the
+ * Evidence: [I] new file. The five functions share the global 0x0067537C (between the
  * pcmovie.c globals and the ztoken parser's 0x00675380), zsceneInit/zsceneClose/zsceneShutdown call
  * Init/Close/Shutdown as a unit, and the "Panorama" literal 0x00563554 sits between the pcmovie.c
  * and ztoken literals. [V] for zpanoramaLoad (handler 'SDPA' in zsceneSceneHandlers 0x00561908).
  * 5 functions, VA 0x004a1060-0x004a1111.
- * DM-043 (draft). Non-matching C (AD-8). Format: docs/formats/LEVEL.md 5.3 (SDPA).
+ * Draft. Non-matching C (AD-8). Format: docs/formats/LEVEL.md 5.3 (SDPA).
  *
  * The panorama is the sky/backdrop model of a level: Scene._sd's SDPA form holds one MODL. It is
  * loaded as a scene *template* with the id zHashName("Panorama") (0x00410A3B) and has no placement

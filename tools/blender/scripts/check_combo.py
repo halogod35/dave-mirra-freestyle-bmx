@@ -1,4 +1,4 @@
-"""Blender headless check (and renders) for `dmbmx export-combo` files (DM-018).
+"""Blender headless check (and renders) for `dmbmx export-combo` files.
 
     blender -b --factory-startup --python tools/blender/scripts/check_combo.py -- combo.glb [--render out/prefix]
         [--frames 0,8,16] [--view side|front34|front] [--riding]

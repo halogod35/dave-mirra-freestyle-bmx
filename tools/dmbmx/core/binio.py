@@ -1,4 +1,4 @@
-"""Small, generic little-endian binary helpers with bounds checks (owner: DM-010).
+"""Small, generic little-endian binary helpers with bounds checks.
 
 Every read goes through ``errors.need`` so a short buffer raises ``TruncatedError``
 (never ``struct.error`` / ``IndexError``).

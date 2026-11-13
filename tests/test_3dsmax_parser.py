@@ -1,4 +1,4 @@
-"""DM-060: tools/3dsmax/parser/dmparse.py (independent reference parser) must agree with dmbmx on the
+"""tools/3dsmax/parser/dmparse.py (independent reference parser) must agree with dmbmx on the
 whole corpus: counts, positions, normals, UVs, colours, indices, skeleton, texture bytes, ZAL
 assets, motion samples, level include files, sound banks, SAVE.DAT."""
 import io
@@ -22,7 +22,7 @@ from dmbmx.formats import audio, mati, motion, zal, zmd  # noqa: E402
 def test_dmparse_is_independent_of_dmbmx():
     src = (REPO / "tools" / "3dsmax" / "parser" / "dmparse.py").read_text(encoding="utf-8")
     assert "dmbmx" not in src.replace("independent of the `dmbmx`", "")
-    assert len(src.splitlines()) <= 1450          # phase 1 ~1000 lines; phase 2 levels allowed to grow (Director)
+    assert len(src.splitlines()) <= 1450          # phase 1 ~1000 lines; phase 2 levels allowed to grow
 
 
 @pytest.mark.parametrize("name", ["Hips", "Head", "LeftFoot", "DAVEMIRRA", "NAME_917_0", "tire", "\xe9t\xe9", ""])
@@ -103,7 +103,7 @@ def test_motion_bank_matches_dmbmx():
         for x, y in zip(pa, pb):
             assert x["rider"] == y.rider and x["bike"] == y.bike
             assert x["rider_trans"] == y.rider_trans and x["bike_trans"] == y.bike_trans
-    for name in motion.RIDER_CHANNELS + motion.BIKE_CHANNELS:      # DM-019: F q F + literal arm table
+    for name in motion.RIDER_CHANNELS + motion.BIKE_CHANNELS:      # F q F + literal arm table
         for e in ((100, -2000, 30000), (0, 0, 0), (-32768, 1234, -999)):
             q = dmparse.channel_rotation(name, e)
             assert all(math.isclose(u, v, abs_tol=1e-12) for u, v in zip(q, motion.channel_rotation(name, e)))

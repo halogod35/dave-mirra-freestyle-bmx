@@ -1,5 +1,5 @@
 /*
- * zstring.h - NgEngine string helpers (NgEngine/Zge/zstring.c) (DM-044).
+ * zstring.h - NgEngine string helpers (NgEngine/Zge/zstring.c).
  *
  * Besides thin CRT wrappers, zstring.c holds the text-id tables ("STRS" string sets, zTextGet) and,
  * by link order [I], the name registries of the particle-effect system (see zstring.c).

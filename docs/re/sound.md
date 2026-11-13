@@ -1,4 +1,4 @@
-# The sound system (DM-055)
+# The sound system
 
 How NgBMX.exe plays sound, from the decompilation of `bmxsound.c`, `zsndseq.c`, `zsndsrc.c` and the
 PC backend `winChan.c` / `winLoad.c` / `winStrm.c` (`decomp/src/zaxis/Bmx/Src/...`, types in
@@ -19,8 +19,8 @@ Tags: [V] read from the code (disassembly / decompilation) or checked over the f
 | banks | `winLoad.c` | 0x0046FB20-0x00470A47 | `zsnd*Asset`, getters for voices / samples / sample files / track defs / keymaps |
 | streams | `winStrm.c` | 0x00470AA0-0x004725D1 | `zsndStream*`: file streaming into DirectSound buffers, IMA-ADPCM decoding |
 
-All 129 functions are drafted. DM-055 created 41 functions Ghidra had missed (only reached through
-ILT thunks or function pointers, see the file headers) and moved three functions DM-040 had put at
+All 129 functions are drafted. The sound pass created 41 functions Ghidra had missed (only reached through
+ILT thunks or function pointers, see the file headers) and moved three functions the skeleton had put at
 the start of `bmxsound.c` to `frontend.c` (`frontendShutdownApp` 0x0044DC30 prints
 "APP: Shutdown MENU", the twin of `frontendInitApp`'s "APP: Init MENU").
 
@@ -162,7 +162,7 @@ Filters: nothing plays while closed; in music mode 2 the 5000-5999 events are mu
 `zsndSrcGetLevelPan` (level 127 x (1 - d^2/2500^2), pan from the sideways offset to the camera).
 `dmbmx audio list` prints these names per voice (`audio.voice_events`), and marks the voices the
 ZTRK tracks play as ambience. Which *sound* each event is (menu move / select / back, ...) still
-needs the play-test DM-015-PT4.
+needs the manual in-game check `sound-tones`.
 
 The music: `bmxsoundUpdate` (per frame) starts `g_bmxsoundLevelTrack[level]`
 (7, 1, 5, 2, 3, 4, 8, 6, 0, 9, 7, 6 for levels 0-11) when the stream is stopped, then, with

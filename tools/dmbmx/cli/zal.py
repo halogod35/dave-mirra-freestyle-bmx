@@ -1,4 +1,4 @@
-"""dmbmx zal list|extract|pack|replace: inspect, unpack and rebuild .zal asset libraries (DM-010, DM-023)."""
+"""dmbmx zal list|extract|pack|replace: inspect, unpack and rebuild .zal asset libraries."""
 import os
 from pathlib import Path
 
@@ -67,7 +67,7 @@ def _guard_outdir(outdir):
     game = os.environ.get("DMBMX_GAME_DIR", r"F:\Projects\Dave Mirra freestyle BMX")
     out = Path(outdir).resolve()
     g = Path(game).resolve()
-    allowed = g / "dave-mirra-bmx", g / "dave-mirra-pro-bmx", g / "wt"
+    allowed = g / "dave-mirra-bmx", g / "dave-mirra-freestyle-bmx", g / "wt"
     if (out == g or g in out.parents) and not any(out == a or a in out.parents for a in allowed):
         raise SystemExit(f"refusing to write into the game install ({out}); use out/ (AD-1)")
 

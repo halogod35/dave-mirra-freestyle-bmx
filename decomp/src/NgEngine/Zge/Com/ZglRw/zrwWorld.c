@@ -3,12 +3,12 @@
  * Original: C:\NgEngine\Zge\Com\ZglRw\zrwWorld.c
  * Evidence: [V] path string referenced by zrwWorldFindScfi/LoadMaterials/Init/Open; the rest [I]: the
  * globals 0x006741B8-0x0067428B, the API table g_zrwWorldApi 0x005620E0 (11 slots, all in this
- * range). DM-043 moved here: 0x00495DF0-0x00496240 (from the zobjPEmit/zrwWorld gap) and
- * 0x00497200-0x00497620 (DM-040 had them in zrwTxr.c by the weak "split" pass).
- * 33 functions, VA 0x00495df0-0x00497777 (DM-059 added the two zfx affectors 0x00497640-0x00497777:
+ * range). The zScene pass moved here: 0x00495DF0-0x00496240 (from the zobjPEmit/zrwWorld gap) and
+ * 0x00497200-0x00497620 (the skeleton had them in zrwTxr.c by the weak "split" pass).
+ * 33 functions, VA 0x00495df0-0x00497777 (the ZglRw pass added the two zfx affectors 0x00497640-0x00497777:
  * their tables g_zfxAffectorGravity 0x005623D8 / g_zfxAffectorFloorColl 0x005623E0 and defaults
  * 0x005623C0 / 0x005623D0 lie in this file's data, before zrwTxr.c's 0x005623E8).
- * DM-043 (draft). Non-matching C (AD-8). Types: decomp/include/zrwworld.h.
+ * Draft. Non-matching C (AD-8). Types: decomp/include/zrwworld.h.
  * Formats: docs/formats/LEVEL.md 3 (ZSD), 4 (BSP._sd); TEXTURE.md (Mat._sd MATI).
  *
  * The world is a RenderWare RpWorld kept in zrwZgl.c's globals; RenderWare calls are library code
@@ -60,7 +60,7 @@ void     *RwCameraGetZRaster(void *cam);                                /* 0x004
 void      RwCameraClear(void *cam, const void *colour, int mode);       /* 0x004DE8A0 */
 extern char RpPVSGeneric[];                                            /* 0x004CD510 sample callback */
 
-/* ---- other modules (current names until their cards land) */
+/* ---- other modules (current names until they are decompiled) */
 void    *zrwCamGetRwCamera(void *cam);                     /* the RwCamera of a zcam */
 void    *zrwCamGetFirst(void);                       /* the current camera */
 int      zrwCamBeginUpdate(void *cam);                  /* begin update */
@@ -162,8 +162,8 @@ void zrwWorldPrintGeometry(void)
 /* VA 0x00495f60, 445 bytes, [I] row, status draft */
 ZrwWorldStats *zrwWorldPrintInfo(void)
 {
-    /* g_zrwWorldApi.printInfo; also inlined at the end of zrwWorldLoad. Needs FixupDM043.java on a
-     * Ghidra project from before DM-043 (the auto-analysis disassembled it from 0x00495F70). */
+    /* g_zrwWorldApi.printInfo; also inlined at the end of zrwWorldLoad. Needs FixupZrwWorldPrintInfo.java on a
+     * Ghidra project from before the zScene pass (the auto-analysis disassembled it from 0x00495F70). */
     int n, i;
 
     g_pfnDebugPrintf("--------------------------------------------------------------\n");
@@ -521,7 +521,7 @@ int zrwWorldOpen(void *zsd, const char *dir)
 {
     /*
      * g_zrwWorldApi.open, called by zsceneOpen: Mat._sd, then BSP._sd, then the material hook-up
-     * (LoadMaterials and HookRpMaterials inlined). DM-040 named this function
+     * (LoadMaterials and HookRpMaterials inlined). The skeleton named this function
      * zrwWorldHookRpMaterials after the message it prints; that name now belongs to 0x004964F0.
      */
     if (g_zrwWorldState.isOpen) {
@@ -654,7 +654,7 @@ int zrwWorldRender(void)
     return 1;
 }
 
-/* ------------------------------------------------------------------ zfx affectors (DM-059)
+/* ------------------------------------------------------------------ zfx affectors
  * zfx affectors = { init, apply } pairs registered by name (NgIFfx.c). apply(enabled, system, params):
  * system word 0 = the zHeapList of particles, word 10 = the system's start time (ms); a particle has
  * its position at +0x04 and its velocity at +0x24. */
@@ -662,13 +662,13 @@ extern uint32_t (__cdecl *g_zglGetTime)(void);       /* 0x00561480 (timeGetTime)
 static const float s_gravityDefault[3] = { 0.0f, 9.81f, 0.0f };   /* 0x005623C0 */
 static const float s_floorDefault[2] = { 0.0f, 0.8f };            /* 0x005623D0 floor y, bounce */
 
-/* VA 0x00497640, 1 bytes, [I] DM-059 created, status draft */
+/* VA 0x00497640, 1 bytes, [I] new function, status draft */
 void zfxGravityInit(void)
 {
     /* g_zfxAffectorGravity[0] */
 }
 
-/* VA 0x00497650, 152 bytes, [I] DM-059 created, status draft */
+/* VA 0x00497650, 152 bytes, [I] new function, status draft */
 void zfxGravityApply(int enabled, uint32_t *system, const float *g)
 {
     /* (g_zfxAffectorGravity[1]) velocity += g * (now - start) / 1000 for every particle (sic: the whole elapsed time). */
@@ -688,13 +688,13 @@ void zfxGravityApply(int enabled, uint32_t *system, const float *g)
         zmathVecAdd((RwV3d *)(p + 0x24), (RwV3d *)(p + 0x24), &dv);
 }
 
-/* VA 0x004976f0, 1 bytes, [I] DM-059 created, status draft */
+/* VA 0x004976f0, 1 bytes, [I] new function, status draft */
 void zfxFloorCollInit(void)
 {
     /* g_zfxAffectorFloorColl[0] */
 }
 
-/* VA 0x00497700, 114 bytes, [I] DM-059 created, status draft */
+/* VA 0x00497700, 114 bytes, [I] new function, status draft */
 void zfxFloorCollApply(int enabled, uint32_t *system, const float *params)
 {
     /* (g_zfxAffectorFloorColl[1]) A particle at or below the floor (y >= floor, y down) is put on it and bounces: vy = -vy * k. */

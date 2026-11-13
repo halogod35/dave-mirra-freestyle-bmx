@@ -1,6 +1,6 @@
 /*
  * contrler.h - controllers: the game's pads (Bmx/Src/com/action/contrler.c) on top of the engine
- * input devices (NgEngine/Zge/zinput.c, Pc/pcinput.c) (DM-051).
+ * input devices (NgEngine/Zge/zinput.c, Pc/pcinput.c).
  *
  * Offsets are [V] (read/written at those offsets by contrler.c, zinput.c, pcinput.c, rider.c and
  * the frontend's controller screen 0x00441CB0/0x004420A0); names and meanings [I] unless noted.
@@ -149,7 +149,7 @@ void          contrlerRumble(uint32_t slot, int motor, int strength);   /* empty
 BmxPad       *contrlerGetPad(uint32_t pad);
 int           contrlerTestMask(const BmxInput *in, uint32_t mask, uint32_t test);
 
-/* engine side: zinput.c (DM-061) */
+/* engine side: zinput.c */
 int           zinputInit(void);                                     /* 0x004802F0 */
 int           zinputShutdown(void);                                 /* 0x00480340 */
 ZInputDevice *zinputOpen(int type);                                 /* 0x00480370 0 joystick, 1 keyboard, 2 both */

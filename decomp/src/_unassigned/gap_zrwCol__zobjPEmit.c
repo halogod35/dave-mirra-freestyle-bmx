@@ -5,13 +5,13 @@
  *                          0x0055C278.. point here, NgIFfx.c fills the rest) - a particle system
  *                          object, its affector list, the generic update; no path string
  *   0x004956F0-0x00495A0F  zmath helpers (plane, reflection, look-at, from-to rotation)
- * 14 functions, VA 0x00495370-0x00495A07 (DM-059 created 7). DM-064 moved the zobjPEmit methods
+ * 14 functions, VA 0x00495370-0x00495A07 (7 new functions). The clean-up moved the zobjPEmit methods
  * 0x00495A10 / 0x00495A60 to zobjPEmit.c.
- * Why this stays a gap (DM-064): no path string, literal or shared global ties these to one file.
+ * Why this stays a gap: no path string, literal or shared global ties these to one file.
  * The zfx base's callers are NgIFfx.c's type tables, the zmath helpers' callers are zobjCamera.c,
  * zrwCam.c, zcompres.c and NgIFfx.c, and zmath.c (0x00480D20-0x00482081) is far away in link order.
  * The likeliest owner of the zfx base is a stubbed engine file "zfx.c" [I], which would link here.
- * DM-059 (draft). Non-matching C (AD-8). Types: ngif.h (ZfxType, ZfxSystem), zmath.h.
+ * Draft. Non-matching C (AD-8). Types: ngif.h (ZfxType, ZfxSystem), zmath.h.
  */
 #include "decomp.h"
 #include "zmath.h"
@@ -30,7 +30,7 @@ typedef struct ZfxAffectorLink {
 } ZfxAffectorLink;         /* 0x10 */
 #define ZFX_AFFECTORS(t) ((zList *)((uint8_t *)(t) + 0x24))
 
-/* VA 0x00495370, 15 bytes, [I] DM-059 created, status draft (no caller found) */
+/* VA 0x00495370, 15 bytes, [I] new function, status draft (no caller found) */
 void zfxTypeInitAffectors(ZfxType *type)
 {
     zListInit(ZFX_AFFECTORS(type));
@@ -42,7 +42,7 @@ void zfxTypeDestroy(ZfxType *type)
     ((void (__cdecl *)(ZfxType *))type->fn0c)(type);
 }
 
-/* VA 0x00495390, 77 bytes, [I] DM-059 created, status draft (slot 4)
+/* VA 0x00495390, 77 bytes, [I] new function, status draft (slot 4)
  * A particle system: a list and a free list of `capacity` 0x60-byte particles. */
 ZfxSystem *zfxSystemCreate(void *owner, uint32_t capacity)
 {
@@ -66,7 +66,7 @@ void zfxSystemDestroy(ZfxType *type, ZfxSystem *sys)
     zmemFree(sys);
 }
 
-/* VA 0x00495410, 39 bytes, [I] DM-059 created, status draft (slot 1) */
+/* VA 0x00495410, 39 bytes, [I] new function, status draft (slot 1) */
 void zfxTypeAddAffector(ZfxType *type, void *const *affector, const void *params)
 {
     ZfxAffectorLink *l = (ZfxAffectorLink *)zmemAlloc(sizeof(ZfxAffectorLink));
@@ -75,7 +75,7 @@ void zfxTypeAddAffector(ZfxType *type, void *const *affector, const void *params
     zListAddTail(ZFX_AFFECTORS(type), &l->node);
 }
 
-/* VA 0x00495440, 41 bytes, [I] DM-059 created, status draft (slot 3) */
+/* VA 0x00495440, 41 bytes, [I] new function, status draft (slot 3) */
 void zfxTypeClearAffectors(ZfxType *type)
 {
     zListNode *n;
@@ -97,7 +97,7 @@ void zfxTypeAddAffectorByName(ZfxType *type, const char *name, const void *param
     }
 }
 
-/* VA 0x004954b0, 465 bytes, [I] DM-059 created, status draft (slot 7: the default update)
+/* VA 0x004954b0, 465 bytes, [I] new function, status draft (slot 7: the default update)
  * Moves every live particle (flag 1: pos += vel * dt / 1000, then pos += vel [V]), spins it (flag
  * 2: euler +0x44 applied to +0x34), recomputes the bounding box, frees expired ones (birth +0x5C,
  * life +0x58), then runs the type's affectors. Returns the number of particles visited. */
@@ -149,7 +149,7 @@ int zfxSystemUpdate(ZfxType *type, ZfxSystem *sys)
     return count;
 }
 
-/* VA 0x00495690, 57 bytes, [I] DM-059 created, status draft (no caller found): v - 2 (v.n) n */
+/* VA 0x00495690, 57 bytes, [I] new function, status draft (no caller found): v - 2 (v.n) n */
 void zmathVecReflect(float *out, const RwV3d *v, const RwV3d *n)
 {
     float d = zmathVecDot(v, n);
@@ -159,13 +159,13 @@ void zmathVecReflect(float *out, const RwV3d *v, const RwV3d *n)
     out[2] = v->z - d * n->z;
 }
 
-/* VA 0x004956d0, 24 bytes, [I] DM-059 created, status draft (no caller found) */
+/* VA 0x004956d0, 24 bytes, [I] new function, status draft (no caller found) */
 float zmathPlaneDistance(const float *plane, const RwV3d *p)
 {
     return zmathVecDot((const RwV3d *)plane, p) + plane[4];
 }
 
-/* Plane helpers (DM-045): a plane is { normal, pad, d } (5 floats) */
+/* Plane helpers: a plane is { normal, pad, d } (5 floats) */
 
 /* VA 0x004956f0, 52 bytes, unassigned, status draft */
 float *zmathPlaneFromPointNormal(float *plane, const RwV3d *point, const RwV3d *normal)

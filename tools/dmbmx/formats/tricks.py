@@ -1,8 +1,8 @@
-"""Trick ids -> motion ids (DM-046) and the trick selection from the stick (DM-047).
+"""Trick ids -> motion ids and the trick selection from the stick.
 Spec: docs/formats/ANIM.md sections 7 and 8.
 
 Trick ids index g_trickNames 0x00559390 (84 names: 46 tricks, then 38 modifiers). The rider code
-(rider.c, decompiled by DM-047) requests motions by number into the motion bank (motion.zal, ids
+(rider.c) requests motions by number into the motion bank (motion.zal, ids
 1..238, see ANIM.md):
 
 - air trick t (0..26): g_trickMotion[t] (u16 table 0x00558FF8) = start, +1 hold, +2 release;

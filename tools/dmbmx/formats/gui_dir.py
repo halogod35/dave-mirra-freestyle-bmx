@@ -1,4 +1,4 @@
-"""Menu-modding directories: export the GUI art / screens / texts / HUD fonts to PNG + JSON and back (DM-066).
+"""Menu-modding directories: export the GUI art / screens / texts / HUD fonts to PNG + JSON and back.
 
 Intwrap.zal (``export_gui`` / ``import_gui``)::
 

@@ -4,8 +4,8 @@
  * Evidence: [V] path string referenced by zactorOpenMotionLibrary / zactorLoadMotionBank; the rest
  * [I]: link order 0x00472630-0x0047785C (between winStrm.c and zprim.c) and the module's globals
  * 0x0055F35C-0x0055F38C, 0x00601D30-0x00641E30, which no code outside this range touches.
- * 85 functions (DM-064 created 40 more, reached only through their /INCREMENTAL thunks: accessors,
- * the LOD/model setters, the motion tags, zactorSampleMotion, ...; DM-053; zactorInit came over from the winStrm/zactor gap; DM-061 created
+ * 85 functions (the clean-up created 40 more, reached only through their /INCREMENTAL thunks: accessors,
+ * the LOD/model setters, the motion tags, zactorSampleMotion, ...; zactorInit came over from the winStrm/zactor gap; the ZGE object pass created
  * zactorCloseMotionLibrary 0x00475000). Non-matching C (AD-8).
  * Types: decomp/include/zactor.h. Clip format: docs/formats/ANIM.md section 2.
  *
@@ -40,7 +40,7 @@
 #define DEG_TO_ANGLE  182.04445f           /* 65536 / 360 (0x0054D01C) */
 #define ZAL_MAGIC     0x2A81511Cu
 
-/* other modules (current names until their cards land) */
+/* other modules (current names until they are decompiled) */
 void zobjSetActive(void *obj, int visible);             /* zobj.c: show / hide the model */
 int  __ftol(void);                                      /* CRT: float -> int of ST(0) */
 #define FTOL(x) ((int32_t)(x))
@@ -106,13 +106,13 @@ void zactorInit(void)
 /* VA 0x004726c0, 1 bytes, [I] row, status draft */
 void zactorStub1(void)
 {
-    /* DM-064 created: a bare ret, thunk 0x00402531 */
+    /* new function: a bare ret, thunk 0x00402531 */
 }
 
 /* VA 0x004726e0, 56 bytes, [V] direct, status draft */
 void zactorCopy(ZActor *dst, const ZActor *src)
 {
-    /* DM-064 created; no caller, thunk 0x00401226 */
+    /* new function; no caller, thunk 0x00401226 */
     if (src->kind != ZACTOR_KIND_3)
         zAssertFail("Only coded for prop types", ZACTOR_FILE, 0xCE, 0);
     zstringMemCopy(dst, src, sizeof(ZActor));
@@ -173,14 +173,14 @@ ZActor *zactorSetup(int kind, ZActor *a)
 /* VA 0x004728c0, 12 bytes, [I] row, status draft */
 void zactorFree(ZActor *a)
 {
-    /* DM-064 created; no caller, thunk 0x00401B54 */
+    /* new function; no caller, thunk 0x00401B54 */
     zactorClear(a);
 }
 
 /* VA 0x004728e0, 18 bytes, [I] row, status draft */
 void zactorClear(ZActor *a)
 {
-    /* (DM-064 created; zactorFree's body): kind 0 marks a free pool slot */
+    /* (new function; zactorFree's body): kind 0 marks a free pool slot */
     a->flags = 0;
     a->kind = 0;
 }
@@ -202,21 +202,21 @@ RwV3d *zactorGetPos(ZActor *a)
 /* VA 0x00472960, 26 bytes, [I] row, status draft */
 void zactorSetYaw(ZActor *a, int yaw)
 {
-    /* DM-064 created; no caller, thunk 0x0040114F */
+    /* new function; no caller, thunk 0x0040114F */
     a->heading = a->rot[1] = (int16_t)zactorToWorldAngle(yaw);
 }
 
 /* VA 0x00472990, 18 bytes, [I] row, status draft */
 int zactorGetYaw(ZActor *a)
 {
-    /* DM-064 created; no caller, thunk 0x0040142E */
+    /* new function; no caller, thunk 0x0040142E */
     return zactorToLocalAngle(a->heading);
 }
 
 /* VA 0x004729c0, 36 bytes, [I] row, status draft */
 int zactorToWorldAngle(int angle)
 {
-    /* (DM-064 created; no caller, thunk 0x00401E1F): game angle -> engine angle through the global
+    /* (new function; no caller, thunk 0x00401E1F): game angle -> engine angle through the global
      * heading */
     return g_zactorHeadingNeg ? g_zactorHeading - angle : g_zactorHeading + angle;
 }
@@ -224,7 +224,7 @@ int zactorToWorldAngle(int angle)
 /* VA 0x00472a00, 25 bytes, [I] row, status draft */
 int zactorToLocalAngle(int angle)
 {
-    /* DM-064 created; no caller, thunk 0x00401CB7 */
+    /* new function; no caller, thunk 0x00401CB7 */
     angle -= g_zactorHeading;
     return g_zactorHeadingNeg ? -angle : angle;
 }
@@ -259,7 +259,7 @@ void zactorSetScale(ZActor *a, const RwV3d *scale)
 /* VA 0x00472af0, 8 bytes, [I] row, status draft */
 RwV3d *zactorGetScale(ZActor *a)
 {
-    /* DM-064 created; no caller, thunk 0x00401B95 */
+    /* new function; no caller, thunk 0x00401B95 */
     return &a->scale;
 }
 
@@ -524,7 +524,7 @@ ZactorFrame *zactorDecodeMotion(ZActor *a, float rate, uint32_t flags, ZactorFra
 /* VA 0x004739c0, 1357 bytes, [I] row, status draft */
 void zactorSampleMotion(ZActor *a, int16_t (*rot)[3], const ZMotionHeader *m, int frames, uint8_t flags)
 {
-    /* (DM-064 created; no caller, thunk 0x0040240F) The rider-section pose `frames` frames into a
+    /* (new function; no caller, thunk 0x0040240F) The rider-section pose `frames` frames into a
      * clip, without touching the actor's decoder: the channel angles go to rot[channel][3]. It decodes
      * into an *uninitialised* stack ZMotionState, so the per-channel deltas start as garbage until a
      * record sets them, and the head-yaw override copies a garbage word (it does clear the actor's
@@ -938,7 +938,7 @@ int zactorOpenMotionLibrary(const char *path)
 /* VA 0x00475000, 59 bytes, [I] row, status draft */
 void zactorCloseMotionLibrary(void)
 {
-    /* DM-061 created this function (DM-057 discovered work): NgApp's level shutdown calls it */
+    /* The ZGE object pass created this function (found during the NgIF pass): NgApp's level shutdown calls it */
     if (g_zactorMotionLib == 0)
         zAssertFail("Motions not opened", ZACTOR_FILE, 0x982, 0);
     zassetCloseLibrary(g_zactorMotionLib);
@@ -969,11 +969,11 @@ ZactorBank *zactorLoadMotionBank(uint32_t bankId)
 
 /* Index an in-memory ZAL: with the 16-byte header (magic 0x2A81511C) or headerless
  * (docs/formats/ZAL.md 2.6); a first byte of 0xFF skips 8 more bytes. reuse != 0 overwrites bank 0
- * once one exists (the motion bank always does). Was zasset_OpenMemLibrary (DM-010). */
+ * once one exists (the motion bank always does). Was zasset_OpenMemLibrary. */
 /* VA 0x00475140, 129 bytes, [V] direct, status draft */
 void zactorLoadMotionBankTemp(uint32_t bankId)
 {
-    /* (DM-064 created; no caller, thunk 0x004013F7) Loads motion group `bankId` of MOTION.ZAL into
+    /* (new function; no caller, thunk 0x004013F7) Loads motion group `bankId` of MOTION.ZAL into
      * temp memory and opens it as a bank (unlike zactorLoadMotionBank, which reuses
      * g_zactorBankBuffer). */
     uint32_t size;
@@ -1020,13 +1020,13 @@ ZactorBank *zactorOpenMemBank(const uint8_t *data, uint32_t size, int reuse)
 /* VA 0x004752c0, 1 bytes, [I] row, status draft */
 void zactorStub2(void)
 {
-    /* DM-064 created: a bare ret, thunk 0x00401A87 */
+    /* new function: a bare ret, thunk 0x00401A87 */
 }
 
 /* VA 0x004752e0, 15 bytes, [I] row, status draft */
 ZactorBank *zactorGetBank(int index)
 {
-    /* DM-064 created; no caller, thunk 0x00401C94 */
+    /* new function; no caller, thunk 0x00401C94 */
     return &g_zactorBanks[index];
 }
 
@@ -1071,7 +1071,7 @@ ZactorBankEntry *zactorNextMotion(ZactorBank *bank)
 /* VA 0x00475430, 24 bytes, [I] row, status draft */
 void zactorSetModel(ZActor *a, uint16_t model)
 {
-    /* DM-064 created; no caller, thunk 0x0040107D */
+    /* new function; no caller, thunk 0x0040107D */
     a->modelId = model;
     ZACTOR_LOD_MODEL(a, 0) = model;
 }
@@ -1079,7 +1079,7 @@ void zactorSetModel(ZActor *a, uint16_t model)
 /* VA 0x00475460, 78 bytes, [V] direct, status draft */
 void zactorSetLodModel(ZActor *a, uint16_t lod, uint16_t model)
 {
-    /* DM-064 created; no caller, thunk 0x00402586 */
+    /* new function; no caller, thunk 0x00402586 */
     if (lod > 3)
         zAssertFail("Exeeded maximum LODs for actor", ZACTOR_FILE, 0xA76, 0);
     ZACTOR_LOD_MODEL(a, lod) = model;
@@ -1090,7 +1090,7 @@ void zactorSetLodModel(ZActor *a, uint16_t lod, uint16_t model)
 /* VA 0x004754d0, 12 bytes, [I] row, status draft */
 uint16_t zactorGetModel(ZActor *a)
 {
-    /* DM-064 created; no caller, thunk 0x00401AF0 */
+    /* new function; no caller, thunk 0x00401AF0 */
     return a->modelId;
 }
 
@@ -1100,7 +1100,7 @@ uint16_t zactorGetModel(ZActor *a)
 /* VA 0x004754f0, 19 bytes, [I] row, status draft */
 uint8_t zactorGetMotionTagCount(const ZMotionHeader *m)
 {
-    /* DM-064 created; no caller, thunk 0x0040189D */
+    /* new function; no caller, thunk 0x0040189D */
     if (m->extra == 0)
         return 0;
     return *(ZMOTION_TAGS(m) + 0xC);
@@ -1109,7 +1109,7 @@ uint8_t zactorGetMotionTagCount(const ZMotionHeader *m)
 /* VA 0x00475520, 402 bytes, [I] row, status draft */
 uint8_t zactorGetMotionTags(const ZMotionHeader *m, ZactorTag *out)
 {
-    /* (DM-064 created; no caller, thunk 0x00402202) All tags of a clip: u16 count at +0xC of the tag
+    /* (new function; no caller, thunk 0x00402202) All tags of a clip: u16 count at +0xC of the tag
      * block, records from +0x10 of 4 s16 (time, x, y, z) or, when header flags bits 12-14 are set, 5
      * (+ id). Positions are rotated by the global heading. Returns the count (low byte). */
     const uint8_t *blk;
@@ -1138,7 +1138,7 @@ uint8_t zactorGetMotionTags(const ZMotionHeader *m, ZactorTag *out)
 /* VA 0x00475730, 347 bytes, [I] row, status draft */
 uint8_t zactorGetFirstMotionTag(const ZMotionHeader *m, ZactorTag *out)
 {
-    /* (DM-064 created; no caller, thunk 0x00402338) The first tag only (same record format); returns
+    /* (new function; no caller, thunk 0x00402338) The first tag only (same record format); returns
      * the tag count (low byte). */
     const int16_t *r;
 
@@ -1157,21 +1157,21 @@ uint8_t zactorGetFirstMotionTag(const ZMotionHeader *m, ZactorTag *out)
 /* VA 0x004758f0, 18 bytes, [I] row, status draft */
 void zactorSetLod(ZActor *a, uint8_t lod)
 {
-    /* DM-064 created; no caller, thunk 0x004024B4 */
+    /* new function; no caller, thunk 0x004024B4 */
     a->lod = lod;
 }
 
 /* VA 0x00475920, 15 bytes, [I] row, status draft */
 void zactorSetRadius(ZActor *a, float radius)
 {
-    /* DM-064 created; no caller, thunk 0x0040200E */
+    /* new function; no caller, thunk 0x0040200E */
     a->radius = radius;
 }
 
 /* VA 0x00475940, 97 bytes, [I] row, status draft */
 void zactorSetExtent(ZActor *a, const RwV3d *extent)
 {
-    /* DM-064 created; no caller, thunk 0x00401B31 */
+    /* new function; no caller, thunk 0x00401B31 */
     float m;
 
     a->extent = *extent;
@@ -1189,7 +1189,7 @@ void zactorSetHeading(int16_t heading, int negate)
 /* VA 0x00475a00, 31 bytes, [I] row, status draft */
 int zactorAddAngle(int angle, int delta)
 {
-    /* DM-064 created; no caller, thunk 0x0040240A */
+    /* new function; no caller, thunk 0x0040240A */
     return g_zactorHeadingNeg ? angle - delta : angle + delta;
 }
 
@@ -1224,7 +1224,7 @@ void zactorClearFlag2(ZActor *a)
 /* VA 0x00475ad0, 45 bytes, [I] row, status draft */
 void zactorSetTarget(ZActor *a, const RwV3d *pos, uint32_t id)
 {
-    /* DM-064 created; no caller, thunk 0x0040131B */
+    /* new function; no caller, thunk 0x0040131B */
     a->targetId = id;
     a->target = *pos;
 }
@@ -1232,7 +1232,7 @@ void zactorSetTarget(ZActor *a, const RwV3d *pos, uint32_t id)
 /* VA 0x00475b10, 35 bytes, [I] row, status draft */
 void zactorEnableTag(ZActor *a, int tag)
 {
-    /* DM-064 created; no caller, thunk 0x00401F69): only tag 0 exists (flag 0x800 */
+    /* new function; no caller, thunk 0x00401F69): only tag 0 exists (flag 0x800 */
     if (tag == 0)
         a->flags |= 0x800;
     else
@@ -1242,7 +1242,7 @@ void zactorEnableTag(ZActor *a, int tag)
 /* VA 0x00475b50, 35 bytes, [I] row, status draft */
 void zactorDisableTag(ZActor *a, int tag)
 {
-    /* DM-064 created; no caller, thunk 0x00401474 */
+    /* new function; no caller, thunk 0x00401474 */
     if (tag == 0)
         a->flags &= ~0x800u;
     else
@@ -1252,27 +1252,27 @@ void zactorDisableTag(ZActor *a, int tag)
 /* VA 0x00475b90, 9 bytes, [I] row, status draft */
 void zactorSetFlag20(ZActor *a)
 {
-    /* DM-064 created; no caller, thunk 0x00401E5B */
+    /* new function; no caller, thunk 0x00401E5B */
     a->flags |= 0x20;
 }
 
 /* VA 0x00475bb0, 9 bytes, [I] row, status draft */
 void zactorClearFlag20(ZActor *a)
 {
-    /* DM-064 created; no caller, thunk 0x00401D34 */
+    /* new function; no caller, thunk 0x00401D34 */
     a->flags &= ~0x20u;
 }
 
 /* VA 0x00475bd0, 1 bytes, [I] row, status draft */
 void zactorStub3(void)
 {
-    /* DM-064 created: a bare ret, thunk 0x00401C44 */
+    /* new function: a bare ret, thunk 0x00401C44 */
 }
 
 /* VA 0x00475bf0, 26 bytes, [I] row, status draft */
 void zactorSetFrameRate(int16_t rate)
 {
-    /* (DM-064 created; no caller, thunk 0x00401E1A) The decoder's clock step for `rate` frames per
+    /* (new function; no caller, thunk 0x00401E1A) The decoder's clock step for `rate` frames per
      * second (1024 / rate; 34 is the default). */
     g_zactorFrameMs = 1024.0f / (float)rate;
 }
@@ -1280,27 +1280,27 @@ void zactorSetFrameRate(int16_t rate)
 /* VA 0x00475c20, 1 bytes, [I] row, status draft */
 void zactorStub4(void)
 {
-    /* DM-064 created: a bare ret, thunk 0x004010FA */
+    /* new function: a bare ret, thunk 0x004010FA */
 }
 
 /* VA 0x00475c40, 15 bytes, [I] row, status draft */
 void zactorSetUser(ZActor *a, void *user)
 {
-    /* DM-064 created; no caller, thunk 0x004015E1 */
+    /* new function; no caller, thunk 0x004015E1 */
     a->user = user;
 }
 
 /* VA 0x00475c60, 11 bytes, [I] row, status draft */
 void *zactorGetUser(ZActor *a)
 {
-    /* DM-064 created; no caller, thunk 0x004024A5 */
+    /* new function; no caller, thunk 0x004024A5 */
     return a->user;
 }
 
 /* VA 0x00475c80, 44 bytes, [I] row, status draft */
 void zactorGetRootPos(ZActor *a, RwV3d *out)
 {
-    /* (DM-064 created; no caller, thunk 0x0040132F) The actor position raised by the decoded rider
+    /* (new function; no caller, thunk 0x0040132F) The actor position raised by the decoded rider
      * height (scaled for a scaled actor). */
     float h = a->anim->block[0].height;
 
@@ -1388,7 +1388,7 @@ void zactorGetBonePos(ZActor *a, int bone, const RwV3d *local, RwV3d *out, uint8
 /* VA 0x004760b0, 107 bytes, [V] direct, status draft */
 void zactorTurnHead(ZActor *a, int16_t delta)
 {
-    /* (DM-064 created; no caller, thunk 0x00401FC3) Turns the head (channel 2 yaw) by delta relative
+    /* (new function; no caller, thunk 0x00401FC3) Turns the head (channel 2 yaw) by delta relative
      * to the decoded pose: the first call saves the pose's yaw in headYaw and sets
      * ZACTOR_HEAD_OVERRIDE (the next decode restores it). */
     ZMotionState *pose;
@@ -1418,7 +1418,7 @@ void zactorSetChannel(ZActor *a, int channel, const int16_t *euler)
 /* VA 0x00476190, 53 bytes, [I] row, status draft */
 void zactorGetChannel(ZActor *a, uint16_t channel, int16_t *euler)
 {
-    /* DM-064 created; no caller, thunk 0x004021A3 */
+    /* new function; no caller, thunk 0x004021A3 */
     const int16_t *r = a->anim->block[0].rot[channel];
 
     euler[0] = r[0];
@@ -1435,7 +1435,7 @@ void zactorSetSkeleton(ZActor *a, int skeleton)
 /* VA 0x00476200, 8 bytes, [I] row, status draft */
 int zactorGetSkeleton(ZActor *a)
 {
-    /* DM-064 created; no caller, thunk 0x0040175D */
+    /* new function; no caller, thunk 0x0040175D */
     return a->skeleton;
 }
 
@@ -1448,7 +1448,7 @@ void zactorSetHeight(ZActor *a, float height)
 /* VA 0x00476250, 22 bytes, [I] row, status draft */
 uint8_t zactorGetFrameCount(ZActor *a)
 {
-    /* (DM-064 created; no caller, thunk 0x0040227A): rider frames decoded since the last restart, 0
+    /* (new function; no caller, thunk 0x0040227A): rider frames decoded since the last restart, 0
      * for other kinds */
     if (a->kind == ZACTOR_KIND_PERSON)
         return a->anim->block[0].frameCount;
@@ -1464,7 +1464,7 @@ float zactorGetHeight(ZActor *a)
 /* VA 0x004762a0, 53 bytes, [I] row, status draft */
 void zactorGetRotation(ZActor *a, int16_t *euler)
 {
-    /* (DM-064 created; no caller, thunk 0x004020BD): the Euler angles with the yaw back in game terms */
+    /* (new function; no caller, thunk 0x004020BD): the Euler angles with the yaw back in game terms */
     int16_t yaw = (int16_t)(a->rot[1] - g_zactorHeading);
 
     if (g_zactorHeadingNeg)
@@ -1485,7 +1485,7 @@ void zactorGetRootMatrix(ZActor *a, RwMatrix *m)
 /* VA 0x00476340, 71 bytes, [I] row, status draft */
 void zactorSetRotation(ZActor *a, int16_t *euler)
 {
-    /* (DM-064 created; no caller, thunk 0x00401C3F) The inverse; like the exe it converts the caller's
+    /* (new function; no caller, thunk 0x00401C3F) The inverse; like the exe it converts the caller's
      * yaw in place. */
     if (g_zactorHeadingNeg)
         euler[1] = (int16_t)-euler[1];

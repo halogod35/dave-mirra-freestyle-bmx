@@ -1,4 +1,4 @@
-"""Error contract for every dmbmx parser (owned by DM-050 / QA; see docs/testing.md).
+"""Error contract for every dmbmx parser (see docs/testing.md).
 
 Rule: when a reader is given malformed bytes it raises a ``FormatError`` (or a
 subclass) with a message that says what was wrong and, where known, at which

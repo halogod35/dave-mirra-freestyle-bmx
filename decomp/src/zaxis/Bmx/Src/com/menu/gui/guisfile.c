@@ -1,14 +1,14 @@
 /*
  * zaxis/Bmx/Src/com/menu/gui/guisfile.c
- * Original: (no path string; the name follows its "GUISFILE:" messages, DM-056)
+ * Original: (no path string; the name follows its "GUISFILE:" messages)
  * Evidence: [V] the "GUISFILE:" literals 0x0055A168-0x0055A218 (with "EDEF" 0x0055A1DC and "SCRN"
  *           0x0055A210) follow guimain.c's last literal 0x0055A128 and precede guitoggl.c's
  *           0x0055A24C in .data; the only code that references them is 0x00439A00, which sits
- *           between guimain.c and guitoggl.c (link order = literal order). DM-040 had it in guimain.c
+ *           between guimain.c and guitoggl.c (link order = literal order). The skeleton had it in guimain.c
  *           (split). The one "GUISFILE:" message inside guimain.c (0x00559F2C, guiLoadScreenNow) is in
  *           guimain.c's own literal run.
  * 1 function, VA 0x00439a00-0x00439e5b.
- * DM-056 (draft). Non-matching C (AD-8). Types: gui.h. Format: docs/formats/ZAL.md 3.2,
+ * Draft. Non-matching C (AD-8). Types: gui.h. Format: docs/formats/ZAL.md 3.2,
  * tools/dmbmx/formats/scrn.py (tests/test_scrn_*.py check the data against this reader).
  */
 #include <string.h>

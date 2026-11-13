@@ -1,5 +1,5 @@
 /*
- * save.h - SAVE.DAT blocks as they live in memory (DM-040, from docs/formats/SAVE.md by DM-012/DM-024).
+ * save.h - SAVE.DAT blocks as they live in memory (from docs/formats/SAVE.md).
  *
  * memcard_LoadSave 0x00412190 copies the file body into three globals:
  *   file 0x0008 (0xC3C)  -> g_saveBlockA   0x006955E0  SaveBlockA

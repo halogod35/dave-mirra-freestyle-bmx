@@ -4,8 +4,8 @@
  * Evidence: [V] path string 0x00559D14 referenced by guiInputInit (line 0x267) and guiInputGetPad
  *           (0x307); [I] the rest by link order (0x00436C20-0x0043744E) and because they only read
  *           g_guiPad. The assert messages are shared literals of contrler.c (string pooling).
- * 20 functions, VA 0x00436c20-0x0043744e (DM-056 created 0x004373E0, guiInputClear).
- * DM-056 (draft). Non-matching C (AD-8). Types: gui.h, contrler.h. Notes: docs/re/frontend.md.
+ * 20 functions, VA 0x00436c20-0x0043744e (the front-end pass created 0x004373E0, guiInputClear).
+ * Draft. Non-matching C (AD-8). Types: gui.h, contrler.h. Notes: docs/re/frontend.md.
  *
  * The menu pad: pad 0 only (guiInputGetPad asserts it), read straight from the zinput device
  * (no SaveProfile remapping, unlike contrler.c). guiUpdate turns these tests into GUI_MSG_*.
@@ -17,7 +17,7 @@
 
 #define GUIINPUT_SRC "C:\\zaxis\\Bmx\\src\\com\\menu\\gui\\guiinput.c"
 
-/* zinputOpen / zinputClose: contrler.h (DM-061) */
+/* zinputOpen / zinputClose: contrler.h */
 
 GuiPad   g_guiPad;               /* 0x0056D298 */
 int32_t  g_guiPadPrev[2];        /* 0x0056D2B8 the pad's +0x10 / +0x14 of the previous poll */

@@ -1,15 +1,15 @@
 /*
- * rider.h - per-player rider state (Bmx/Src/com/action/rider.c) (DM-040, partial; DM-046 added the
- * fields game.c touches: trick input, the trick/score block, the trick log, per-area statistics,
- * judging, position/velocity and the two contact records; DM-047 added the fields rider.c touches:
+ * rider.h - per-player rider state (Bmx/Src/com/action/rider.c). The decomp of game.c
+ * recovered the fields it touches: trick input, the trick/score block, the trick log, per-area statistics,
+ * judging, position/velocity and the two contact records; rider.c added the fields it touches:
  * the input block and direction buffer, the state machine (state/stateTimer), the two motion slots
  * and the root-motion accumulator, the trick-flip rotation, the steering rates and the wheel contacts;
- * DM-048 added the physics fields (prefixed `phys`) and BmxWheel, the two wheel records).
+ * physics.c added the physics fields (prefixed `phys`) and BmxWheel, the two wheel records.
  *
  * [V] Global array g_riders at 0x00691F40, stride 0xF70, indexed by player slot (rider_Create
  * 0x004316C0 writes slot * 0xF70 + offset). [I] two slots (2 players, as g_saveProfiles).
  * Offsets are [V] (read/written at those offsets by game.c / rider.c); meanings [I] unless noted.
- * The rest is padding until the rider/physics cards recover it.
+ * The rest is padding until someone recovers it.
  */
 #ifndef RIDER_H
 #define RIDER_H
@@ -102,12 +102,12 @@ typedef struct BmxIkTarget {
     float    dir[4];           /* +0x10 bend direction (the forearm / shin right axis) */
 } BmxIkTarget;                 /* 0x20 */
 
-/* The rider's two-bone limb IK (BmxRider +0xD98, 0x1D8; dyn.c dynIk*, DM-058). Limb bits / target
+/* The rider's two-bone limb IK (BmxRider +0xD98, 0x1D8; dyn.c dynIk*). Limb bits / target
  * index: 1 left arm, 2 right arm, 4 left leg, 8 right leg. Lengths are the model's part offsets
  * (zactorGetPartLength, dynIkMeasure); reach = the two lengths (arms: minus 1). [V] offsets. */
 typedef struct BmxIk {
     uint8_t  unk_000[0x100];   /* +0x000 not used */
-    float    unk_100;          /* +0x100 1.0 (riderCreate; DM-047's camScale), not read */
+    float    unk_100;          /* +0x100 1.0 (riderCreate; formerly camScale), not read */
     float    unk_104;          /* +0x104 0 (riderCreate), not read */
     float    unk_108;          /* +0x108 0 (riderCreate), not read */
     uint32_t unk_10c;
@@ -131,7 +131,7 @@ typedef struct BmxIk {
     BmxIkTarget target[4];     /* +0x158 left arm, right arm, left leg, right leg */
 } BmxIk;                       /* 0x1D8 */
 
-/* One wheel of the bike (rider +0xC88 front, +0xD0C rear; DM-048, physics.c). [V] offsets from
+/* One wheel of the bike (rider +0xC88 front, +0xD0C rear; physics.c). [V] offsets from
  * bmxphysUpdatePositionRoll/Air (wheel base + i * 0x84) and bmxphysResetRider; meanings [I]. */
 typedef struct BmxWheel {
     float    pos[3];           /* +0x00 hub in bike space (front {55.25, -5.6, 0}, rear {-36.52, -5.6, 0}, riderCreate) */
@@ -193,7 +193,7 @@ typedef struct BmxRider {
     uint8_t  surface;          /* +0x3DD BMXSURF_* (physics.h): type of what the bike is on (9, 10, 12, ...) */
     int16_t  physTimer;        /* +0x3DE frames left of a timed physics move: the lock-on flight to a rail / wall,
                                   the air auto-rotation (physAirRot) or the spine hop; physics counts down
-                                  (DM-047 called it snapFrames) */
+                                  (formerly snapFrames) */
     float    matrix[16];       /* +0x3E0 orientation */
     float    pos[3];           /* +0x420 position (cm; y up is negative) */
     uint8_t  unk_42c[4];
@@ -221,7 +221,7 @@ typedef struct BmxRider {
     float    stats[7];         /* +0x6D0 rider x bike multipliers (tables 0x00553664, 0x005537B4), clamped to 1.0 (stat 6: 2.0) */
     float    physAirMatrix[16];/* +0x6EC RwMatrix: orientation at take-off (frame of the auto-rotation) */
     int16_t  physAirRot[3];    /* +0x72C auto-rotation per frame while physTimer runs (binary angles x, y, z);
-                                  [1] is DM-047's carriedSpin (spin carried over from the rail / lip) */
+                                  [1] was called carriedSpin (spin carried over from the rail / lip) */
     uint8_t  unk_732[2];
     float    trickMatrix[16];  /* +0x734 orientation when the air trick started */
     int16_t  flipVel[3];       /* +0x774 flip rotation rates (x, y, z); flipVel[2] drives flip */
@@ -236,22 +236,22 @@ typedef struct BmxRider {
                                   y = -height (ZGE units = 100 x model units, Y down) */
     uint8_t  unk_c08[4];
     int32_t  bikeModel;        /* +0xC0C rider * 4 + bike, or 0x30 = secret bike */
-    float    spawnPos[3];      /* +0xC10 random-spot start (gameResetRider); DM-048: the bike's position, which
+    float    spawnPos[3];      /* +0xC10 random-spot start (gameResetRider); physics.c: the bike's position, which
                                   physics integrates every frame (pos = rider hips) */
     uint8_t  unk_c1c[4];
     float    bikeMatrix[16];   /* +0xC20 bike orientation (right/up/at/pos) */
     float    pedalForce;       /* +0xC60 drive added to the wheel speed this frame (cleared every frame) */
     float    wheelDrag;        /* +0xC64 wheel speed damping this frame (1.0 idle, 0.1 skid, 0.01 manual/stall) */
-    float    tuneC68;          /* +0xC68 50.0; DM-048: height of the centre of mass above the wheel contact */
-    float    tuneC6C;          /* +0xC6C 5.0; DM-048: weight-transfer divisor (pitch torque) */
-    float    tuneC70;          /* +0xC70 0.2; DM-048: suspension spring divisor (mass) */
-    float    suspension[5];    /* +0xC74 0 or {-15, 25, 0.3, 0.1, 0.1} (cheat bit 4); DM-048: [0] min travel,
+    float    tuneC68;          /* +0xC68 50.0; physics.c: height of the centre of mass above the wheel contact */
+    float    tuneC6C;          /* +0xC6C 5.0; physics.c: weight-transfer divisor (pitch torque) */
+    float    tuneC70;          /* +0xC70 0.2; physics.c: suspension spring divisor (mass) */
+    float    suspension[5];    /* +0xC74 0 or {-15, 25, 0.3, 0.1, 0.1} (cheat bit 4); physics.c: [0] min travel,
                                   [1] max travel, [2] spring stiffness, [3] damping when the spring
                                   extends (velocity < 0), [4] damping when it compresses */
-    BmxWheel wheel[2];         /* +0xC88 [0] front, [1] rear (DM-048; were wheelFront/R/Load/Contact, wheelRear/...) */
+    BmxWheel wheel[2];         /* +0xC88 [0] front, [1] rear (were wheelFront/R/Load/Contact, wheelRear/...) */
     void    *bikeActor;        /* +0xD90 zroller actor (zrollerCreateBike) */
     void    *bikeCtl;          /* +0xD94 */
-    BmxIk    ik;               /* +0xD98 limb IK block (dyn.c dynIk*; DM-046/047 called it the camera block) */
+    BmxIk    ik;               /* +0xD98 limb IK block (dyn.c dynIk*; formerly called the camera block) */
 } BmxRider;                    /* 0xF70 */
 
 /* GHIDRA-SKIP-BEGIN */

@@ -4,7 +4,7 @@ Axes: RW world space is written unchanged (Y up, like the ZMD exporter, ``docs/t
 Tag faces / scene points / props are converted from ZGE (engine) coordinates with
 :func:`dmbmx.formats.level.zge_to_rw` / :func:`~dmbmx.formats.level.pos_to_rw` /
 :func:`~dmbmx.formats.level.matrix_to_rw` (scene points); props use their stored rotation rows
-(:func:`~dmbmx.formats.level.prop_matrix_to_rw`, via ``Level.prop_instances``; DM-065).
+(:func:`~dmbmx.formats.level.prop_matrix_to_rw`, via ``Level.prop_instances``).
 
 glTF layout (``export_glb``)::
 
@@ -252,7 +252,7 @@ def _matrix(R, t):
 def export_glb(level, *, props=True, tags=True, points=True, panorama=False) -> bytes:
     b = _Builder()
     g = b.g
-    g["asset"]["generator"] = "dmbmx level export (DM-013)"
+    g["asset"]["generator"] = "dmbmx level export"
     files = {e.name: e.size for e in level.zsd.entries}
     root = b.node({"name": level.name or "level", "extras": {EXTRAS_KEY: {
         "format": "dmbmx-level", "version": 1, "zsd": level.zsd_name, "scfi_sizes": files,

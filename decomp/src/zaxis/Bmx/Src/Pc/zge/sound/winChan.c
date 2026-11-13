@@ -4,7 +4,7 @@
  * Evidence: [V] path string 0x0055EEA8 (CRT assert()s: "init->hWnd", "fzsndcInitialized",
  *           "hChan < kzsndNumChannelHandles", ...) in 12 functions; [I] the rest: between them,
  *           and they share the module's data 0x005FB760-0x005FFF2B and tables 0x0055E820-0x0055ED7F.
- * 21 functions, VA 0x0046D940-0x0046FA0A. DM-055 (draft). Non-matching C (AD-8).
+ * 21 functions, VA 0x0046D940-0x0046FA0A. Draft. Non-matching C (AD-8).
  * Types: zsound.h. Description: docs/re/sound.md section 2.
  *
  * The channel manager ("zsndc") is a software mixer: DirectSound (DSOUND.DLL, loaded with
@@ -22,7 +22,7 @@
  *    (ZsndcInitParams.echoSeconds = 0), so the PC build mixes dry.
  * zsndcUpdate runs from the 16 ms multimedia timer (bmxsoundService), mixes the time that has
  * passed into a ring buffer and copies one block ahead of the play cursor into DirectSound.
- * DM-055 created zsndcFreeAll, zsndcGetState and zsndcProbe (only reached through ILT thunks).
+ * The sound pass created zsndcFreeAll, zsndcGetState and zsndcProbe (only reached through ILT thunks).
  */
 #include <math.h>
 #include <stdlib.h>

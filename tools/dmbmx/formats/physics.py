@@ -1,4 +1,4 @@
-"""What the rider physics (Bmx/Src/com/action/physics.c, DM-048) does with level data, plus a
+"""What the rider physics (Bmx/Src/com/action/physics.c) does with level data, plus a
 Python port of its simple integration rules. Pure stdlib.
 
 Units: ZGE world units (the level is in centimetres), y points DOWN, velocities per frame,
@@ -42,7 +42,7 @@ CONSTANTS = {                       # name: (VA, struct format, value)
 GRAVITY = CONSTANTS["gravity"][2]
 AIR_DRAG = CONSTANTS["air_drag"][2]
 
-# bike defaults written by rider_Create (rider +0xC68.., DM-046/DM-048)
+# bike defaults written by rider_Create (rider +0xC68..)
 BIKE_TUNING = {"com_height": 50.0, "transfer": 5.0, "spring_mass": 0.2,
                "suspension": (-15.0, 25.0, 0.3, 0.1, 0.1),   # min, max, stiffness, damp extend, damp compress
                "wheel_front": (55.25, -5.6, 0.0), "wheel_rear": (-36.52, -5.6, 0.0), "wheel_radius": 24.65}

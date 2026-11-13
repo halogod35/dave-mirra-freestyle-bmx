@@ -2,11 +2,11 @@
  * NgEngine/Zge/ZgeMods/zFont.c
  * Original: C:\NgEngine\Zge\ZgeMods\zFont.c
  * Evidence: [V] path string referenced by 3 function(s); the others [I]: the globals
- * 0x006763D0-0x006763E4, the Zfont / ZfontGlyph layouts. DM-061 created the constructors /
+ * 0x006763D0-0x006763E4, the Zfont / ZfontGlyph layouts. The ZGE object pass created the constructors /
  * destructors 0x004A2620-0x004A26B0 (before the ZFNT handler) and 0x004A2800, 0x004A2820,
  * 0x004A2950 in the holes.
  * 11 functions, VA 0x004a2620-0x004a2c62.
- * DM-061 (draft). Non-matching C (AD-8). Types: ztools.h. Description: docs/re/zge.md 4.
+ * Draft. Non-matching C (AD-8). Types: ztools.h. Description: docs/re/zge.md 4.
  *
  * C++ in the original: `new Zfont[1]` and `new ZfontGlyph[n]` put a count word in front of the
  * block (the constructors and the array destructor below are the compiler's). A ZFNT chunk (or

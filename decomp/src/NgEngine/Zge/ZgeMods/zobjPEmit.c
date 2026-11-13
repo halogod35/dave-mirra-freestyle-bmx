@@ -2,12 +2,12 @@
  * NgEngine/Zge/ZgeMods/zobjPEmit.c
  * Original: C:\NgEngine\Zge\ZgeMods\zobjPEmit.c
  * Evidence: [V] path string referenced by 1 function(s); the others [I]: slots 2-5 of the emitter
- * vtable 0x00562098 and the global 0x006741B4. DM-061 created the five hole functions.
- * DM-064 moved DM-059's drafts in: vtable slots 0-1 (0x00495A10 update, 0x00495A60 destroy) from
+ * vtable 0x00562098 and the global 0x006741B4. The ZGE object pass created the five hole functions.
+ * The clean-up moved the ZglRw pass's drafts in: vtable slots 0-1 (0x00495A10 update, 0x00495A60 destroy) from
  * gap_zrwCol__zobjPEmit.c, and the draw callback, zobjPEmitCreate and zpemitSpawn
  * (0x00495BD0-0x00495DE5) from gap_zobjPEmit__zrwWorld.c [I]: the vtable, the 0x3C data block.
- * 12 functions, VA 0x00495a10-0x00495de5 (DM-064 also created zpemitSpawnType 0x00495CC0).
- * DM-061 / DM-059 (draft). Non-matching C (AD-8). Types: zobj.h, ngif.h (ZfxType, ZfxSystem).
+ * 12 functions, VA 0x00495a10-0x00495de5 (the clean-up also created zpemitSpawnType 0x00495CC0).
+ * Draft. Non-matching C (AD-8). Types: zobj.h, ngif.h (ZfxType, ZfxSystem).
  * Description: docs/re/zge.md 2.5.
  *
  * An emitter keeps one zfx particle system per zfx type it has spawned (created on first use with
@@ -33,7 +33,7 @@ const ZobjVtbl g_zobjPEmitVtbl = {    /* 0x00562098 */
 /* VA 0x00495a10, 71 bytes, [I] row, status draft */
 int zobjPEmitUpdate(ZObj *obj)
 {
-    /* vtable slot 1: update every system; DM-059 */
+    /* vtable slot 1: update every system */
     ZfxSystem *s;
 
     for (s = (ZfxSystem *)zHeapListFirst(PEMIT(obj)->systems); s != 0;
@@ -45,7 +45,7 @@ int zobjPEmitUpdate(ZObj *obj)
 /* VA 0x00495a60, 99 bytes, [I] row, status draft */
 int zobjPEmitDestroy(ZObj *obj)
 {
-    /* vtable slot 0: destroy; DM-059 */
+    /* vtable slot 0: destroy */
     ZfxSystem *s;
 
     for (s = (ZfxSystem *)zHeapListFirst(PEMIT(obj)->systems); s != 0;
@@ -120,7 +120,7 @@ int zobjPEmitShutdown(void)
 /* VA 0x00495bd0, 58 bytes, [I] row, status draft */
 int zobjPEmitDraw(ZObj *obj)
 {
-    /* ZGL callback: draw every system; DM-059 */
+    /* ZGL callback: draw every system */
     ZfxSystem *s;
 
     for (s = (ZfxSystem *)zHeapListFirst(PEMIT(obj)->systems); s != 0;
@@ -132,7 +132,7 @@ int zobjPEmitDraw(ZObj *obj)
 /* VA 0x00495c10, 162 bytes, [I] row, status draft */
 void *zobjPEmitCreate(void)
 {
-    /* DM-059; the field offsets checked against the disassembly by DM-064: rotation = identity
+    /* The ZglRw pass; the field offsets checked against the disassembly by the clean-up: rotation = identity
      * quaternion at +0x18 */
     ZObj *obj = zobjAlloc();
     ZobjPEmitData *d;
@@ -156,7 +156,7 @@ void *zobjPEmitCreate(void)
 /* VA 0x00495cc0, 130 bytes, [I] row, status draft */
 uint32_t zpemitSpawnType(ZObj *emitter, ZfxType *type, uint32_t count, void *arg, const void *params)
 {
-    /* (DM-064 created; no caller) zpemitSpawn with the zfx type already looked up: spawns `count`
+    /* (new function; no caller) zpemitSpawn with the zfx type already looked up: spawns `count`
      * particles of `type` into the emitter's system for it (created on first use with 0x100
      * particles). */
     ZfxSystem *s;
@@ -178,7 +178,7 @@ uint32_t zpemitSpawnType(ZObj *emitter, ZfxType *type, uint32_t count, void *arg
 /* VA 0x00495d50, 150 bytes, [I] row, status draft */
 uint32_t zpemitSpawn(void *emitter, const char *type, uint32_t count, void *arg, const void *params)
 {
-    /* (DM-059) Spawns `count` particles of the named zfx type; the emitter keeps one system per type
+    /* Spawns `count` particles of the named zfx type; the emitter keeps one system per type
      * (created on first use with 0x100 particles). Returns count & 0xFF, 0 if the type is unknown. */
     ZfxType *t = (ZfxType *)zfxFindType(type);
     ZfxSystem *s;

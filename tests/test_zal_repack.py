@@ -1,4 +1,4 @@
-"""DM-023: extract -> pack round-trip, asset replacement, and the LZO1X encoder over the corpus."""
+"""Extract -> pack round-trip, asset replacement, and the LZO1X encoder over the corpus."""
 import json
 import struct
 
@@ -105,8 +105,8 @@ def test_cli_refuses_install(game_dir, tmp_path):
     d = tmp_path / "t"
     zal_dir.extract_dir(zal.read(p.read_bytes()), d)
     with pytest.raises(SystemExit):
-        main(["zal", "pack", str(d), str(game_dir / "assets" / "tables_dm023.zal")])
+        main(["zal", "pack", str(d), str(game_dir / "assets" / "tables_repack.zal")])
     with pytest.raises(SystemExit):
         main(["zal", "replace", str(p), "0", str(d / "00000000.iff"), str(game_dir / "assets" / "t2.zal")])
-    assert not (game_dir / "assets" / "tables_dm023.zal").exists()
+    assert not (game_dir / "assets" / "tables_repack.zal").exists()
     assert not (game_dir / "assets" / "t2.zal").exists()

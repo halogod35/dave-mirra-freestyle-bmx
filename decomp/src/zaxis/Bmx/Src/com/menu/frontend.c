@@ -6,7 +6,7 @@
  *           frontendAllocMacros); [I] the rest by link order (0x0043BE90-0x0044DD23, after guitoggl.c,
  *           before bmxsound.c) and because it is all screen code over guimain.c.
  * 136 functions, VA 0x0043be90-0x0044dd23.
- * DM-056 (draft). Non-matching C (AD-8). Types: gui.h, save.h, game.h. Notes: docs/re/frontend.md.
+ * Draft. Non-matching C (AD-8). Types: gui.h, save.h, game.h. Notes: docs/re/frontend.md.
  *
  * The front end: one handler per screen (guiLoadScreen(screen, handler)); a screen's sub-pages
  * swap the handler with guiSetScreenHandler. Animation and deferred work run through one

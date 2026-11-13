@@ -1,5 +1,5 @@
 """RenderWare 3.x per-sector collision tree (the 384-byte block after a BSP._sd world sector's
-triangles) - DM-048.
+triangles).
 
 Layout [V] (RW 3.1 in NgBMX.exe: the line test 0x004BE560 and the sphere test 0x004BED60 walk it
 from ``sector + 0x54``; docs/re/physics.md 3, docs/formats/LEVEL.md 4.3):
@@ -18,7 +18,7 @@ that every node's triangles are contiguous, and every triangle must be reference
 [V: 784/784 sectors of the 12 levels]. A geometry edit therefore has to rebuild this block
 (and re-order the triangles) for collision to stay correct.
 
-DM-049 adds the writer side:
+The writer side:
 
 * :func:`build` / :func:`tree`: a builder for this block. RenderWare's own builder is part of the
   offline world importer and is **not** in NgBMX.exe [V: the exe only reads, sizes and writes the

@@ -5,8 +5,8 @@
  *           overflow", "free list overflow", "Null font in overlay", "Overflow"); [I] the other five
  *           (zoveriiSetLayer, zoveriiGetPool, zoveriiAlloc, zoveriiFree, zoveriiDrawRect) lie between
  *           them and touch only this file's globals.
- * 19 functions, VA 0x004578f0-0x0045a130 (zoveriiInit 0x004578F0 added by DM-058).
- * DM-054 (draft). Non-matching C (AD-8). Types: zoverii.h. Notes: docs/re/hud.md.
+ * 19 functions, VA 0x004578f0-0x0045a130 (zoveriiInit 0x004578F0 added by the dyn.c pass).
+ * Draft. Non-matching C (AD-8). Types: zoverii.h. Notes: docs/re/hud.md.
  *
  * The "overlay II" primitive layer: rectangles, gradients, sprites and text as PSX GPU primitives in
  * four double-buffered pools (see zoverii.h). Only overlay.c and overlymp.c use it; the menus
@@ -141,7 +141,7 @@ static void zoverInitPool(ZoverPrim *pool, int count)
 }
 
 /* Empty the four pools of both buffers; no fonts, buffer 0, unlocked. action.c actionLoad calls it
- * after loading the overlay fonts' assets. (DM-058: was the last function of the bmxsound / zoverii
+ * after loading the overlay fonts' assets. (was the last function of the bmxsound / zoverii
  * gap; it touches only this file's globals.) */
 /* VA 0x004578f0, 409 bytes, [I] row, status draft */
 int zoveriiInit(void)
@@ -766,7 +766,7 @@ int zoveriiLoadFont(const uint8_t *data, ZoverFont *font)
 {
     /* Build the glyph table from a font file (miscdata.zal 0x7531/0x7532/0x7534/0x7535, see
      * docs/re/hud.md): the character range is min..max of the records; returns 1 without memory.
-     * The glyph images are Material.ZAL groups 9 / 11 / 12 / 13 (DM-066). */
+     * The glyph images are Material.ZAL groups 9 / 11 / 12 / 13. */
     const ZoverFontHeader *hdr = (const ZoverFontHeader *)data;
     const ZoverFontRecord *rec = (const ZoverFontRecord *)(data + sizeof(ZoverFontHeader));
     uint32_t n = hdr->count, i;

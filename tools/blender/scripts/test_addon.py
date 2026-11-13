@@ -1,4 +1,4 @@
-"""Headless tests of the Blender add-on (DM-022). Not part of the default pytest run.
+"""Headless tests of the Blender add-on. Not part of the default pytest run.
 
     "C:/Program Files/Blender Foundation/Blender 5.3/blender.exe" -b --factory-startup \
         --python tools/blender/scripts/test_addon.py -- [--zip out/io_dmbmx.zip] [--only DMbike01,DaveMirra1] [--no-corpus]
@@ -56,7 +56,7 @@ def corpus():
     out = []
     for d, dirs, files in os.walk(GAME):
         if Path(d) == GAME:
-            dirs[:] = [x for x in dirs if x not in {"_pristine", "_testgame", "wt", "dave-mirra-bmx", "dave-mirra-pro-bmx"}]
+            dirs[:] = [x for x in dirs if x not in {"_pristine", "_testgame", "wt", "dave-mirra-bmx", "dave-mirra-freestyle-bmx"}]
         out += [Path(d) / f for f in files if f.lower().endswith(".zmd")]
     return sorted(out)
 

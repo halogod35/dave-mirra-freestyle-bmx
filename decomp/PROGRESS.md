@@ -1,6 +1,6 @@
 # Decompilation progress (NgBMX.exe)
 
-DM-040. Non-matching, readable C (AD-8), laid out like the original source tree. Library code
+Non-matching, readable C (AD-8), laid out like the original source tree. Library code
 (MSVC CRT, RenderWare 3.1, libpng 1.0.5, zlib 1.1.3; see `docs/re/libraries.md`) is not decompiled.
 
 ## Layout
@@ -11,92 +11,92 @@ DM-040. Non-matching, readable C (AD-8), laid out like the original source tree.
 | `decomp/src/zaxis/Bmx/Src/...` | game code (`C:\zaxis\Bmx\Src\...`) |
 | `decomp/src/NgEngine/Zge/...` | engine code (`C:\NgEngine\Zge\...`) |
 | `decomp/src/_unassigned/gap_<prev>__<next>.c` | functions not yet attributed; they sit between those two files in link order |
-| `decomp/include/` | recovered types: `dmtypes.h` (base + Ghidra pseudo-types), `zengine.h` (zdebug + umbrella for `zmem.h`, `zlist.h`, `zstring.h`, DM-044), `rwtypes.h`, `zfile.h`, `zasset.h`, `save.h`, `rider.h`, `game.h` (DM-046), `physics.h` (DM-048), `contrler.h`, `camera.h` (DM-051), `bmxprop.h`, `replay.h`, `fx.h` (DM-052), `zscene.h`, `zactor.h`, `zprim.h` (DM-053), `zoverii.h`, `overlay.h` (DM-054), `zsound.h` (DM-055), `ngif.h` (DM-057), `zglrw.h` (DM-059: the ZglRw types, driver tables, prototypes and the RenderWare 3.1 calls), `gui.h` (DM-056), `dyn.h` (DM-058), `zobj.h`, `zpc.h`, `ztools.h` (DM-061), `zanim.h`, `zmath.h` (DM-045; included by the files that use them); umbrella `decomp.h` |
+| `decomp/include/` | recovered types: `dmtypes.h` (base + Ghidra pseudo-types), `zengine.h` (zdebug + umbrella for `zmem.h`, `zlist.h`, `zstring.h`), `rwtypes.h`, `zfile.h`, `zasset.h`, `save.h`, `rider.h`, `game.h`, `physics.h`, `contrler.h`, `camera.h`, `bmxprop.h`, `replay.h`, `fx.h`, `zscene.h`, `zactor.h`, `zprim.h`, `zoverii.h`, `overlay.h`, `zsound.h`, `ngif.h`, `zglrw.h` (the ZglRw types, driver tables, prototypes and the RenderWare 3.1 calls), `gui.h`, `dyn.h`, `zobj.h`, `zpc.h`, `ztools.h`, `zanim.h`, `zmath.h` (included by the files that use them); umbrella `decomp.h` |
 | `decomp/include/ghidra_types.txt` | which headers `tools/ghidra/ImportTypes.java` imports into Ghidra (+ size checks) |
 | `tools/decomp/make_skeleton.py` | regenerates `functions.csv`, the stubs and the tables below |
 
 - `confidence`/`method`: `V direct` = the function references the file's path string; `I` =
-  inferred (`strings`, `between`, `callers`: DM-002; `seed`, `range`, `orphan`, `split`: DM-040).
+  inferred (basic passes: `strings`, `between`, `callers`; extended passes: `seed`, `range`, `orphan`, `split`).
   Method definitions: `tools/ghidra/build_symbols.py` and `docs/re/module-map.md`.
 - `status`: `todo` (stub) → `draft` (C written) → `reviewed`. The generator rewrites a source file
-  only while all its functions are `todo`, so module cards never lose work.
+  only while all its functions are `todo`, so hand-written C is never lost.
 - Stub signatures come from Ghidra's decompiler (`DecompileAll.java`); `undefined4` & co. are
   typedef'd in `dmtypes.h`. The stubs are meant to compile with MSVC or any C89 compiler, but this
   has not been tried (no C compiler on the build PC yet).
 
-## Workflow for a module card
+## Workflow for decompiling a module
 
 1. Read the file's stubs in `decomp/src/...` and the Ghidra C in `out/ghidra_c/<file>.c`
    (`tools/ghidra/apply_symbols.sh --no-apply --no-export --decompile`).
 2. Rewrite each function as readable C, keep its `/* VA 0x... */` comment, set its status in
    `decomp/functions.csv` to `draft`.
 3. New names and types: rows in `decomp/symbols/symbols.csv` (AD-6), structs in `decomp/include/*.h` (listed in
-   `ghidra_types.txt` with a size check). The RE owner runs `tools/ghidra/apply_symbols.sh` (imports the
+   `ghidra_types.txt` with a size check). The owner of the Ghidra project runs `tools/ghidra/apply_symbols.sh` (imports the
    types, applies the names) and re-runs `tools/testing/py.sh tools/decomp/make_skeleton.py`.
 4. Functions found to belong to a neighbouring file: move them and fix `STRING_SEEDS`/`RANGE_FILES`
    in `build_symbols.py` so the map agrees.
 
-## Recovered structs (DM-040)
+## Recovered structs
 
 | Type | Size | Header | Used by | Tag |
 |---|---|---|---|---|
 | `SaveBlockA`, `SaveRiderRecord`, `SaveGoalInfo` | 0xC3C, 0x104, 0x27 | `save.h` | `g_saveBlockA` 0x006955e0 | V (SAVE.md) |
 | `SaveRecordEntry` | 0x14 | `save.h` | `g_saveRecords[12][24]` 0x00551fd8 | V |
 | `SaveProfile` | 0x4C | `save.h` | `g_saveProfiles[2]` 0x006952a0 | V |
-| `ZassetLib` (completed DM-042), `ZalHeader` | 0x128, 0x14 | `zasset.h` | `zasset*` 0x004804d0-0x00480930, `g_materialZal` ... | V offsets, I names |
-| `ZiffChunk`, `ZiffFile`, `ZiffHandler`, `ZiffGlobals` | 0x20, 0x108, 0x10, 0x1C | `ziff.h` | `ziff*` 0x0049a6d0-0x0049b2a0, `g_ziff` 0x006746d0 | V offsets, I names (DM-042) |
-| `ZanimNode`, `ZanimNodeTable`, `ZanimContents`, `ZanimChannel`, `ZanimNameList` | 0x44, 0xC, 0x14, 0x10, 0xC | `zanim.h` | node tables, loaded ANIM IFF (`zanimLoadIff`) | V offsets, I names (DM-042; DM-045 completed, renamed the links) |
-| `ZanimKey`, `ZanimDefName`, `ZanimTrack`, `ZanimObj` (partial), `ZanimWeight`, `ZanimWeights` | 0x14, 0x24, 0x3C, 0x34, 8, 8 | `zanim.h` | `zanim.c` 0x00498D80-0x0049A6CB, track pool 0x006746C4 | V offsets, I names (DM-045) |
-| `Zquat` (+ zmath/zquat prototypes) | 0x10 | `zmath.h` | `zmath.c` 0x00480D20-0x00482081, `zquat.c` 0x00483020-0x00483A5E, tables 0x0065E2BC-0x006702D3 | V (DM-045) |
-| `zfileDevice`, `zfileHandle` | 0x40, 0x8 | `zfile.h` | `zrwFileDevice` 0x00562ff8, `zfileDevice2` 0x00563240, `zfile*` | all 16 slots named (DM-041): V GetName/MakeFileName/Exists/Open..GetSize, I CheckDevice/Format/CheckFormatted/GetFreeSpace/Delete |
-| `zfileCallback`, `zfileCallbackInfo`, `zfileDeviceList`, `zramdiskFile` | 8, 0x10, 0x44, 0x10 | `zfile.h` | device callbacks, `g_zfileDevices` 0x00670630, RAM-disk files | V (DM-041) |
+| `ZassetLib` (complete), `ZalHeader` | 0x128, 0x14 | `zasset.h` | `zasset*` 0x004804d0-0x00480930, `g_materialZal` ... | V offsets, I names |
+| `ZiffChunk`, `ZiffFile`, `ZiffHandler`, `ZiffGlobals` | 0x20, 0x108, 0x10, 0x1C | `ziff.h` | `ziff*` 0x0049a6d0-0x0049b2a0, `g_ziff` 0x006746d0 | V offsets, I names |
+| `ZanimNode`, `ZanimNodeTable`, `ZanimContents`, `ZanimChannel`, `ZanimNameList` | 0x44, 0xC, 0x14, 0x10, 0xC | `zanim.h` | node tables, loaded ANIM IFF (`zanimLoadIff`) | V offsets, I names (complete; the links renamed) |
+| `ZanimKey`, `ZanimDefName`, `ZanimTrack`, `ZanimObj` (partial), `ZanimWeight`, `ZanimWeights` | 0x14, 0x24, 0x3C, 0x34, 8, 8 | `zanim.h` | `zanim.c` 0x00498D80-0x0049A6CB, track pool 0x006746C4 | V offsets, I names |
+| `Zquat` (+ zmath/zquat prototypes) | 0x10 | `zmath.h` | `zmath.c` 0x00480D20-0x00482081, `zquat.c` 0x00483020-0x00483A5E, tables 0x0065E2BC-0x006702D3 | V |
+| `zfileDevice`, `zfileHandle` | 0x40, 0x8 | `zfile.h` | `zrwFileDevice` 0x00562ff8, `zfileDevice2` 0x00563240, `zfile*` | all 16 slots named: V GetName/MakeFileName/Exists/Open..GetSize, I CheckDevice/Format/CheckFormatted/GetFreeSpace/Delete |
+| `zfileCallback`, `zfileCallbackInfo`, `zfileDeviceList`, `zramdiskFile` | 8, 0x10, 0x44, 0x10 | `zfile.h` | device callbacks, `g_zfileDevices` 0x00670630, RAM-disk files | V |
 | `RwFileFunctions` | 0x28 | `rwtypes.h` | `g_zrwFileFuncs` 0x006752c0 | V (rwfseek at +0x20 is what zrwFile_Seek calls) |
-| `ZActor`, `ZActorAnim`, `ZMotionState`, `ZMotionHeader`/`ZMotionSection`, `ZactorFrame`, `ZactorBikeOffset`, `ZactorBank`, `ZactorBankEntry` | 0x278, 0xD60, 0x17C, -/4, 0x18, 0x18, 0x14, 8 | `zactor.h` | `zactor.c` (actor pool `g_zactorPool` 0x00641E1C, motion decoder, bank 0x00601DC8), NgIFzactor.c, rider.c, physics.c | V offsets, I names (DM-053) |
-| `ZprimAsset`, `ZprimState`, `ZprimImage`/`ZprimFrame`, `ZprimPalette`, `ZprimFont`/`ZprimGlyph` | 0x10, 0x54, -/0x10, -, -/0xA | `zprim.h` | `zprim.c` (state stack 0x006783FC, asset pool 0x00678404, groups 0x00678418) | V offsets, I names (DM-053) |
+| `ZActor`, `ZActorAnim`, `ZMotionState`, `ZMotionHeader`/`ZMotionSection`, `ZactorFrame`, `ZactorBikeOffset`, `ZactorBank`, `ZactorBankEntry` | 0x278, 0xD60, 0x17C, -/4, 0x18, 0x18, 0x14, 8 | `zactor.h` | `zactor.c` (actor pool `g_zactorPool` 0x00641E1C, motion decoder, bank 0x00601DC8), NgIFzactor.c, rider.c, physics.c | V offsets, I names |
+| `ZprimAsset`, `ZprimState`, `ZprimImage`/`ZprimFrame`, `ZprimPalette`, `ZprimFont`/`ZprimGlyph` | 0x10, 0x54, -/0x10, -, -/0xA | `zprim.h` | `zprim.c` (state stack 0x006783FC, asset pool 0x00678404, groups 0x00678418) | V offsets, I names |
 | `BmxRider` | 0xF70 | `rider.h` | `g_riders[2]` 0x00691f40 (`rider_Create` 0x004316c0) | V offsets, I meaning; partial |
-| `ZsceneDef`, `ZsceneEntry`, `ZsceneAnim`, `ZsceneLoadReq`, `ZsceneLoader`, `ZsceneKindInfo`, `ZsceneDefKey`, `ZsceneEntryKey`, `ZsceneGlobals`, `ZsceneChunkHandler` | 0x78, 0x10, 0xC, 0xC, 8, 8, 0x10, 0xC, 0x8C, 8 | `zscene.h` | `zScene.c`, `g_zscene` 0x00673f70, handler tables 0x00561900 | V offsets, I names (DM-043) |
-| `ZpropDefInfo`/`ZpropDef`, `ZpropInfo`/`Zprop`, `ZpropPdinRecord`, `ZpropPrblRecord`, `ZobjiHeader` (lists: DM-044's `zList`) | 0x4C/0x54, 0x2C/0x34, 0x38, 0x48, 8 | `zprop.h` | `zprop.c`, `g_zpropDefs` 0x006722b8, `g_zprops` 0x006722c4 | V (DM-043) |
-| `ZtagFace`, `ZtagNode`, `ZtagHit`, `ZtagHitList`, `ZtagVec`, `ZtagTagdRecord`, `ZtagTagfRecord`, `ZtagTagnRecord` | 0x6C, 0x34, 0x38, 8, 0x10, 8, 0x50, 0x28 | `ztaginf.h` | `ztaginf.c`, root node 0x006728c4, hits 0x00672908 | V (DM-043) |
-| `ZscnPoint`, `ZscnSdptRecord`, `ZscnptsGlobals` | 0x50, 0x4C, 0x18 | `zscnpts.h` | `zscnpts.c`, `g_zscnpts` 0x00674000 | V (DM-043) |
-| `RwV3d`, `RwMatrix` | 0xC, 0x40 | `rwtypes.h` | scene points | I (RW SDK layout; DM-043) |
-| `ZsdScfiRecord`, `ZrwWorldApi`, `ZrwWorldStats`, `ZrwWorldGlobals` | 0x28, 0x2C, 0x1C, 0xAC | `zrwworld.h` | `zrwWorld.c`, `g_zrwWorldApi` 0x005620e0, `g_zrwWorldState` 0x006741e0 | V (DM-043) |
-| `ZmemBlock`, `ZmemPoolFuncs`, `ZmemPool` | 8, 8, 0x14 | `zmem.h` | memory pools (first-fit heaps) `zmemPool*` 0x00486410-0x004868C0, `g_zmemPools[128]` 0x006718B0 | V offsets, I names (DM-044) |
-| `ZmemFreeNode`, `ZmemFreeList`, `ZmemGlobals` | 8, 0x20, 0x24 | `zmem.h` | free lists `zmemFreeList*` 0x00485E80-0x004862F0, `g_zmemFreeLists[128]` 0x006708A8, `g_zmem` 0x00670880 | V offsets, I names (DM-044) |
-| `ZmemDMMHandle`, `ZmemDMMFree`, `ZmemDMMGlobals` | 0x10, 0xC, 0x28 | `zmem.h` | `NgIfzmemDMM.c` movable-block heap, `g_zmemDMM` 0x005F8F30 | V offsets, I names (DM-044) |
-| `zListNode`, `zList`, `zHeapList` | 8, 0xC, 0x10 | `zlist.h` | `zList.c` 0x0048C110-0x0048C5B4 | V offsets, I names (DM-044) |
-| `ZstringSet`, `ZfxRegEntry` | 8, 0x48 | `zstring.h` | "STRS" text sets (`zTextGet`), zfx name registries | V offsets, I names (DM-044) |
-| `BmxRider` (DM-046 fields: trick input, score block, trick log, area stats, judging, position/velocity, contacts) + `BmxTrickRec`, `BmxScoreBlock`, `BmxAreaStats`, `BmxJudgeRun`, `BmxContact` | 0xF70; 0x10, 0x80, 0xE, 0xC, 0x20C | `rider.h` | `game.c` (offsets as read/written there) | V offsets, I meaning (DM-046) |
-| `BmxRider` (DM-047 fields: direction buffer, input block, state machine `state`/`stateTimer`, motion slots, root motion, steering rates, flip rotation, trick matrix, bike matrix, pedal force / wheel drag, wheel contacts) + `BmxInput`, `BmxMotionSlot`, `BmxSigCombo` | 0xF70; 0x28, 0x10, 0x6 | `rider.h` | `rider.c` (offsets checked against rider.c's code) | V offsets, I meaning (DM-047) |
-| `GoalObjective`, `GoalDef`, `GoalTierDef` | 0x14, 0x54, 0x150 | `game.h` | `g_goalDefs[18]` 0x00555118 | V (DM-046; 72 goals decoded in SAVE.md 7.1) |
-| `GameReward`, `GameRewardTables`, `GameLiveRecord`, `GameTrickInfo` | 2, 0xE0, 8, 4 | `game.h` | `g_rewards` 0x005568B8, `g_gameLive[4][24]` 0x0056B70C, `g_trickInfo[85]` 0x00559118 | V (DM-046) |
-| `BmxRider` (DM-048 physics fields: `physState`, `physTimer` (was DM-047's snapFrames), `physHipOffset`, `physSlopeAccel`, `physLockStep`, `physSurfaceCopy`, `physLockPos`, `physLockMatrix`, `physAirMatrix`, `physAirRot` (carriedSpin = [1]); physics also uses DM-047's `rotVel`, `airLean`, `trickMatrix`, `flipVel`, `rootMotion`, `bikeMatrix`, `pedalForce`, `wheelDrag`) + `BmxWheel` | 0xF70; 0x84 | `rider.h` | `physics.c`, `rider.c` (`wheel[2]` replaces wheelFront/R/Load/Contact and wheelRear/...) | V offsets, I meaning (DM-048) |
-| `NgColFace`, `NgColEdge`, `NgColHit`, `BmxProbe` | 0x88, 0x38, 0xD8, 0x30 | `physics.h` | collision results from `NgIFzcollide_00469B00` / `NgIFzbsp`, `g_bmxphysHit` 0x0056C128 | V offsets, I names (DM-048; docs/re/physics.md) |
-| `BmxActionBinding`, `ZInputDevice`, `BmxPad` (+ `PAD_*` buttons, `ACT_*` actions, `CONTRLER_TEST_*`) | 8, 0x74, 0x3C | `contrler.h` | `g_contrlerActions[3][21][3]` 0x00553EE0, `g_pads[2]` 0x0056B628, zinput devices | V offsets + tables, I names (DM-051; docs/re/input-camera.md) |
-| `BmxCamParams`, `BmxCamera`, `BmxCamView` (+ `CAM_MODE_*`, `CAM_VIEW_*`, `CAMF_*`) | 0x18, 0xB8, 0x68 | `camera.h` | `g_cameras[2]` 0x0056B448, parameter tables 0x00551D04-0x00551EE3 | V offsets + tables, I names (DM-051) |
-| `BmxPropDef`, `BmxProp`, `BmxPropSwitch`, `BmxPropState`, `NgPropCol` (partial) | 0xA, 0x84, 0xC, 0xB40, 0x1F4 | `bmxprop.h` | `g_bmxpropTable[14][16]` 0x00557D28, `g_bmxprops` 0x00694460, `g_bmxpropsStart` 0x0056C4F8, NgIFzbsp's prop collision record | V offsets + table, I names (DM-052; docs/re/props-replay-fx.md) |
-| `BmxReplayDesc`, `BmxReplay`, `BmxReplayRider` | 8, 0x40, 0x2DE8 | `replay.h` | `g_replays[5]` 0x0056D278, replay.zal records | V (DM-052; docs/formats/REPLAY.md) |
-| `FxParticle`, `FxDust`, `FxShard`, `FxSkidCorner`, `FxSkidQuad`, `FxRipple`, `FxPsxEffect`, `FxPsxBurst`, `FxBodyPoint` | 0x34, 0x2C, 0x40, 0x10, 0x4C, 0x24, 0x20, 0x40, 8 | `fx.h` | zfx spawner parameters, PSX effect blocks 0x00554AB8 / 0x00554AD8 | V layouts, I names (DM-052) |
-| `ZoverPrim`, `ZoverPolyF4`/`G4`/`FT4`, `ZoverTexture`, `ZoverFont`, `ZoverGlyph`, `ZoverFontHeader`/`Record`, `ZoverSprite` | 0xA0, 0x24/0x30/0x3C, 0x14, 0xC, 8, 0xC/0xD, 0x14 | `zoverii.h` | `zoverii.c` primitive pools 0x00574E70-0x005A1398, fonts miscdata.zal 0x7531-0x7535, image slots 0x0068C3E0 | V offsets + font files, I names (DM-054) |
-| `GuiElement`, `GuiToggleData`, `GuiStyle`, `GuiPad`, `GuiScrnHeader`, `GuiEdef` | 0xF0, 0x24, 0x18, 0x20, 0x2C, 0xD4 | `gui.h` | menu elements `g_guiElements[100]` 0x0056D2C0, screen style 0x00573088, menu pad 0x0056D298, the SCRN / EDEF screen records of Intwrap.zal | V offsets + data, I names (DM-056; docs/re/frontend.md, ZAL.md 3.2) |
-| `OverlayScreen`, `OverlayItem`, `OverlayMenuEntry`, `OverlaySavePage`, `OverlayTrickEntry`, `OverlayScoreReq`, `OverlayMeterReq`, `OverlayTimedText`, `OverlayMessage`, `OverlayFadeReq`, `OverlayFade` | 0x10, 0x18, 4, 4, 2, 8, 0xC, 4, 8, 6, 0x20 | `overlay.h` | HUD items `g_overlayItems[17]` 0x00556F00, screens 0x00557098 / `g_overlayScreens[26]` 0x005571B8 | V tables, I names (DM-054; docs/re/hud.md) |
-| `ZsndVoice`, `ZsndSample`, `ZsndSampleFile`, `ZsndTrackDef`, `ZsndKeymap`/`ZsndKeymapKey`, `ZsndBankHeader`, `ZsndAsset`, `ZsndFileDesc` | 0x14, 0x18, 8, 0x10, -/2, 0x48, 0x48, 0xC | `zsound.h` | sound banks (`winLoad.c`, `g_zsndAssets[16]` 0x00600D98) | V (DM-055; AUDIO.md) |
-| `ZsndcInitParams`, `ZsndcEffect`, `ZsndcChannel`, `ZsndcHandle` | 0x14, 0x14, 0x48, 2 | `zsound.h` | the mixer (`winChan.c`, `g_zsndcChannels[24]` 0x005FB770, `g_zsndcHandles[64]` 0x005FBE38) | V offsets, I names (DM-055) |
-| `ZsndStreamFile`, `ZsndStreamQueue`, `ZsndStream` | 0x24, 0xC, 0x44 | `zsound.h` | streams (`winStrm.c`, 0x00601350 / 0x006019F8 / 0x006017D0) | V offsets, I names (DM-055) |
-| `ZsndSeqTrack`, `ZsndSeqNote`, `ZsndSeqEvent`, `ZsndSrc` | 0x48, 0x14, 0x10, 0x28 | `zsound.h` | ZTRK sequencer (`g_zsndSeqTrackPool[32]` 0x0064F048, notes 0x0064EB38), 3-D sources (`g_zsndSrcs[24]` 0x0064FCD0) | V offsets, I names (DM-055; docs/re/sound.md) |
-| `ZglVertex`, `ZglLine`/`Tri`/`Quad`, `ZfxParticle`, `ZfxSystem`, `ZfxType`, `ZfxTexAnim` | 0x1C, 0xC/0x10/0x14, 0xA0, 0x30, 0x38, 0x50 | `ngif.h` | ZGL immediate mode (NgApp, NgIFfx, NgIFpsx), zfx particle types 0x0055C278.. | V offsets, I names (DM-057; docs/re/ngif.md) |
-| `PsxPolyF3`/`F4`/`G4`/`FT4`/`GT4` (+ `PsxGT4Corner`), `PsxLineF2`/`G2`, `PsxClip`, `PsxVert3D` | 0x70/0x84/0x90/0x9C/0xA4 (0xC), 0x5C/0x60, 0x18, 0x14 | `ngif.h` | NgIFpsx packets (heads = zoverii.h ZoverPoly*) | V offsets, I names (DM-057) |
-| `NgPropShapeInfo`, `NgPropShape`, `ZrwColTri`, `ZrwColHit`, `ZrwColTriList`, `ZbspSphereHit`, `ZbspSphereResult` (+ `NgColFace`, `NgPropCol` completed) | 0x14, 0x38, 0x4C, 0x5C, 8, 0x1C, 0x40 | `ngif.h` (`physics.h`, `bmxprop.h`) | prop shapes, RW collision results, the sphere query | V offsets, I names (DM-057) |
-| `ZresImageDef`, `ZresMapHeader`, `ZresPlayerHeader`, `ZrollerPlayerDesc`, `ZrollerPlayer`, `ZrollerShadows` | 0x10, 8, 8, 4, 0x10, 0x28 | `ngif.h` | `g_zresImages` 0x0055D978, ZMHD / PLHD, players 0x005FB6F0, `g_zrollerShadows` 0x00678440 | V offsets, I names (DM-057) |
-| `DynParticleDesc`, `DynParticle`, `DynSpring`, `DynLimitDesc`, `DynLimit`, `DynBody`, `DynSlab`; `BmxIkTarget`, `BmxIk` (BmxRider +0xD98, was `camera[0x100]` + camScale..) | 0x20, 0xB4, 0x20, 0x24, 0x28, 0xE88, 0x1C; 0x20, 0x1D8 | `dyn.h`, `rider.h` | `dyn.c` crash rag doll (rider 14 particles / 21 springs / 6 limits, bike 3 / 3), `g_dynSlab` 0x0068FFC0, the limb IK | V offsets, I names (DM-058; docs/re/physics.md 7) |
-| `ZObj`, `ZobjLink`, `ZobjVtbl`, `ZobjCameraData`, `ZobjPEmitData` | 0x3C, 0x10, 0x24, 0x104, 0x3C | `zobj.h` | the zobj scene nodes (`zobj.c`, pool 0x006722D4), the four type vtables 0x00560518 / 0x00560FA8 / 0x00560FD0 / 0x00561858 / 0x00562098 | V offsets + vtables, I names (DM-061; docs/re/zge.md 2) |
-| `PcGuid`, `PcJoyMapHeader`, `PcInputDevice`, `PcAviOptions`, `PcMovie` | 0x10, 8, 0x14, 0x2C, 0x28C | `zpc.h` | `pcinput.c` (joystick maps 0x00561F2C), `pcmovie.c` (AVI player) | V offsets + tables, I names (DM-061; input-camera.md 2.4, zge.md 5) |
-| `ZtokenFile`, `ZfontPoint`, `ZfontStroke`, `ZfontGlyph`, `Zfont`, `ZrwRamDiskFile`, `ZprofileBar`, `ZprofileLayout`, `ZprofileGlobals`, `ZheapItem`, `Zheap`, `ZtimerEvent` | 0x30C, 0x1C, 0xC, 0xC, 0x10, 0xC, 0x24, 0x30, 0x68, 8, 0x10, 0x20 | `ztools.h` | `ztoken.c` (`g_ztokenFiles[4]` 0x00675380), `zFont.c`, `zrwRamDisk.c`, `zprofile.c` (`g_zprofile` 0x00676438), `ztimer.c`, `zheap.c` | V offsets, I names (DM-061; zge.md 3-7) |
-| `RwRGBA`, `RwImage` (+ `u8`...`s32`) | 4, 0x1C | `rwtypes.h` | `zrwTxr_*` (DM-014) | I (RW 3.x SDK layout) |
-| `ZglTexture`, `ZrwTxrGlobals`, `ZglTextureApi` | 0x28, 0x430, 0x3C | `zglrw.h` | `zrwTxr.c`, `g_zrwTxr` 0x00674290, `g_texDriverVtbl` 0x005623F0 | V offsets + table, I names (DM-059; docs/re/zrw.md 3) |
-| `ZrwMadf`, `ZglMatPass`, `ZglMaterial`, `ZrwMatGlobals`, `ZglMaterialApi` | 0x88, 0xC, 0x74, 0x24, 0x3C | `zglrw.h` | `zrwMat.c`, MADF buffer 0x00672320, `g_zrwMat` 0x006723A8, `g_zglMaterialApi` 0x00561018 | V (DM-059) |
-| `ZglModelDefEntry`, `ZglModelDef`, `ZglModelPart`, `ZglModelLod`, `ZglModel`, `ZglModelApi` | 0x14, 0xBC, 0x28, 0xC, 0x8C, 0xA4 | `zglrw.h` | `zrwModel*.c`, `g_zglModelApi` 0x00560E78 (41 slots) | V offsets + table, I names (DM-059; zrw.md 2) |
-| `ZglLight`, `ZglLightApi`, `ZglCamera`, `ZglCameraApi`, `ZglColApi`, `ZglPrimApi`, `ZglSystemApi` | 0xC, 0x28, 0xC8, 0x3C, 0x10, 0x1C, 0x34 | `zglrw.h` | the light / camera / collision / primitive / system driver tables 0x00563420, 0x00561D88, 0x00562060, 0x00561720, 0x00561468 | V tables, I names (DM-059) |
-| `RwCollTri`, `RwIntersection`, `ZglPoly`, `ZrwDbgShape`, `ZrwShadow` | 0x28, 0x1C, 0xC, 0x6C, 0x18 | `zglrw.h` | `zrwCol.c` (RW collision callbacks), `zrwPrim.c`, `zrwDbg.c` shapes 0x00650A9C, `zrwShadow.c` | V offsets, I names (DM-059) |
+| `ZsceneDef`, `ZsceneEntry`, `ZsceneAnim`, `ZsceneLoadReq`, `ZsceneLoader`, `ZsceneKindInfo`, `ZsceneDefKey`, `ZsceneEntryKey`, `ZsceneGlobals`, `ZsceneChunkHandler` | 0x78, 0x10, 0xC, 0xC, 8, 8, 0x10, 0xC, 0x8C, 8 | `zscene.h` | `zScene.c`, `g_zscene` 0x00673f70, handler tables 0x00561900 | V offsets, I names |
+| `ZpropDefInfo`/`ZpropDef`, `ZpropInfo`/`Zprop`, `ZpropPdinRecord`, `ZpropPrblRecord`, `ZobjiHeader` (lists: zList.c's `zList`) | 0x4C/0x54, 0x2C/0x34, 0x38, 0x48, 8 | `zprop.h` | `zprop.c`, `g_zpropDefs` 0x006722b8, `g_zprops` 0x006722c4 | V |
+| `ZtagFace`, `ZtagNode`, `ZtagHit`, `ZtagHitList`, `ZtagVec`, `ZtagTagdRecord`, `ZtagTagfRecord`, `ZtagTagnRecord` | 0x6C, 0x34, 0x38, 8, 0x10, 8, 0x50, 0x28 | `ztaginf.h` | `ztaginf.c`, root node 0x006728c4, hits 0x00672908 | V |
+| `ZscnPoint`, `ZscnSdptRecord`, `ZscnptsGlobals` | 0x50, 0x4C, 0x18 | `zscnpts.h` | `zscnpts.c`, `g_zscnpts` 0x00674000 | V |
+| `RwV3d`, `RwMatrix` | 0xC, 0x40 | `rwtypes.h` | scene points | I (RW SDK layout) |
+| `ZsdScfiRecord`, `ZrwWorldApi`, `ZrwWorldStats`, `ZrwWorldGlobals` | 0x28, 0x2C, 0x1C, 0xAC | `zrwworld.h` | `zrwWorld.c`, `g_zrwWorldApi` 0x005620e0, `g_zrwWorldState` 0x006741e0 | V |
+| `ZmemBlock`, `ZmemPoolFuncs`, `ZmemPool` | 8, 8, 0x14 | `zmem.h` | memory pools (first-fit heaps) `zmemPool*` 0x00486410-0x004868C0, `g_zmemPools[128]` 0x006718B0 | V offsets, I names |
+| `ZmemFreeNode`, `ZmemFreeList`, `ZmemGlobals` | 8, 0x20, 0x24 | `zmem.h` | free lists `zmemFreeList*` 0x00485E80-0x004862F0, `g_zmemFreeLists[128]` 0x006708A8, `g_zmem` 0x00670880 | V offsets, I names |
+| `ZmemDMMHandle`, `ZmemDMMFree`, `ZmemDMMGlobals` | 0x10, 0xC, 0x28 | `zmem.h` | `NgIfzmemDMM.c` movable-block heap, `g_zmemDMM` 0x005F8F30 | V offsets, I names |
+| `zListNode`, `zList`, `zHeapList` | 8, 0xC, 0x10 | `zlist.h` | `zList.c` 0x0048C110-0x0048C5B4 | V offsets, I names |
+| `ZstringSet`, `ZfxRegEntry` | 8, 0x48 | `zstring.h` | "STRS" text sets (`zTextGet`), zfx name registries | V offsets, I names |
+| `BmxRider` (game.c fields: trick input, score block, trick log, area stats, judging, position/velocity, contacts) + `BmxTrickRec`, `BmxScoreBlock`, `BmxAreaStats`, `BmxJudgeRun`, `BmxContact` | 0xF70; 0x10, 0x80, 0xE, 0xC, 0x20C | `rider.h` | `game.c` (offsets as read/written there) | V offsets, I meaning |
+| `BmxRider` (rider.c fields: direction buffer, input block, state machine `state`/`stateTimer`, motion slots, root motion, steering rates, flip rotation, trick matrix, bike matrix, pedal force / wheel drag, wheel contacts) + `BmxInput`, `BmxMotionSlot`, `BmxSigCombo` | 0xF70; 0x28, 0x10, 0x6 | `rider.h` | `rider.c` (offsets checked against rider.c's code) | V offsets, I meaning |
+| `GoalObjective`, `GoalDef`, `GoalTierDef` | 0x14, 0x54, 0x150 | `game.h` | `g_goalDefs[18]` 0x00555118 | V (72 goals decoded in SAVE.md 7.1) |
+| `GameReward`, `GameRewardTables`, `GameLiveRecord`, `GameTrickInfo` | 2, 0xE0, 8, 4 | `game.h` | `g_rewards` 0x005568B8, `g_gameLive[4][24]` 0x0056B70C, `g_trickInfo[85]` 0x00559118 | V |
+| `BmxRider` (physics.c fields: `physState`, `physTimer` (formerly snapFrames), `physHipOffset`, `physSlopeAccel`, `physLockStep`, `physSurfaceCopy`, `physLockPos`, `physLockMatrix`, `physAirMatrix`, `physAirRot` (carriedSpin = [1]); physics also uses rider.c's `rotVel`, `airLean`, `trickMatrix`, `flipVel`, `rootMotion`, `bikeMatrix`, `pedalForce`, `wheelDrag`) + `BmxWheel` | 0xF70; 0x84 | `rider.h` | `physics.c`, `rider.c` (`wheel[2]` replaces wheelFront/R/Load/Contact and wheelRear/...) | V offsets, I meaning |
+| `NgColFace`, `NgColEdge`, `NgColHit`, `BmxProbe` | 0x88, 0x38, 0xD8, 0x30 | `physics.h` | collision results from `NgIFzcollide_00469B00` / `NgIFzbsp`, `g_bmxphysHit` 0x0056C128 | V offsets, I names (docs/re/physics.md) |
+| `BmxActionBinding`, `ZInputDevice`, `BmxPad` (+ `PAD_*` buttons, `ACT_*` actions, `CONTRLER_TEST_*`) | 8, 0x74, 0x3C | `contrler.h` | `g_contrlerActions[3][21][3]` 0x00553EE0, `g_pads[2]` 0x0056B628, zinput devices | V offsets + tables, I names (docs/re/input-camera.md) |
+| `BmxCamParams`, `BmxCamera`, `BmxCamView` (+ `CAM_MODE_*`, `CAM_VIEW_*`, `CAMF_*`) | 0x18, 0xB8, 0x68 | `camera.h` | `g_cameras[2]` 0x0056B448, parameter tables 0x00551D04-0x00551EE3 | V offsets + tables, I names |
+| `BmxPropDef`, `BmxProp`, `BmxPropSwitch`, `BmxPropState`, `NgPropCol` (partial) | 0xA, 0x84, 0xC, 0xB40, 0x1F4 | `bmxprop.h` | `g_bmxpropTable[14][16]` 0x00557D28, `g_bmxprops` 0x00694460, `g_bmxpropsStart` 0x0056C4F8, NgIFzbsp's prop collision record | V offsets + table, I names (docs/re/props-replay-fx.md) |
+| `BmxReplayDesc`, `BmxReplay`, `BmxReplayRider` | 8, 0x40, 0x2DE8 | `replay.h` | `g_replays[5]` 0x0056D278, replay.zal records | V (docs/formats/REPLAY.md) |
+| `FxParticle`, `FxDust`, `FxShard`, `FxSkidCorner`, `FxSkidQuad`, `FxRipple`, `FxPsxEffect`, `FxPsxBurst`, `FxBodyPoint` | 0x34, 0x2C, 0x40, 0x10, 0x4C, 0x24, 0x20, 0x40, 8 | `fx.h` | zfx spawner parameters, PSX effect blocks 0x00554AB8 / 0x00554AD8 | V layouts, I names |
+| `ZoverPrim`, `ZoverPolyF4`/`G4`/`FT4`, `ZoverTexture`, `ZoverFont`, `ZoverGlyph`, `ZoverFontHeader`/`Record`, `ZoverSprite` | 0xA0, 0x24/0x30/0x3C, 0x14, 0xC, 8, 0xC/0xD, 0x14 | `zoverii.h` | `zoverii.c` primitive pools 0x00574E70-0x005A1398, fonts miscdata.zal 0x7531-0x7535, image slots 0x0068C3E0 | V offsets + font files, I names |
+| `GuiElement`, `GuiToggleData`, `GuiStyle`, `GuiPad`, `GuiScrnHeader`, `GuiEdef` | 0xF0, 0x24, 0x18, 0x20, 0x2C, 0xD4 | `gui.h` | menu elements `g_guiElements[100]` 0x0056D2C0, screen style 0x00573088, menu pad 0x0056D298, the SCRN / EDEF screen records of Intwrap.zal | V offsets + data, I names (docs/re/frontend.md, ZAL.md 3.2) |
+| `OverlayScreen`, `OverlayItem`, `OverlayMenuEntry`, `OverlaySavePage`, `OverlayTrickEntry`, `OverlayScoreReq`, `OverlayMeterReq`, `OverlayTimedText`, `OverlayMessage`, `OverlayFadeReq`, `OverlayFade` | 0x10, 0x18, 4, 4, 2, 8, 0xC, 4, 8, 6, 0x20 | `overlay.h` | HUD items `g_overlayItems[17]` 0x00556F00, screens 0x00557098 / `g_overlayScreens[26]` 0x005571B8 | V tables, I names (docs/re/hud.md) |
+| `ZsndVoice`, `ZsndSample`, `ZsndSampleFile`, `ZsndTrackDef`, `ZsndKeymap`/`ZsndKeymapKey`, `ZsndBankHeader`, `ZsndAsset`, `ZsndFileDesc` | 0x14, 0x18, 8, 0x10, -/2, 0x48, 0x48, 0xC | `zsound.h` | sound banks (`winLoad.c`, `g_zsndAssets[16]` 0x00600D98) | V (AUDIO.md) |
+| `ZsndcInitParams`, `ZsndcEffect`, `ZsndcChannel`, `ZsndcHandle` | 0x14, 0x14, 0x48, 2 | `zsound.h` | the mixer (`winChan.c`, `g_zsndcChannels[24]` 0x005FB770, `g_zsndcHandles[64]` 0x005FBE38) | V offsets, I names |
+| `ZsndStreamFile`, `ZsndStreamQueue`, `ZsndStream` | 0x24, 0xC, 0x44 | `zsound.h` | streams (`winStrm.c`, 0x00601350 / 0x006019F8 / 0x006017D0) | V offsets, I names |
+| `ZsndSeqTrack`, `ZsndSeqNote`, `ZsndSeqEvent`, `ZsndSrc` | 0x48, 0x14, 0x10, 0x28 | `zsound.h` | ZTRK sequencer (`g_zsndSeqTrackPool[32]` 0x0064F048, notes 0x0064EB38), 3-D sources (`g_zsndSrcs[24]` 0x0064FCD0) | V offsets, I names (docs/re/sound.md) |
+| `ZglVertex`, `ZglLine`/`Tri`/`Quad`, `ZfxParticle`, `ZfxSystem`, `ZfxType`, `ZfxTexAnim` | 0x1C, 0xC/0x10/0x14, 0xA0, 0x30, 0x38, 0x50 | `ngif.h` | ZGL immediate mode (NgApp, NgIFfx, NgIFpsx), zfx particle types 0x0055C278.. | V offsets, I names (docs/re/ngif.md) |
+| `PsxPolyF3`/`F4`/`G4`/`FT4`/`GT4` (+ `PsxGT4Corner`), `PsxLineF2`/`G2`, `PsxClip`, `PsxVert3D` | 0x70/0x84/0x90/0x9C/0xA4 (0xC), 0x5C/0x60, 0x18, 0x14 | `ngif.h` | NgIFpsx packets (heads = zoverii.h ZoverPoly*) | V offsets, I names |
+| `NgPropShapeInfo`, `NgPropShape`, `ZrwColTri`, `ZrwColHit`, `ZrwColTriList`, `ZbspSphereHit`, `ZbspSphereResult` (+ `NgColFace`, `NgPropCol` completed) | 0x14, 0x38, 0x4C, 0x5C, 8, 0x1C, 0x40 | `ngif.h` (`physics.h`, `bmxprop.h`) | prop shapes, RW collision results, the sphere query | V offsets, I names |
+| `ZresImageDef`, `ZresMapHeader`, `ZresPlayerHeader`, `ZrollerPlayerDesc`, `ZrollerPlayer`, `ZrollerShadows` | 0x10, 8, 8, 4, 0x10, 0x28 | `ngif.h` | `g_zresImages` 0x0055D978, ZMHD / PLHD, players 0x005FB6F0, `g_zrollerShadows` 0x00678440 | V offsets, I names |
+| `DynParticleDesc`, `DynParticle`, `DynSpring`, `DynLimitDesc`, `DynLimit`, `DynBody`, `DynSlab`; `BmxIkTarget`, `BmxIk` (BmxRider +0xD98, was `camera[0x100]` + camScale..) | 0x20, 0xB4, 0x20, 0x24, 0x28, 0xE88, 0x1C; 0x20, 0x1D8 | `dyn.h`, `rider.h` | `dyn.c` crash rag doll (rider 14 particles / 21 springs / 6 limits, bike 3 / 3), `g_dynSlab` 0x0068FFC0, the limb IK | V offsets, I names (docs/re/physics.md 7) |
+| `ZObj`, `ZobjLink`, `ZobjVtbl`, `ZobjCameraData`, `ZobjPEmitData` | 0x3C, 0x10, 0x24, 0x104, 0x3C | `zobj.h` | the zobj scene nodes (`zobj.c`, pool 0x006722D4), the four type vtables 0x00560518 / 0x00560FA8 / 0x00560FD0 / 0x00561858 / 0x00562098 | V offsets + vtables, I names (docs/re/zge.md 2) |
+| `PcGuid`, `PcJoyMapHeader`, `PcInputDevice`, `PcAviOptions`, `PcMovie` | 0x10, 8, 0x14, 0x2C, 0x28C | `zpc.h` | `pcinput.c` (joystick maps 0x00561F2C), `pcmovie.c` (AVI player) | V offsets + tables, I names (input-camera.md 2.4, zge.md 5) |
+| `ZtokenFile`, `ZfontPoint`, `ZfontStroke`, `ZfontGlyph`, `Zfont`, `ZrwRamDiskFile`, `ZprofileBar`, `ZprofileLayout`, `ZprofileGlobals`, `ZheapItem`, `Zheap`, `ZtimerEvent` | 0x30C, 0x1C, 0xC, 0xC, 0x10, 0xC, 0x24, 0x30, 0x68, 8, 0x10, 0x20 | `ztools.h` | `ztoken.c` (`g_ztokenFiles[4]` 0x00675380), `zFont.c`, `zrwRamDisk.c`, `zprofile.c` (`g_zprofile` 0x00676438), `ztimer.c`, `zheap.c` | V offsets, I names (zge.md 3-7) |
+| `RwRGBA`, `RwImage` (+ `u8`...`s32`) | 4, 0x1C | `rwtypes.h` | `zrwTxr_*` | I (RW 3.x SDK layout) |
+| `ZglTexture`, `ZrwTxrGlobals`, `ZglTextureApi` | 0x28, 0x430, 0x3C | `zglrw.h` | `zrwTxr.c`, `g_zrwTxr` 0x00674290, `g_texDriverVtbl` 0x005623F0 | V offsets + table, I names (docs/re/zrw.md 3) |
+| `ZrwMadf`, `ZglMatPass`, `ZglMaterial`, `ZrwMatGlobals`, `ZglMaterialApi` | 0x88, 0xC, 0x74, 0x24, 0x3C | `zglrw.h` | `zrwMat.c`, MADF buffer 0x00672320, `g_zrwMat` 0x006723A8, `g_zglMaterialApi` 0x00561018 | V |
+| `ZglModelDefEntry`, `ZglModelDef`, `ZglModelPart`, `ZglModelLod`, `ZglModel`, `ZglModelApi` | 0x14, 0xBC, 0x28, 0xC, 0x8C, 0xA4 | `zglrw.h` | `zrwModel*.c`, `g_zglModelApi` 0x00560E78 (41 slots) | V offsets + table, I names (zrw.md 2) |
+| `ZglLight`, `ZglLightApi`, `ZglCamera`, `ZglCameraApi`, `ZglColApi`, `ZglPrimApi`, `ZglSystemApi` | 0xC, 0x28, 0xC8, 0x3C, 0x10, 0x1C, 0x34 | `zglrw.h` | the light / camera / collision / primitive / system driver tables 0x00563420, 0x00561D88, 0x00562060, 0x00561720, 0x00561468 | V tables, I names |
+| `RwCollTri`, `RwIntersection`, `ZglPoly`, `ZrwDbgShape`, `ZrwShadow` | 0x28, 0x1C, 0xC, 0x6C, 0x18 | `zglrw.h` | `zrwCol.c` (RW collision callbacks), `zrwPrim.c`, `zrwDbg.c` shapes 0x00650A9C, `zrwShadow.c` | V offsets, I names |
 
 All of them are in the Ghidra project (category `/dmbmx`), and with them every type in
 `decomp/symbols/symbols.csv` now applies (0 type warnings, was 31).
@@ -104,7 +104,7 @@ All of them are in the Ghidra project (category `/dmbmx`), and with them every t
 ## Proposed module order
 
 Smallest and most useful first: the file/asset/save path that the format and editor tracks rely
-on, then the engine core, then game logic, then presentation. Every card is one or a few files
+on, then the engine core, then game logic, then presentation. Each group is one or a few files
 from the table below; the "Functions/Bytes" columns size them.
 
 <!-- BEGIN GENERATED by tools/decomp/make_skeleton.py; do not edit by hand -->
@@ -115,9 +115,9 @@ from the table below; the "Functions/Bytes" columns size them.
 - Status: todo 0, draft 2458, reviewed 0.
 - Attributed to a source file: 2429 (98%), of which [V] 359.
 
-### Proposed module cards
+### Proposed module groups
 
-| # | Module card | Files | Functions | Bytes | Done |
+| # | Module group | Files | Functions | Bytes | Done |
 |---:|---|---|---:|---:|---:|
 | 1 | memcard + save globals | `memcard.c` | 4 | 678 | 0 |
 | 2 | zfile + file devices | `zfile.c`, `zrwFile.c`, `zramdisk.c` | 69 | 12308 | 0 |
@@ -140,7 +140,7 @@ from the table below; the "Functions/Bytes" columns size them.
 | 19 | engine objects | `zobj.c`, `zobjCamera.c`, `zobjModel.c`, `zobjLight.c`, `zobjPEmit.c`, `zprop.c`, `ztaginf.c`, `zinput.c`, `zge.c` | 149 | 15451 | 0 |
 | 20 | RenderWare glue (zrw*) | `zrwModel.c`, `zrwModelCreate.c`, `zrwModelGeom.c`, `zrwModelRender.c`, `zrwMat.c`, `zrwTxr.c`, `zrwWorld.c`, `zrwCam.c`, `zrwLight.c`, `zrwShadow.c`, `zrwCol.c`, `zrwPrim.c`, `zrwDbg.c`, `zrwRamDisk.c` | 359 | 50228 | 0 |
 | 21 | app, platform, font (WinMain, zrwZgl, pc*) | `zrwZgl.c`, `pcinput.c`, `pcmovie.c`, `pcProfile.c`, `zprofile.c`, `zFont.c` | 107 | 21728 | 0 |
-| | (not in a card yet) | `NgEngine/Zge/ztoken.c`, `NgEngine/Zge/ztimer.c`, `NgEngine/Zge/zheap.c` | 36 | 6906 | |
+| | (not in a group yet) | `NgEngine/Zge/ztoken.c`, `NgEngine/Zge/ztimer.c`, `NgEngine/Zge/zheap.c` | 36 | 6906 | |
 | | (unassigned gaps) | 2 files | 29 | 2545 | |
 
 ### Per file

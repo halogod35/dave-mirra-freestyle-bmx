@@ -1,8 +1,8 @@
 # `dmbmx import`: glTF (.glb) → ZMD
 
-Owner: DM-021 (Agent G). Code: `tools/dmbmx/convert/gltf_import.py`, `tools/dmbmx/convert/glb_edit.py` (scripted
+Code: `tools/dmbmx/convert/gltf_import.py`, `tools/dmbmx/convert/glb_edit.py` (scripted
 edits), `tools/dmbmx/convert/imaging.py` (texture re-encoding), CLI `tools/dmbmx/cli/import_.py`.
-Tests: `tests/test_import_gltf.py`. Play-test: `tools/testing/playtest/make_playtest_dm021.py`.
+Tests: `tests/test_import_gltf.py`. Play-test: `tools/testing/playtest/make_playtest_gltf_bikes.py`.
 Counterpart: `docs/tools/export.md` (layout and `extras.dmbmx` schema). Evidence tags: **[V]** means verified by code or tests, **[I]** means inferred.
 
 ## 1. Usage
@@ -53,7 +53,7 @@ with zero changes and zero warnings** (`test_unedited_import_is_byte_identical`)
   restored from `tri_materials`. Otherwise triangles are written grouped by material, which is reported
   as a change. glTF `(a, b, c)` CCW is stored in the file as `(b, a, slot, c)`.
 - **Frame records** of unchanged frames are written back from the stored 56 raw bytes
-  (`_patch_frames`), so the output is exact even on hosts that flush denormal floats (Blender, DM-022).
+  (`_patch_frames`), so the output is exact even on hosts that flush denormal floats (Blender, the Blender add-on).
 - **Rigid parts:** a transform on the mesh node itself (relative to its frame node) is baked into the
   vertices. Normals use the inverse-transpose. A skinned mesh node's transform is ignored, per glTF.
 - **Frames:** if a frame node's matrix or TRS differs from the stored record (compared in float32), the
@@ -98,12 +98,12 @@ An image is treated as edited when its SHA-256 differs from `png_sha256`.
 - **TBMP:** the BMP is rebuilt at the **original bit depth**, with the original header and palette:
   - 24-bit: RGB, with the original header.
   - 4/8-bit palettised: if the PNG is a palette PNG of the same depth and palette, its indices are used
-    as painted. Otherwise, by default (`--palettised promote`, DM-022) the texture is **promoted to a 24-bit
-    BMP** with exact colours: DM-014 [V] found that TBMP payloads go through RenderWare's generic BMP reader,
+    as painted. Otherwise, by default (`--palettised promote`, the Blender add-on) the texture is **promoted to a 24-bit
+    BMP** with exact colours: the texture work [V] found that TBMP payloads go through RenderWare's generic BMP reader,
     which loads 4/8/24-bit in any slot. `--palettised quantize` instead maps colours to the nearest colour
-    of the original palette, with a warning (the DM-021 behaviour).
+    of the original palette, with a warning (the glTF importer behaviour).
   - Alpha: pixels with alpha < 128 become the colour key **255,0,255**, which the game turns transparent
-    (DM-014, 0x004978F0). This is reported as a change.
+    (the texture work, 0x004978F0). This is reported as a change.
   - If the size changes, the header is resized, with a warning.
 - The importer also warns about non-power-of-two sizes (every corpus texture is a power of two) and
   sizes above 256 (the largest in the corpus).
@@ -139,9 +139,9 @@ doc.set_image(doc.image_index("NAME_431_0"), new_png)
 zmd_bytes, rep = import_glb(doc.to_bytes())
 ```
 
-## 8. Play-test DM-021-PT1 (M2)
+## 8. the manual in-game check `gltf-bikes` (M2)
 
-`tools/testing/py.sh tools/testing/playtest/make_playtest_dm021.py [--out DIR]` builds `out/playtest/dm-021/`. It takes **all 47
+`tools/testing/py.sh tools/testing/playtest/make_playtest_gltf_bikes.py [--out DIR]` builds `out/playtest/gltf-bikes/`. It takes **all 47
 in-game bikes** (every ZMD whose root frame is `Hipsdeck`, shadows excluded) from `_pristine` through
 export → `GlbDoc` edit → `import_glb(strict=True)`, and verifies each result. Three variants:
 
@@ -149,14 +149,14 @@ export → `GlbDoc` edit → `import_glb(strict=True)`, and verifies each result
 - `paint`: the frame texture is colour-inverted.
 - `both`: the two edits together.
 
-`install.sh wheels|paint|both|--restore` follows docs/testing.md §5. Outcome: pending (see the card).
+`install.sh wheels|paint|both|--restore` follows docs/testing.md §5. Outcome: pending.
 
 ## 9. Known limitations
 
 - **Blender round-trip:** a .glb re-exported by Blender's glTF exporter is only importable if it keeps the
   node and primitive extras ("Include → Custom Properties"). It must also keep one node per frame and per
   part, and the skin joints. Blender's importer turns the LOD node into the armature, and its exporter
-  re-splits vertices. This is untested here. The Blender add-on (DM-022) should call `dmbmx` directly
+  re-splits vertices. This is untested here. The Blender add-on should call `dmbmx` directly
   rather than go through Blender's glTF exporter.
 - The vertex count can change (adding or removing vertices works), but the part count, frame count and
   material count cannot.

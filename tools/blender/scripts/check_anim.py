@@ -1,4 +1,4 @@
-"""Blender headless check for dmbmx .glb animations (DM-016), plus optional frame renders.
+"""Blender headless check for dmbmx .glb animations, plus optional frame renders.
 
     "C:/Program Files/Blender Foundation/Blender 5.3/blender.exe" -b --factory-startup \
         --python tools/blender/scripts/check_anim.py -- <in.glb> [--render out/prefix] [--action motion_008] \

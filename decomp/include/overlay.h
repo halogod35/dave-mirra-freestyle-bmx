@@ -1,8 +1,8 @@
 /*
  * overlay.h - Bmx/Src/com/action/overlay.c + overlymp.c: the in-game HUD and the overlay screens
- * (DM-054). Drawn through zoverii.c (zoverii.h).
+ *. Drawn through zoverii.c (zoverii.h).
  *
- * Offsets and tables [V] (read back from the exe by tests/test_decomp_dm054.py), names [I].
+ * Offsets and tables [V] (read back from the exe by tests/test_decomp_overlay.py), names [I].
  * Notes and the screen / item catalogue: docs/re/hud.md.
  *
  * Two mechanisms:
@@ -185,7 +185,7 @@ typedef char overlay_h_size_check[(sizeof(OverlayScreen) == 0x10 && sizeof(Overl
                                    sizeof(OverlayMessage) == 0x08 && sizeof(OverlayFadeReq) == 0x06 &&
                                    sizeof(OverlayFade) == 0x20) ? 1 : -1];
 
-/* overlay.c (DM-054): the interface used by action.c / game.c */
+/* overlay.c: the interface used by action.c / game.c */
 void     overlayInit(void);                                    /* 0x004147E0 */
 void     overlayShutdown(void);                                /* 0x004148B0 */
 void     overlayLoadFonts(void);                               /* 0x00414970 */
@@ -206,7 +206,7 @@ uint32_t overlayPulseColour(void);                             /* 0x0041E9C0 */
 void     overlayFormatDistance(char *out, float cm);           /* 0x0041EA40 */
 void     overlayTrickName(char *out, const BmxTrickRec *t, int full); /* 0x0041EAB0 */
 
-/* overlymp.c (DM-054) */
+/* overlymp.c */
 void     overlympDrawTitle(const char *s);                     /* 0x00412620 */
 void     overlympDrawRoundLeader(int y);                       /* 0x004134A0 */
 void     overlympDrawLetters(int *y);                          /* 0x00414580 */

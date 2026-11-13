@@ -2,10 +2,10 @@
  * NgEngine/Zge/zge.c
  * Original: C:\NgEngine\Zge\zge.c
  * Evidence: [V] path string referenced by 1 function(s); the others [I] (the shared global
- * 0x00675378, link order). DM-061 created zgeShutdown and the two unit converters; DM-064 the
+ * 0x00675378, link order). The ZGE object pass created zgeShutdown and the two unit converters; the clean-up the
  * debug dump zgeDump 0x0049FA60.
  * 5 functions, VA 0x0049f900-0x0049fb29.
- * DM-061 / DM-064 (draft). Non-matching C (AD-8). Description: docs/re/zge.md 1.
+ * Draft. Non-matching C (AD-8). Description: docs/re/zge.md 1.
  *
  * Engine start-up and shut-down: the order in which App_Open (via NgApp) brings the ZGE modules up
  * and App_Start's exit path takes them down again (reverse order).
@@ -21,8 +21,8 @@
 int  zstringInit(void);              /* 0x00482430 */
 int  zmemShutdown(void);             /* 0x00485A50 */
 int  zsceneInit(char *database);     /* 0x00490880 */
-int  ziffShutdown(void);             /* 0x0049A740 (ziff.c, created by DM-064) */
-void zmemDump(void);                 /* 0x004859B0 an empty debug dump (zmem.c, DM-064) */
+int  ziffShutdown(void);             /* 0x0049A740 (ziff.c, created by the clean-up) */
+void zmemDump(void);                 /* 0x004859B0 an empty debug dump (zmem.c, the clean-up) */
 
 static int g_zgeInitialised;         /* 0x00675378 */
 
@@ -96,7 +96,7 @@ int zgeShutdown(void)
 /* VA 0x0049fa60, 141 bytes, [I] row, status draft */
 void zgeDump(void)
 {
-    /* (DM-064 created; no caller in the exe) Debug dump: the ZGE objects (zobjDumpAll, then the empty
+    /* (new function; no caller in the exe) Debug dump: the ZGE objects (zobjDumpAll, then the empty
      * zmemDump), then the ZGL materials, models and textures through the driver tables. */
     g_pfnDebugPrintf("-------------------------------------------------------\n");
     g_pfnDebugPrintf("ZGE DUMP\n");

@@ -34,10 +34,9 @@ malformed input raises a `FormatError` (`docs/testing.md` section 3), never hang
 
 ## Conventions in the docs and tests
 
-- `DM-0NN` names the work item that found or built something (for example "DM-048"). Play-test ids
-  (`DM-0NN-PT1`) refer to in-game checks a person ran on `_testgame`.
-- `tools/testing/playtest/make_playtest_dm0NN.py` rebuild those play-test packages under
-  `out/playtest/` from your install; `docs/testing.md` section 5 describes the package layout.
+- "Manual in-game check" means a check a person ran by hand on `_testgame`.
+- `tools/testing/playtest/make_playtest_<name>.py` rebuild those packages under
+  `out/playtest/<name>/` from your install; `docs/testing.md` section 5 describes the package layout.
 
 ## Ground facts (2000-11-22 build)
 

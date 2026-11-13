@@ -2,10 +2,10 @@
  * NgEngine/Zge/ZgeMods/ztaginf.c
  * Original: C:\NgEngine\Zge\ZgeMods\ztaginf.c
  * Evidence: [V] path string at 0x005617dc (asserts in ztaginfLoad); the rest [I]: they share the
- * globals 0x006728B8-0x006737BB (root node, face array, hit buffers, node pool). DM-043 moved
+ * globals 0x006728B8-0x006737BB (root node, face array, hit buffers, node pool). The zScene pass moved
  * 0x0048D6F0-0x0048D810 (Init/Shutdown/SetDebugDraw) here from the zrwPrim/ztaginf gap.
  * 28 functions, VA 0x0048d6f0-0x0048f3b1.
- * DM-043 (draft). Non-matching C (AD-8). Types: decomp/include/ztaginf.h.
+ * Draft. Non-matching C (AD-8). Types: decomp/include/ztaginf.h.
  * Format: docs/formats/LEVEL.md 6; Python reference tools/dmbmx/formats/level.py TagSd (agrees; notes inline).
  *
  * Positions and faces are in ZGE units. Users: NgIFzbsp.c (face tags under the rider:
@@ -15,7 +15,7 @@
  */
 #include "decomp.h"
 
-/* other modules (current names until their cards land) */
+/* other modules (current names until they are decompiled) */
 void    *zrwZglAddCallback(int list, int (__cdecl *fn)(void), void *arg, int on); /* add render callback */
 void     zrwZglRemoveCallback(void *task);                                   /* remove render callback */
 int      _finite(double x);                                             /* CRT 0x004A60D9 */

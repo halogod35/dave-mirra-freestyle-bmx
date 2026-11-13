@@ -1,6 +1,6 @@
 /*
- * zanim.h - NgEngine keyframe animation (NgEngine/Zge/zanim.c). DM-042 started it (node table,
- * loaded contents); DM-045 completed the module (VA 0x00498D80-0x0049A6CB): the "NAD" key
+ * zanim.h - NgEngine keyframe animation (NgEngine/Zge/zanim.c): the node table, the
+ * loaded contents and the whole module (VA 0x00498D80-0x0049A6CB): the "NAD" key
  * channels loaded from ANIM/DEFI/AROT/ATRA IFF chunks, the per-node track lists and the blender.
  *
  * Offsets [V] (field use in the code), names [I]. Only the node table and the loader are used by

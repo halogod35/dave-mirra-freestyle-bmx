@@ -8,11 +8,11 @@
  *           overlay.c and prop.c), the state tables 0x00557898-0x0055793F, the globals
  *           0x0056C128-0x0056C44F.
  * 50 functions, 45590 bytes, VA 0x0041fa20-0x0042de22.
- * DM-048 (draft). Non-matching C (AD-8). Types: physics.h, rider.h. Description: docs/re/physics.md.
+ * Draft. Non-matching C (AD-8). Types: physics.h, rider.h. Description: docs/re/physics.md.
  *
- * DM-048 found 15 functions Ghidra had not created (reached only through the state tables or a
+ * The physics.c pass found 15 functions Ghidra had not created (reached only through the state tables or a
  * thunk; decomp/symbols/symbols.csv rows create them), moved bmxphysInit/Shutdown in from the overlay/physics
- * gap, and renamed DM-040's seed "bmxphysUpdatePositionAir" 0x0042DAD0 (it only shares that
+ * gap, and renamed the skeleton's seed "bmxphysUpdatePositionAir" 0x0042DAD0 (it only shares that
  * function's message) to bmxphysSetSurfaceFromHit; the real bmxphysUpdatePositionAir is 0x00428DF0.
  *
  * The rider is a 7-state machine (physics.h BMXPHYS_*). bmxphysUpdate runs, per active rider and
@@ -23,7 +23,7 @@
  * supplies the tag of the face that was hit and the grind edges.
  *
  * Conventions: ZGE units, y DOWN (g_bmxphysUp = {0, -1, 0}); per-frame velocities; 16-bit binary
- * angles. r->pos is the rider (hips) position, r->spawnPos the bike's (DM-046 name), r->matrix the
+ * angles. r->pos is the rider (hips) position, r->spawnPos the bike's (the game.c pass name), r->matrix the
  * rider orientation and r->bikeMatrix the bike's; row 0 ("right") of both is the forward
  * direction, row 1 ("up") the up direction.
  */
@@ -48,7 +48,7 @@
 #define WFRAME(w)     MAT((w)->frame)                  /* wheel contact frame */
 /* zactor pose block (actor + 0x48): wheel / handlebar angles written every frame */
 #define ACTOR_POSE(a)         (*(uint8_t **)((uint8_t *)(a) + 0x48))
-/* rider stateFlags bits physics uses (rider.c RIDER_FLAG_* names, DM-047); motion[0].flags bit 3 = MOTION_MIRROR */
+/* rider stateFlags bits physics uses (rider.c RIDER_FLAG_* names); motion[0].flags bit 3 = MOTION_MIRROR */
 #define RIDER_FLAG_ACTIVE       0x00000001u   /* rider slot in play */
 #define RIDER_FLAG_IDLE         0x00000004u   /* standing still (rider.c); bmxphysDebugRender draws a marker over the head */
 #define RIDER_FLAG_FLIP         0x00000800u   /* air trick flips: flipVel applied in trickMatrix's frame */
@@ -77,7 +77,7 @@ typedef struct NgFaceHit {             /* entry of zbspColSphere's list (0x1C by
 } NgFaceHit;
 
 void      zactorGetAbsolutePartPosition(void *actor, int bone, const RwV3d *local, RwV3d *out);  /* bone position */
-/* dyn.c (DM-058): the limb IK on BmxRider.ik and the crash rag doll (bodies are void * here) */
+/* dyn.c: the limb IK on BmxRider.ik and the crash rag doll (bodies are void * here) */
 void      dynIkSetTarget(void *ik, const RwV3d *target, const RwV3d *dir, int limbs);   /* 0x00457790 */
 void      dynIkReset(void *actor, void *ik);                                        /* 0x00455EF0 */
 void      dynIkSolve(void *actor, void *ik);                                        /* 0x00456120 */
@@ -319,13 +319,13 @@ static void dbgLine(const float *a, const float *b, uint8_t cr, uint8_t cg, uint
 
 /* ================================================================== functions (VA order) */
 
-/* VA 0x0041fa20, 12 bytes, [I] row (DM-048: was gap_overlay__physics.c), status draft */
+/* VA 0x0041fa20, 12 bytes, [I] row (was gap_overlay__physics.c), status draft */
 void bmxphysInit(void)
 {
     zrollerAddDrawCallback(bmxphysDebugRender);    /* called from action.c's game start */
 }
 
-/* VA 0x0041fa40, 1 bytes, [I] row (DM-048: was gap_overlay__physics.c), status draft */
+/* VA 0x0041fa40, 1 bytes, [I] row (was gap_overlay__physics.c), status draft */
 void bmxphysShutdown(void)
 {
 }
@@ -527,7 +527,7 @@ NgColFace *bmxphysFindRespawnFace(const RwV3d *pos, uint32_t flags)
     return found;
 }
 
-/* VA 0x004203a0, 1789 bytes, [I] row (DM-048: new function; bmxphysInit registers it), status draft */
+/* VA 0x004203a0, 1789 bytes, [I] row (new function; bmxphysInit registers it), status draft */
 int bmxphysDebugRender(void)
 {
     /* with g_bmxphysDebugDraw: each wheel's contact frame (or a radius line when in the air), the
@@ -682,7 +682,7 @@ int bmxphysProbeGround(const RwV3d *pos, BmxProbe *out)
     return 0;
 }
 
-/* VA 0x00420f00, 32 bytes, [I] row (DM-048: new function, exit table), status draft */
+/* VA 0x00420f00, 32 bytes, [I] row (new function, exit table), status draft */
 int bmxphysStateExitGrind(BmxRider *r, int from, int to)
 {
     r->rotVel[0] = r->rotVel[1] = r->rotVel[2] = 0;
@@ -721,7 +721,7 @@ int bmxphysStateExitCrash(BmxRider *r, int from, int to)
     return from;
 }
 
-/* VA 0x004210c0, 145 bytes, [I] row (DM-048: new function, enter table), status draft */
+/* VA 0x004210c0, 145 bytes, [I] row (new function, enter table), status draft */
 int bmxphysStateInitRoll(BmxRider *r, int from, int to)
 {
     if (from == BMXPHYS_GRIND) {
@@ -738,7 +738,7 @@ int bmxphysStateInitRoll(BmxRider *r, int from, int to)
     return to;
 }
 
-/* VA 0x00421190, 4611 bytes, [I] row (DM-048: new function, enter table [3] and [5]), status draft */
+/* VA 0x00421190, 4611 bytes, [I] row (new function, enter table [3] and [5]), status draft */
 int bmxphysStateInitLockOn(BmxRider *r, int from, int to)
 {
     /* Grind / stall button in the air: fly the predicted parabola (velocity + gravity per frame)
@@ -1036,7 +1036,7 @@ next_step:
     return to;
 }
 
-/* VA 0x00422830, 1235 bytes, [I] row (DM-048: new function, enter table [4]), status draft */
+/* VA 0x00422830, 1235 bytes, [I] row (new function, enter table [4]), status draft */
 int bmxphysStateInitGrind(BmxRider *r, int from, int to)
 {
     /* Start a grind. From the ground on a quarterpipe face (surface 1..3) the coping edge itself is
@@ -1129,7 +1129,7 @@ int bmxphysStateInitGrind(BmxRider *r, int from, int to)
     return to;
 }
 
-/* VA 0x00422e50, 4330 bytes, [I] row (DM-048: new function, enter table [1]; name [V] from its message), status draft */
+/* VA 0x00422e50, 4330 bytes, [I] row (new function, enter table [1]; name [V] from its message), status draft */
 int bmxphysStateInitAir(BmxRider *r, int from, int to)
 {
     /* Take-off. Records the take-off contact, measures the height above ground (wallHeight), caps
@@ -1441,7 +1441,7 @@ sound:
     return to;
 }
 
-/* VA 0x004243b0, 667 bytes, [I] row (DM-048: new function, enter table [6]), status draft */
+/* VA 0x004243b0, 667 bytes, [I] row (new function, enter table [6]), status draft */
 int bmxphysStateInitStall(BmxRider *r, int from, int to)
 {
     /* arrive on the stall target: orientation and position from the lock-on, motion stops */
@@ -1539,7 +1539,7 @@ void bmxphysUpdateOrientationRoll(BmxRider *r)
     }
 }
 
-/* VA 0x00424a10, 913 bytes, [I] row (DM-048: new function, orientation table), status draft */
+/* VA 0x00424a10, 913 bytes, [I] row (new function, orientation table), status draft */
 void bmxphysUpdateOrientationAir(BmxRider *r)
 {
     /* spin by rotVel; while physTimer runs add the take-off auto-rotation physAirRot (in the
@@ -1682,7 +1682,7 @@ void bmxphysUpdateOrientationGrind(BmxRider *r)
     }
 }
 
-/* VA 0x00425610, 227 bytes, [I] row (DM-048: new function, orientation table), status draft */
+/* VA 0x00425610, 227 bytes, [I] row (new function, orientation table), status draft */
 void bmxphysUpdateOrientationLockOn(BmxRider *r)
 {
     /* turn 15 % per frame towards the orientation on the target */
@@ -1695,13 +1695,13 @@ void bmxphysUpdateOrientationLockOn(BmxRider *r)
     zmathTriangleNormal(&m->right, &m->up, &g_zmathOrigin, &m->at);
 }
 
-/* VA 0x00425740, 1 bytes, [I] row (DM-048: new function, forces table), status draft */
+/* VA 0x00425740, 1 bytes, [I] row (new function, forces table), status draft */
 void bmxphysUpdateForcesRoll(BmxRider *r)
 {
     /* nothing: the roll forces are applied per wheel in bmxphysUpdatePositionRoll */
 }
 
-/* VA 0x00425760, 96 bytes, [I] row (DM-048: new function, forces table), status draft */
+/* VA 0x00425760, 96 bytes, [I] row (new function, forces table), status draft */
 void bmxphysUpdateForcesAir(BmxRider *r)
 {
     vecSet(r->physSlopeAccel, 0.0f, g_bmxphysGravity, 0.0f);
@@ -1731,13 +1731,13 @@ void bmxphysUpdateForcesGrind(BmxRider *r)
     r->frameDist = zmathVecLength(V3(r->vel));
 }
 
-/* VA 0x00425910, 23 bytes, [I] row (DM-048: new function, forces table), status draft */
+/* VA 0x00425910, 23 bytes, [I] row (new function, forces table), status draft */
 void bmxphysUpdateForcesLockOn(BmxRider *r)
 {
     r->physLockStep[1] += g_bmxphysGravity;     /* the lock-on flight is a parabola */
 }
 
-/* VA 0x00425940, 10654 bytes, [V] direct (DM-048: new function, position table [0]), status draft */
+/* VA 0x00425940, 10654 bytes, [V] direct (new function, position table [0]), status draft */
 void bmxphysUpdatePositionRoll(BmxRider *r)
 {
     /* Two-wheel ground model. For each wheel: wall probes ahead (left and right of the hub), the
@@ -2355,7 +2355,7 @@ roll:
         bmxphysSetState(r, BMXPHYS_AIR);
 }
 
-/* VA 0x00428df0, 6892 bytes, [V] direct (DM-048: new function, position table [1]), status draft */
+/* VA 0x00428df0, 6892 bytes, [V] direct (new function, position table [1]), status draft */
 void bmxphysUpdatePositionAir(BmxRider *r)
 {
     /* Flight. Each wheel probes along -up for a landing: a hit within 78 deg of the bike's up
@@ -2922,7 +2922,7 @@ void bmxphysPostRoll(BmxRider *r)
                       ((((uint32_t)r->slot << 4 | manual) << 8 | wheelie) << 16) | sound | 0x100, volume, pitch);
 }
 
-/* VA 0x0042ba50, 2684 bytes, [I] row (DM-048: new function, post table [1], [3], [5]), status draft */
+/* VA 0x0042ba50, 2684 bytes, [I] row (new function, post table [1], [3], [5]), status draft */
 void bmxphysPostAir(BmxRider *r)
 {
     /* place the actors (rider leaned by airLean) and pose the trick modifier: for each bit of
@@ -3320,7 +3320,7 @@ NgColEdge *bmxphysFindTaggedEdge(uint32_t ctx, int id, const RwV3d *pos)
     return best;
 }
 
-/* VA 0x0042dad0, 396 bytes, [I] row (DM-048: was "bmxphysUpdatePositionAir", DM-040 seed), status draft */
+/* VA 0x0042dad0, 396 bytes, [I] row (was "bmxphysUpdatePositionAir", seed), status draft */
 int bmxphysSetSurfaceFromHit(BmxRider *r, NgColHit *hit)
 {
     /* make what a wheel / the rider landed on the current surface (tag class -> BMXSURF_*) */

@@ -1,5 +1,5 @@
 /*
- * zsound.h - the sound system (DM-055): sound banks (winLoad.c), the software mixer / channel
+ * zsound.h - the sound system: sound banks (winLoad.c), the software mixer / channel
  * manager on DirectSound (winChan.c), streamed audio (winStrm.c), the ZTRK sequencer (zsndseq.c),
  * 3-D sound sources (zsndsrc.c) and the game layer (bmxsound.c).
  *

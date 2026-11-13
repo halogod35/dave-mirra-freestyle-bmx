@@ -1,6 +1,6 @@
 /*
  * physics.h - BMX rider physics (Bmx/Src/com/action/physics.c) and the collision records it gets
- * from the NgIF collision layer (NgIFzcollide.c / NgIFzbsp.c) (DM-048).
+ * from the NgIF collision layer (NgIFzcollide.c / NgIFzbsp.c).
  *
  * Offsets of the records are [V] (read/written at those offsets by physics.c, NgIFzcollide.c and
  * NgIFzbsp.c); names and meanings [I] unless noted. Units: ZGE world units (the level is in
@@ -62,7 +62,7 @@ typedef struct NgColFace {
     uint16_t code;             /* +0x16 tag code: class << 12 | id (class 1 with extra == 0 keeps only the id) */
     uint8_t  unk_18[4];        /* +0x18 0 */
     int16_t *vtx[3];           /* +0x1C integer corners (NgIFzbsp faces: ivtx; zbspFacePointInside) */
-    const void *tagFace;       /* +0x28 the ZtagFace (zbspMakeTagFace); a 4th corner when flags bit 0 (DM-057) */
+    const void *tagFace;       /* +0x28 the ZtagFace (zbspMakeTagFace); a 4th corner when flags bit 0 */
     void    *prop;             /* +0x2C NgPropCol * of a prop switch face (zbspFindTaggedFaces) */
     float    v0[3];            /* +0x30 triangle corners */
     uint8_t  unk_3c[4];
@@ -133,7 +133,7 @@ typedef void (__cdecl *BmxPhysStepFn)(BmxRider *r);
 typedef char physics_h_size_check[(sizeof(NgColFace) == 0x88 && sizeof(NgColEdge) == 0x38 &&
                                    sizeof(NgColHit) == 0xD8 && sizeof(BmxProbe) == 0x30) ? 1 : -1];
 
-/* physics.c, VA 0x0041FA20-0x0042DE23 (DM-048) */
+/* physics.c, VA 0x0041FA20-0x0042DE23 */
 void      bmxphysInit(void);                                                      /* 0x0041FA20 */
 void      bmxphysShutdown(void);                                                  /* 0x0041FA40 */
 void      bmxphysSetLimbTargets(BmxRider *r);                                     /* 0x0041FA60 */

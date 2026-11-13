@@ -1,9 +1,9 @@
 /*
- * rwtypes.h - the few RenderWare 3.1 public types that game/engine prototypes use (DM-040).
+ * rwtypes.h - the few RenderWare 3.1 public types that game/engine prototypes use.
  *
  * Layouts follow the RenderWare 3.x SDK headers (rwcore.h) [I: not verified against this exe
  * beyond the field use in zrwTxr.c]. RenderWare itself is library code and is not decompiled.
- * Also the short integer names other cards use in decomp/symbols/symbols.csv (u8, u16, u32, s8, s16, s32).
+ * Also the short integer names used in decomp/symbols/symbols.csv (u8, u16, u32, s8, s16, s32).
  */
 #ifndef RWTYPES_H
 #define RWTYPES_H
@@ -32,7 +32,7 @@ typedef struct RwImage {
     RwRGBA        *palette;
 } RwImage;                /* 0x1C */
 
-/* DM-043: RwV3d / RwMatrix (rwcore.h layout). [V] zscnptsLoad 0x00491F50 fills the rows at
+/* RwV3d / RwMatrix (rwcore.h layout). [V] zscnptsLoad 0x00491F50 fills the rows at
  * +0x00/+0x10/+0x20 and the position at +0x30 of a 0x40-byte matrix inside its scene point. */
 typedef struct RwV3d {
     float x;

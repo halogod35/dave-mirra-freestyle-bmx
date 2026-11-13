@@ -2,12 +2,12 @@
  * NgEngine/Zge/ziff.c
  * Original: C:\NgEngine\Zge\ziff.c
  * Evidence: [V] path string referenced by 13 function(s); the others [I] (link order, literals, calls)
- * 22 functions, VA 0x0049a6d0-0x0049b328 (DM-064 created ziffShutdown, ziffPrintContents,
+ * 22 functions, VA 0x0049a6d0-0x0049b328 (the clean-up created ziffShutdown, ziffPrintContents,
  * ziffChunkGetId, ziffChunkGetOffset, ziffChunkNext).
- * DM-042 (draft). Non-matching C (AD-8). Types: decomp/include/ziff.h.
+ * Draft. Non-matching C (AD-8). Types: decomp/include/ziff.h.
  *
- * The zanim node-table functions DM-042 found here (0x0049A4E0-0x0049A630) were moved to zanim.c
- * during the DM-042 integration (RANGE_FILES in tools/ghidra/build_symbols.py).
+ * The zanim node-table functions the zasset pass found here (0x0049A4E0-0x0049A630) were moved to zanim.c
+ * when the zasset pass was merged (RANGE_FILES in tools/ghidra/build_symbols.py).
  *
  * IFF model: a chunk is { u32 id; u32 size; data[size] }. ZiffFile.stack holds the open chunks;
  * each remembers its current child's header. ziffChunkFindFirst/Next walk the children,
@@ -17,7 +17,7 @@
 #include "decomp.h"
 #include "zanim.h"
 
-/* other modules: zfile.h/zengine.h via decomp.h (DM-041); the rest until their cards land */
+/* other modules: zfile.h/zengine.h via decomp.h; the rest until they are decompiled */
 void *memset(void *dst, int c, size_t n);            /* the exe uses zstring_00482b90 */
 char *zstring_00482860(const char *fmt, ...);        /* sprintf into a static buffer [I] */
 
@@ -42,7 +42,7 @@ void ziffInit(void)
 /* VA 0x0049a740, 76 bytes, [V] direct, status draft */
 int ziffShutdown(void)
 {
-    /* DM-064 created; zgeShutdown calls it */
+    /* new function; zgeShutdown calls it */
     if (!g_ziff.initialized)
         zAssertFail("Not initialized", ZIFF_FILE, 0x139, 0);
     zmemFreeListDestroy(g_ziff.handlerPool);
@@ -129,7 +129,7 @@ int ziffParse(ZiffFile *iff, void *user)
 /* VA 0x0049aa00, 206 bytes, [I] row, status draft */
 void ziffPrintContents(ZiffFile *iff)
 {
-    /* (DM-064 created; no caller) Debug listing of the current chunk: one "%c%c%c%c" line per child,
+    /* (new function; no caller) Debug listing of the current chunk: one "%c%c%c%c" line per child,
      * indented. Like the exe, the loop only ends when the position reaches the chunk's end. */
     ZiffChunk *c;
 
@@ -180,7 +180,7 @@ ZiffHandler *ziffRegisterHandler(uint32_t id, ZiffHandlerFn fn)
 /* VA 0x0049abb0, 11 bytes, [I] row, status draft */
 uint32_t ziffChunkGetId(ZiffFile *iff)
 {
-    /* DM-064 created; no caller */
+    /* new function; no caller */
     return iff->cur->childId;
 }
 
@@ -193,7 +193,7 @@ uint32_t ziffChunkGetSize(ZiffFile *iff)
 /* VA 0x0049abd0, 16 bytes, [I] row, status draft */
 int32_t ziffChunkGetOffset(ZiffFile *iff)
 {
-    /* (DM-064 created; no caller): bytes from the current child's header to the current position */
+    /* (new function; no caller): bytes from the current child's header to the current position */
     return iff->cur->pos - iff->cur->childStart;
 }
 
@@ -281,7 +281,7 @@ static int ziffScanFor(ZiffFile *iff, uint32_t id)
 /* VA 0x0049ad30, 92 bytes, [I] row, status draft */
 int32_t ziffChunkNext(ZiffFile *iff)
 {
-    /* (DM-064 created; no caller) Skip to the next child: seek past the current one and read its
+    /* (new function; no caller) Skip to the next child: seek past the current one and read its
      * header. Returns the position after the header, -1 at the end of the chunk. */
     ZiffChunk *c = iff->cur;
 

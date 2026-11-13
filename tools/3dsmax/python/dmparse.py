@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """dmparse: a simple, single-file reference parser for Dave Mirra Freestyle BMX (PC, 2000) files.
 
-Stdlib only, independent of the `dmbmx` library. The format specification is ../SPEC.md; section
+Stdlib only, independent of the `dmbmx` library. The format specification is ../../../docs/formats/SPEC.md; section
 numbers in comments (e.g. "SPEC 3.2") point there. The MaxScript importer
 (../maxscript/DaveMirraImport.ms) mirrors the ZMD/MATI functions here line by line.
 
@@ -429,7 +429,7 @@ def matrix_to_rw(m9):
 
 
 def prop_matrix_to_rw(m9):
-    """Prop rotation rows (PRBL m[9]) -> RW rows: the stored rows unchanged (SPEC 2.6, DM-065). The game
+    """Prop rotation rows (PRBL m[9]) -> RW rows: the stored rows unchanged (SPEC 2.6). The game
     renders props through its mirrored quaternion converter, D (F M F) D with D = diag(-1, 1, 1) = M."""
     return [tuple(float(m9[3 * r + c]) for c in range(3)) for r in range(3)]
 
@@ -1372,7 +1372,7 @@ def _jsonable(o, full):
 
 def main(argv=None):
     import argparse
-    ap = argparse.ArgumentParser(description="Dave Mirra Freestyle BMX reference parser (see ../SPEC.md)")
+    ap = argparse.ArgumentParser(description="Dave Mirra Freestyle BMX reference parser (see ../../../docs/formats/SPEC.md)")
     sp = ap.add_subparsers(dest="cmd", required=True)
     for c in ("tree", "dump"):
         p = sp.add_parser(c)

@@ -1,4 +1,4 @@
-"""Find executable bytes in the game/engine part of .text that no Ghidra function covers (DM-064).
+"""Find executable bytes in the game/engine part of .text that no Ghidra function covers.
 
     tools/testing/py.sh tools/ghidra/scan_holes.py                 # report every hole
 
@@ -15,7 +15,7 @@ left between two functions is classified, in this order:
 
 A hole is reported with its size, whether it is referenced (a call / jmp rel32, or an absolute
 dword anywhere in the image equal to its start, e.g. a vtable or a thunk) and its first
-instruction. Exit status 0; the test (tests/test_decomp_dm064.py) decides what is acceptable.
+instruction. Exit status 0; the test (tests/test_decomp_cleanup.py) decides what is acceptable.
 """
 from __future__ import annotations
 

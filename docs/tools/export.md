@@ -1,6 +1,6 @@
 # `dmbmx export`: ZMD → glTF 2.0 (.glb) + OBJ
 
-Owner: DM-020 (Agent G). Code: `tools/dmbmx/convert/gltf.py`, `tools/dmbmx/convert/obj.py`,
+Code: `tools/dmbmx/convert/gltf.py`, `tools/dmbmx/convert/obj.py`,
 `tools/dmbmx/convert/imaging.py`, CLI `tools/dmbmx/cli/export.py`. Tests: `tests/test_export_gltf.py`,
 `tests/test_imaging_unit.py`, `tests/test_cli_export.py`. Blender checks: `tools/blender/`.
 Source format: `docs/formats/ZMD.md`.
@@ -17,14 +17,14 @@ tools/testing/py.sh -m dmbmx export --all out/glb [--game-dir DIR] [--obj]      
 ```
 
 - `--all` scans `--game-dir` (default `$DMBMX_GAME_DIR`, else the project install), skipping
-  `_pristine`, `_testgame`, `wt`, `dave-mirra-bmx` and `dave-mirra-pro-bmx`. It writes `<outdir>/<stem>.glb`. The two
+  `_pristine`, `_testgame`, `wt`, `dave-mirra-bmx` and `dave-mirra-freestyle-bmx`. It writes `<outdir>/<stem>.glb`. The two
   0-byte files (`TroyMcMurray1v2/1v3.ZMD`) print `skip ...: empty file (0 bytes)`.
   [V] `exported 115, skipped 2 (empty), failed 0, of 117 files` in about 5 s with `--obj`.
 - `--no-upright` leaves out the rider root rotation (§2).
-- `--anims all|1,5,10-12` (DM-016) adds motion.zal clips as glTF animations (rotation tracks on the
+- `--anims all|1,5,10-12` adds motion.zal clips as glTF animations (rotation tracks on the
   channel frames). For riders it also removes the upright root rotation, because the animated Hips
   stands the skeleton up. The tracks are the game's frame rotations: the arm table and the engine -> model
-  conversion (x, −y, −z, w) of every channel (DM-019). `--motion-zal PATH` overrides the bank. See
+  conversion (x, −y, −z, w) of every channel. `--motion-zal PATH` overrides the bank. See
   `docs/formats/ANIM.md` §3-4.
 - Exit codes: 0 means OK, 1 means an export failed or the file was empty, 2 means bad usage.
 
@@ -46,7 +46,7 @@ and there is no handedness flip. The glTF root node adds one rotation for riders
 |---|---|
 | [V] Bikes (`*bike*.zmd`), `sfx.zmd`, `ShadowVolume.ZMD`, test rider `DaveMirra.ZMD` | Up is +Y: the bike's wheels sit at y ≈ −0.3, the seat at y ≈ +0.5, and the front wheel is at +Z. ShadowVolume spans y 0..1.48. |
 | [V] Bike `LeftGrip` x = +0.25, rider `LeftHand` x = +0.73 | With +Y up and +Z forward, the model's left is +X. That is a right-handed system, the same as glTF ("+Y up, front faces +Z"). |
-| [V] In-game riders `*1..5`, `rider_shadow`, `DaveMirra_shadow` | The bind pose is **lying along +Z**: Head z = +0.65, feet z = −0.75, and forward is −Y. The `Hips` frame (first child of the root `Skin` frame) has `up = (0,0,1)`, `at = (0,−1,0)`. In other words, the skeleton below the Hips is authored Y-up and the Hips frame rotates it to model +Z. [I] In game, animations (DM-016) replace the Hips matrix, so the rider stands up in the Y-up world. |
+| [V] In-game riders `*1..5`, `rider_shadow`, `DaveMirra_shadow` | The bind pose is **lying along +Z**: Head z = +0.65, feet z = −0.75, and forward is −Y. The `Hips` frame (first child of the root `Skin` frame) has `up = (0,0,1)`, `at = (0,−1,0)`. In other words, the skeleton below the Hips is authored Y-up and the Hips frame rotates it to model +Z. [I] In game, animations replace the Hips matrix, so the rider stands up in the Y-up world. |
 
 **Upright correction** (`gltf.upright_correction`). For a skinned LOD, the exporter looks at the first
 child of the root frame. If that frame's world local-Y axis points along model ±Z (|z| > 0.9),
@@ -61,7 +61,7 @@ glTF = Rx(-90°) · RW        (x, y, z) -> (x, z, -y)
 ```
 
 Everything else gets no rotation. The rotation sits only on the root node. Vertices, joints and
-inverse-bind matrices stay in RW model space, so the data is unchanged and DM-021 just drops
+inverse-bind matrices stay in RW model space, so the data is unchanged and the glTF importer just drops
 the root rotation. `extras.dmbmx.axis = {"rw_to_gltf": "identity", "root_correction": "rx-90" | null}`
 records the decision.
 
@@ -125,7 +125,7 @@ Geometry and texture pixels come from the glTF buffers.
 
 [V] `gltf.restore_zmd(export_glb(f)) == f` **byte-for-byte for 115/115** non-empty ZMDs
 (`test_export_restore_lossless`). This includes all 215 TBMP rebuilt from their PNG plus the
-stored header (`test_corpus_bmp_png_roundtrip`). DM-021 starts from this path and only needs to
+stored header (`test_corpus_bmp_png_roundtrip`). The glTF importer starts from this path and only needs to
 handle what the user changed.
 
 | Where | Key | Content |
@@ -139,7 +139,7 @@ handle what the user changed.
 | | `clump_struct_extra`, `clump_ext` | b64 |
 | | `frames`, `atomic_nodes` | frame count; node index of each atomic **in atomic order** |
 | frame node | `frame`, `parent`, `anim_id`, `name_source` | RW frame index etc. |
-| | (note) | `record` is taken from the source file's raw bytes when it matches the decoded frame, because Blender's Python flushes denormal floats and would lose them (DM-022). |
+| | (note) | `record` is taken from the source file's raw bytes when it matches the decoded frame, because Blender's Python flushes denormal floats and would lose them. |
 | | `record` | b64 of the 56-byte RW frame record (exact matrix + parent + flags) |
 | | `ext` | b64 of the frame's extension chunks (Animation 0x108 = bone id) |
 | atomic mesh node | `atomic`, `frame`, `flags`, `unused`, `ext` | RpAtomic fields, b64 extension |
@@ -152,7 +152,7 @@ in order and interleave them following `tri_materials`. Each glTF `(a, b, c)` be
 because float32 is stored unchanged and all corpus normals are unit-length. Everything else comes
 from the b64 chunks.
 
-For **edited** models (DM-021): when the geometry changes, `BinMesh` must be regenerated and
+For **edited** models: when the geometry changes, `BinMesh` must be regenerated and
 `Bone` ranges re-derived from `JOINTS_0`, and vertices must be re-sorted by bone (ZMD.md §3.4/3.5).
 The stored `ext` chunks are only valid while the topology is unchanged. `png_sha256` tells the
 importer whether a texture was edited.
@@ -192,7 +192,7 @@ Blender importer behaviour the checker accounts for ([V]):
 - Materials are not double-sided. [I] The game presumably back-face culls, but this is unverified.
 - `.glb`, `.obj` and `.png` output belongs in `out/` (gitignored) and must never be committed (AD-9).
 
-## 7. Rider on bike: `dmbmx export-combo` (DM-018)
+## 7. Rider on bike: `dmbmx export-combo`
 
 ```bash
 tools/testing/py.sh -m dmbmx export-combo assets/DaveMirra1.ZMD assets/DMbike01.zmd out/dm_on_bike.glb --anims 8
@@ -216,23 +216,23 @@ Glb merging (`combo.merge_glbs`) offsets every index and concatenates the binary
 same name merge into one.
 
 **Placement.** For each frame, the rider root is translated so that the mid-point of the rider's foot frames
-lies on the mid-point of the bike's pedal frames (DM-017).
-- [V] In motion 8 every frame passes; the foot-to-pedal residual is 0.086-0.122 (DM-019: with the engine's
-  F·R·F the feet stand wider than the pedals; it was < 0.12 under DM-017's rotations).
-- A frame where a foot stays farther than 0.15 (DM-018: 0.12) from its pedal counts as "off the bike" (tricks).
+lies on the mid-point of the bike's pedal frames.
+- [V] In motion 8 every frame passes; the foot-to-pedal residual is 0.086-0.122 (with the engine's
+  F·R·F the feet stand wider than the pedals; it was < 0.12 under the legacy arm table's rotations).
+- A frame where a foot stays farther than 0.15 (0.12) from its pedal counts as "off the bike" (tricks).
   Over all 238 clips, 1,127 of 2,301 frames are on the pedals.
-- **DM-047:** off-pedal frames follow the game's own placement (`combo.engine_offsets`, ANIM.md section 8.3):
+- **Off the pedals:** off-pedal frames follow the game's own placement (`combo.engine_offsets`, ANIM.md section 8.3):
   the clip's bike-section translation b is the bike's offset from the rider in engine units (100 x model
   units, Y and Z negated), so the rider root sits at F(-b) / 100 from the bike root plus a constant. The
   constant is calibrated on the clip's on-pedal frames (`ENGINE_OFFSET` = (0.007, -0.251, 0.044) when a clip
   has none). [V] Median residual against the feet placement: 0.023 with the per-clip constant, 0.054 with the
-  global one (all 1,246 on-pedal frames). `rider_offsets(..., fill="interpolate")` keeps DM-018's linear
+  global one (all 1,246 on-pedal frames). `rider_offsets(..., fill="interpolate")` keeps the combo exporter's linear
   interpolation between the nearest good frames. The combo root's `extras.dmbmx.placement` is now
   `"feet-on-pedals+engine"`.
 
 **Wheels.** The clips have no wheel channels. With wheel spin on (the default), BackWheel and FrontWheel
 turn about the bike's lateral axis by the accumulated crank (Sprocket) angle × the gear ratio (default
-44/16 = 2.75, [I] typical BMX gearing). DM-047: the game spins each wheel from physics (per-wheel angle +=
+44/16 = 2.75, [I] typical BMX gearing). The rider.c pass: the game spins each wheel from physics (per-wheel angle +=
 spin velocity, written into the BackWheel/FrontWheel channels, ANIM.md section 8.5), not from the crank, so
 the crank coupling stays a stand-in. [V] In motion 8 the crank turns once (361°) and the wheels 2.75
 times (993°).
@@ -245,12 +245,12 @@ times (993°).
 | 15 | 0.097 / 0.104 | 0.124 | small | OK `--riding` |
 | 59 (trick: bike spins, hands/feet off) | 0.35 | 0.67 | — | OK (no explosion); on-bike thresholds not applicable |
 
-[V] DM-019 numbers (engine F·R·F + literal arm table). DM-018 measured 0.054/0.077, 0.169; 0.064/0.091, 0.114;
-0.19, 0.61 with DM-017's rotations.
+[V] Numbers with F conjugation (engine F·R·F + literal arm table). The combo exporter measured 0.054/0.077, 0.169; 0.064/0.091, 0.114;
+0.19, 0.61 with the legacy arm table's rotations.
 
 There are no explosions (bbox ratio ≤ 1.06). The Blender-measured wheel angle (1554° in motion 8) also
 includes the frame-to-frame interpolation of the 24 fps resampling; the track itself has 993°.
-Render: `out/dm019/frf_strip.png` (DM-019 worktree, ANIM.md §4); DM-018's was `out/combo/combo_strip.png` (DM-018 worktree): rows are clips 8, 15 and 59, columns are Blender
+Render: `out/frf/frf_strip.png` (ANIM.md §4); the combo exporter's was `out/combo/combo_strip.png`: rows are clips 8, 15 and 59, columns are Blender
 frames 0, 12 and 24.
 
 **Blender add-on.** File > Import > "Dave Mirra rider on bike (animated)" (`import_scene.dmbmx_combo`).
@@ -259,5 +259,5 @@ default to 8. The operator builds the combo .glb in memory and loads it with Ble
 the result is **view-only**: it is not linked to the lossless ZMD export.
 
 **Limits.** The placement is by translation only (no rider tilt relative to the bike). Tricks where the feet
-leave the pedals use the interpolated placement. With the engine rotations (DM-019) the hands sit 0.13-0.16
+leave the pedals use the interpolated placement. With the engine rotations the hands sit 0.13-0.16
 from the bar and the feet ~0.09 from the pedal frames (knees out; ANIM.md §3.1).

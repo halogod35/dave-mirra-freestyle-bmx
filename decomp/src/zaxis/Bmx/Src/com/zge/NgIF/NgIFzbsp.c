@@ -5,10 +5,10 @@
  *           zbspColSphere (0xDE9), zbspFindPropsByGroup (0xF21), zbspFindTaggedFaces (0xF61),
  *           zbspFindTaggedEdges (0xFF6) and the 113 "not implemented" stubs (lines 107 .. 4108,
  *           in address order, from 0x00465A50 'bsp init' on); [I] the rest by link order.
- * 137 functions, VA 0x00465a50-0x0046951f (DM-057 created the 113 stubs, zbspUnusedStub
+ * 137 functions, VA 0x00465a50-0x0046951f (the NgIF pass created the 113 stubs, zbspUnusedStub
  * 0x004665F0 and zbspPropColFree 0x00468D20, and took zbspPropSetRotation / AddRotation /
  * SetPosition from the NgIFzactor/NgIFzbsp gap).
- * DM-057 (draft). Non-matching C (AD-8). Types: ngif.h, physics.h (NgColFace / NgColEdge),
+ * Draft. Non-matching C (AD-8). Types: ngif.h, physics.h (NgColFace / NgColEdge),
  * bmxprop.h (NgPropCol). Description: docs/re/ngif.md, docs/re/physics.md.
  *
  * The PSX engine kept the level in its own BSP ("zbsp"); the PC port uses RenderWare's world and

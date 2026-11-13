@@ -1,4 +1,4 @@
-"""ZMD -> Blender scene (DM-022). Builds objects directly (no Blender glTF importer).
+"""ZMD -> Blender scene. Builds objects directly (no Blender glTF importer).
 
 Pipeline: ``dmbmx.convert.gltf.export_glb`` (in memory) -> walk that glTF -> Blender objects.
 The glTF JSON (with every ``extras.dmbmx`` rebuild block) is stored on the root object as the custom

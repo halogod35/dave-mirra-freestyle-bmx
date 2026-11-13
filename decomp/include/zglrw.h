@@ -1,12 +1,12 @@
 /*
  * zglrw.h - the ZglRw layer (NgEngine/Zge/Com/ZglRw/zrw*.c): the PC implementation of the engine's
- * "ZGL" graphics interface on top of RenderWare 3.1 (DM-059). Description: docs/re/zrw.md.
+ * "ZGL" graphics interface on top of RenderWare 3.1. Description: docs/re/zrw.md.
  *
  * The engine core never calls RenderWare. Each zrw module fills a driver table (a const array of
  * function pointers in .data) and zrwZglInstallDrivers 0x0048AFE0 hands the tables to the engine:
  *
  *   table       VA          slots  module            engine global (pointer to the table)
- *   texture     0x005623F0  15     zrwTxr.c          g_texDriverVtbl (the table itself, DM-014 name)
+ *   texture     0x005623F0  15     zrwTxr.c          g_texDriverVtbl (the table itself, older name)
  *   material    0x00561018  15     zrwMat.c          g_zglMatApi      0x006977A0
  *   model       0x00560E78  37     zrwModel.c (+ zrwModelCreate.c, zrwModelRender.c, zrwModelGeom.c)
  *   light       0x00563420   8     zrwLight.c

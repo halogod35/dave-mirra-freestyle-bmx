@@ -4,12 +4,12 @@
  * Evidence: [V] path string 0x005589D0 referenced by the asserts of riderUpdateAll, riderGetState and
  *           riderOnRiderImpact; the others [I] (link order between replay.c and guiinput.c, the
  *           state-procedure tables 0x005588B8-0x00558903, the trick-selection tables 0x00558904-0x00558FBF).
- * 34 functions, VA 0x00430e70-0x004364ff. DM-047 (draft): DM-040 listed 27; DM-047 added
+ * 34 functions, VA 0x00430e70-0x004364ff. Draft: the skeleton listed 27; the rider.c pass added
  * riderReadInput (from the replay/rider gap), the empty riderNullProc, the air and coast state
  * procedures and the empty riding sub-state 5 (reached only through the tables), and the two
  * dynamics impact callbacks (registered by riderCreate). Non-matching C (AD-8). Types: rider.h.
  * Answers written into docs/formats/ANIM.md section 8; Python ports in tools/dmbmx/formats/tricks.py
- * (tests/test_decomp_dm047.py).
+ * (tests/test_decomp_rider.py).
  *
  * The rider: one BmxRider per player (g_riders, 2 slots). Every frame action.c calls
  * riderReadInput (controller -> rider input block), riderUpdateAll (state machine + motion
@@ -41,9 +41,9 @@
  */
 #include <math.h>
 #include "decomp.h"
-#include "zmath.h"     /* DM-045 names; float arrays are passed where it declares RwV3d / RwMatrix */
-#include "contrler.h"  /* DM-051: ACT_* actions, ACT_PRESSED/HELD/RELEASED, BmxPad, contrler* */
-#include "camera.h"    /* DM-051: cameraSetPlayer / cameraGetPlayer */
+#include "zmath.h"     /* zmath names; float arrays are passed where it declares RwV3d / RwMatrix */
+#include "contrler.h"  /* ACT_* actions, ACT_PRESSED/HELD/RELEASED, BmxPad, contrler* */
+#include "camera.h"    /* cameraSetPlayer / cameraGetPlayer */
 
 #define RIDER_SRC "C:\\zaxis\\Bmx\\Src\\com\\action\\rider.c"
 
@@ -108,7 +108,7 @@ enum {
 #define MOTION_FROZEN   0x100u   /* do not step this frame */
 #define MOTION_BLEND    0x200u   /* blend motion[0] and motion[1] (weight motion[1].rate) */
 
-/* controller actions ACT_* and statuses ACT_PRESSED / ACT_HELD / ACT_RELEASED: contrler.h (DM-051;
+/* controller actions ACT_* and statuses ACT_PRESSED / ACT_HELD / ACT_RELEASED: contrler.h
  * contrlerTestAction looks them up in g_contrlerActions 0x00553EE0 [config][action][status]) */
 
 /* RIDER_DIR_*: g_dirFromMask maps the d-pad/stick bits (1 up, 2 down, 4 left, 8 right) to these */
@@ -163,7 +163,7 @@ void    *zbspGetPropShape(int16_t shape);                            /* collisio
 void    *zcolGetPropShape(int16_t shape);
 void     NgIFzactor_ApplyMotionPose(ZActor *a);                       /* 0x004654B0 pose the model from the decoder */
 void     zrwModelUpdateObj(void *model);                              /* 0x004892A0 */
-/* the crash rag doll and the limb IK (dyn.c, DM-058; types in dyn.h, declared loosely here) */
+/* the crash rag doll and the limb IK (dyn.c; types in dyn.h, declared loosely here) */
 typedef void (*DynImpactFn)(void *body, int particle, float force, void *hit);
 void     dynIkReset(void *actor, void *ik);                           /* 0x00455EF0, empty */
 void     dynIkMeasure(void *actor, void *ik);                         /* 0x00455F10 limb lengths */
@@ -624,7 +624,7 @@ void riderReset(int slot, int active)
     r->dirCount = 0;
     r->stateFlags |= RIDER_FLAG_MOTION_DONE;
     riderSetState(r, 0, RIDER_STATE_RIDING);
-    r->physState = 0xFF;                 /* BMXPHYS_NONE until the first bmxphysSetState (DM-048) */
+    r->physState = 0xFF;                 /* BMXPHYS_NONE until the first bmxphysSetState */
     bmxphysResetRider(r);
     r->impactTimer = 0;
     r->motion[0].rate = 1.0f;
@@ -1074,7 +1074,7 @@ int riderStateCrash(BmxRider *r)
         }
         /* more than 1 m above the ground: the player can tuck (ACT_GO_LIMP, dynTuck curls the body up)
          * and spin the tumble with the stick; ACT_RAGDOLL held makes the hands grab a nearby rail or
-         * ledge (dynGrab), and while hanging (dynIsHanging) the state is CRASH_STEER (DM-058) */
+         * ledge (dynGrab), and while hanging (dynIsHanging) the state is CRASH_STEER */
         if (bmxphysProbeGround(r->pos, ground) && fabsf(ground[2] - r->pos[1]) > 100.0f) {
             if (act(r, ACT_GO_LIMP, ACT_HELD) && !(r->stateFlags & RIDER_FLAG_RAGDOLL)) {
                 dynTuck(r->animCtl, r->riderActor);
@@ -1391,7 +1391,7 @@ int riderRideTurnaround(BmxRider *r)
         r->stateTimer[2]++;
         return 1;
     }
-    if (act(r, ACT_TURNAROUND, ACT_PRESSED)) {      /* DM-051: statuses as the exe passes them (9,0 / 6,1) */
+    if (act(r, ACT_TURNAROUND, ACT_PRESSED)) {      /* statuses as the exe passes them (9,0 / 6,1) */
         requestMotion(r, MOTION_TURN_FAKIE);
         riderSetState(r, 2, 2);
     } else if (act(r, ACT_JUMP, ACT_HELD)) {
@@ -1868,7 +1868,7 @@ int riderManual(BmxRider *r)
     if (riderGetState(r, 2) < 2)
         r->rotVel[2] = (int16_t)(stick(r)[1] * 2.5f * DEG_TO_ANGLE);    /* balance with the stick's y */
     if (riderGetState(r, 2) < 3) {
-        /* the first wheel on the ground decides (DM-048: wheel.contact 2 = in the air): almost
+        /* the first wheel on the ground decides (wheel.contact 2 = in the air): almost
          * stopped (speed < 1) ends the manual */
         if (r->wheel[0].contact != 2) {
             if (r->wheel[0].speed < 1.0f)

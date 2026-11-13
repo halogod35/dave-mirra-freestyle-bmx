@@ -1,4 +1,4 @@
-"""DM-040: decomp skeleton (decomp/functions.csv, decomp/src/**, decomp/PROGRESS.md, decomp/include).
+"""Decomp skeleton (decomp/functions.csv, decomp/src/**, decomp/PROGRESS.md, decomp/include).
 
 No Ghidra or C compiler needed. Checks the CSV contract, that every function has exactly one stub
 with its VA comment, that the committed skeleton is what make_skeleton.py generates, and that the
@@ -102,7 +102,7 @@ def test_stub_types_are_declared():
         t = h.read_text(encoding="utf-8")
         known |= set(re.findall(r"typedef\s+[^;]*?\b([A-Za-z_]\w*)\s*(?:\[[^\]]*\])?\s*;", t))
         known |= set(re.findall(r"\bstruct\s+([A-Za-z_]\w*)", t))
-        # function-pointer typedefs: typedef int (__cdecl *Name)(...);  (DM-042)
+        # function-pointer typedefs: typedef int (__cdecl *Name)(...); 
         known |= set(re.findall(r"typedef\s+[^;()]*\(\s*(?:__\w+\s+)?\*\s*([A-Za-z_]\w*)\s*\)", t))
     kw = {"void", "int", "char", "short", "long", "float", "double", "unsigned", "signed", "const", "struct",
           "__cdecl", "__stdcall", "__fastcall", "__thiscall", "volatile"}
@@ -121,7 +121,7 @@ def test_stub_types_are_declared():
 
 def test_generator_never_overwrites_hand_written_files(tmp_path):
     """Even if functions.csv says 'todo' everywhere (e.g. after a bad merge), files that hold
-    anything but generated stubs must survive a regeneration byte for byte (DM-042 integration)."""
+    anything but generated stubs must survive a regeneration byte for byte."""
     sys.path.insert(0, str(REPO / "tools" / "decomp"))
     import make_skeleton
     hand = [p for p in (DECOMP / "src").rglob("*.c") if make_skeleton.is_hand_written(str(p))]

@@ -4,8 +4,8 @@
  * Evidence: [V] path string referenced by zanimAllocTrack (inlined 6 times), the IFF chunk handlers,
  * zanimInit, zanimPlay and zanimMix; the rest [I] (link order 0x00498D80-0x0049A6CB, between
  * zrwTxr.c and ziff.c, and the globals 0x006746C0-0x006746C8).
- * 36 functions, VA 0x00498d80-0x0049a6cb. DM-042 wrote zanimLoadIff .. zanimFreeContents (then in
- * ziff.c); DM-045 completed the module. Non-matching C (AD-8). Types: decomp/include/zanim.h.
+ * 36 functions, VA 0x00498d80-0x0049a6cb. The zasset pass wrote zanimLoadIff .. zanimFreeContents (then in
+ * ziff.c); the zmath pass completed the module. Non-matching C (AD-8). Types: decomp/include/zanim.h.
  *
  * Keyframe animation ("NAD" data, Scene.Txt ANIM entries *.NAD / *.IFF / *.ZAL):
  *  - loading: zanimLoadIff parses an ANIM form into a ZanimContents: DEFI (node names + hashes),
@@ -34,7 +34,7 @@
 #define ZANIM_MAX_TIME      32400.0f   /* zanimPlay asserts below this; zanimRebaseTime shifts down */
 #define ZANIM_HOLD_TIME     10000.0f   /* a new track holds its last key this long after its end */
 
-/* other modules (current names until their cards land) */
+/* other modules (current names until they are decompiled) */
 int  zobjModelGetNumParts(ZanimObj *obj);                          /* number of body parts (zrwModelGetNumParts) */
 void zobjModelGetPartIds(ZanimObj *obj, uint32_t *hashes);        /* their name hashes (zrwModelGetPartIds) */
 void zobjModelSetNodes(ZanimObj *obj, ZanimNodeTable *table);   /* obj->nodes = table; zrwModelBindParts links parts */

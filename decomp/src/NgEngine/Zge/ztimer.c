@@ -2,11 +2,11 @@
  * NgEngine/Zge/ztimer.c
  * Original: unknown (no path string; name invented in the original style from the "ZTIMER assert
  * failed" message)
- * Evidence: [I] new file (DM-061): the literals 0x005639A0-0x00563A0F lie between zprofile.c's and
+ * Evidence: [I] new file: the literals 0x005639A0-0x00563A0F lie between zprofile.c's and
  * pcProfile.c's, the functions share the globals 0x006764A0-0x006764C8, and zgeInit / zgeShutdown
  * call Init / Shutdown between zsceneInit and zprofileInit.
  * 9 functions, VA 0x004a4230-0x004a45d9.
- * DM-061 (draft). Non-matching C (AD-8). Types: ztools.h. Description: docs/re/zge.md 7.
+ * Draft. Non-matching C (AD-8). Types: ztools.h. Description: docs/re/zge.md 7.
  *
  * Timed callbacks: events (a pool of maxEvents, 0x40 from zgeInit) wait in a min-heap keyed by
  * their due time (timeGetTime ms); the frame callback (priority 8) fires the due ones.

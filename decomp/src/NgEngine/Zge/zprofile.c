@@ -1,12 +1,12 @@
 /*
  * NgEngine/Zge/zprofile.c
  * Original: C:\NgEngine\Zge\zprofile.c
- * Evidence: [V] path string referenced by zprofileInit and (DM-061) SetLayout / CreateBar; the
+ * Evidence: [V] path string referenced by zprofileInit and SetLayout / CreateBar; the
  * others [I]: the globals 0x00676438-0x0067649F (ZprofileGlobals) and the callbacks Init/Create*
- * register. DM-061 created the draw callback 0x004A35F0 (between zrwRamDisk.c and zprofileInit)
+ * register. The ZGE object pass created the draw callback 0x004A35F0 (between zrwRamDisk.c and zprofileInit)
  * and the twelve functions after zprofileInit.
- * 15 functions, VA 0x004a35f0-0x004a4225 (DM-064 created zprofileResetPeak 0x004A4190).
- * DM-061 (draft). Non-matching C (AD-8). Types: ztools.h. Description: docs/re/zge.md 7.
+ * 15 functions, VA 0x004a35f0-0x004a4225 (the clean-up created zprofileResetPeak 0x004A4190).
+ * Draft. Non-matching C (AD-8). Types: ztools.h. Description: docs/re/zge.md 7.
  *
  * On-screen CPU bars, timed with the performance counter (pcProfile.c): each bar accumulates the
  * ticks between Start and Stop during a frame; the draw callback (ZGL priority 4) draws, per bar,
@@ -288,7 +288,7 @@ void zprofileSetPeakPeriod(int frames)
 /* VA 0x004a4190, 68 bytes, [I] row, status draft */
 void zprofileResetPeak(ZprofileBar *bar)
 {
-    /* (DM-064 created; no caller) Clears the peak of one bar, or of every bar when bar is NULL. */
+    /* (new function; no caller) Clears the peak of one bar, or of every bar when bar is NULL. */
     ZmemFreeNode *node;
 
     if (bar != NULL) {

@@ -1,4 +1,4 @@
-"""Survey of embedded textures (DM-014): MATI/MADF/TBMP/TPNG in every .zmd and level Mat._sd,
+"""Survey of embedded textures: MATI/MADF/TBMP/TPNG in every .zmd and level Mat._sd,
 plus the BMPs in material.zal. Prints MADF field histograms and image format statistics.
 
 usage: tools/testing/py.sh tools/research/survey_textures.py

@@ -1,7 +1,7 @@
-# Props, replays and effects (prop.c, replay.c, fx.c) (DM-052)
+# Props, replays and effects (prop.c, replay.c, fx.c)
 
 C: `decomp/src/zaxis/Bmx/Src/com/action/{prop,replay,fx}.c`; types `decomp/include/{bmxprop,replay,fx}.h`.
-Replay format: `docs/formats/REPLAY.md`. Evidence tags as in AD-5; the tests are `tests/test_decomp_dm052.py`.
+Replay format: `docs/formats/REPLAY.md`. Evidence tags as in AD-5; the tests are `tests/test_decomp_prop_replay_fx.py`.
 
 ## 1. Module boundaries
 
@@ -11,8 +11,8 @@ Replay format: `docs/formats/REPLAY.md`. Evidence tags as in AD-5; the tests are
 | prop.c | 0x0042DE70-0x0042FCA1 | 18 | [V] path 0x00558678 (bmxpropInit, "state info overflow"), "bmxprop..." messages |
 | replay.c | 0x0042FCE0-0x00430E50 | 13 | [V] path 0x005587E4 (9 functions), "bmxreplay..." messages |
 
-DM-052 absorbed the gaps contrler/fx (9), fx/game (2) and prop/replay (1), and created 12 functions
-Ghidra had not made (decomp/symbols/symbols.csv rows, card DM-052): fx.c 0x00408960, 0x00408980, 0x00409880
+The prop/replay/fx pass absorbed the gaps contrler/fx (9), fx/game (2) and prop/replay (1), and created 12 functions
+Ghidra had not made (decomp/symbols/symbols.csv rows): fx.c 0x00408960, 0x00408980, 0x00409880
 (zfxRegisterFuncTable entries), 0x00408A40, 0x00408A60, 0x00408C50 (only ILT thunks), 0x004098B0,
 0x004098F0 (hooks stored by fxInit); prop.c 0x0042EB50 (draw callback); replay.c 0x00430CF0
 (bmxreplayGetFrame), 0x00430E30, 0x00430E50 (empty, unreferenced; [I] could be rider.c's).
@@ -62,7 +62,7 @@ two travellers (20 opens the fence pair 1000) and the pair, Woodward Dirt 4 tumb
 Vert 8 delay slots (20 / 24 open the fence pairs 1000 / 1020); ProTour Street 3 and Acclaim Street 1
 sound-only slots (ids 3000+; no prop carries them, so they print "error finding face").
 
-### OBJI answers (DM-043 open items; LEVEL.md 5.4)
+### OBJI answers (the zScene pass open items; LEVEL.md 5.4)
 
 - **Prop OBJI (10 bytes)**: bytes 0..3 = RGBA **tint**: ngappApplyPropTints (level load) forces the
   alpha to 0xFF and passes it to 0x00488CA0, which stores it at model +0x84 and applies it to the
@@ -96,7 +96,7 @@ SetMode (snapshots), Get/SetPlayer, GetMode, GetFrame, GetSaveArea.
 
 ## 5. Open questions
 
-1. Answered by DM-057 (docs/re/ngif.md 2): NgPropCol flag 0x80 = "knocked" (zbspPropSetMode 0, set by
+1. Answered by the NgIF pass (docs/re/ngif.md 2): NgPropCol flag 0x80 = "knocked" (zbspPropSetMode 0, set by
    physics.c on a hard crash into the prop, never cleared): the prop's grind rails are skipped by
    zbspFindEdgesNear from then on [V code, I gameplay]; the OBJI flags 0x400 / 0x800 / 0x1000 are
    written but never read in this build [V: scan of all game code].

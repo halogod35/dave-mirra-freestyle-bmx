@@ -5,10 +5,10 @@
  *           the file is ~1700 lines); [V] the type tables 0x0055C278..0x0055C3C8 point at the
  *           spawn / update / draw functions, zfxInitTypes registers them; [I] the file runs from
  *           the end of NgApp.c (0x0045C950) to zfxFlash (0x0045FDC0), by link order and data.
- * 31 functions, VA 0x0045c950-0x0045fdeb (DM-057 absorbed the NgApp/NgIFfx and NgIFfx/NgIFpsx
+ * 31 functions, VA 0x0045c950-0x0045fdeb (the NgIF pass absorbed the NgApp/NgIFfx and NgIFfx/NgIFpsx
  * gaps and created 14 functions Ghidra had not made: the draw / update functions and four
  * spawners, only reached through the type tables and zfxRegisterSpawner).
- * DM-057 (draft). Non-matching C (AD-8). Types / prototypes: ngif.h. Description: docs/re/ngif.md.
+ * Draft. Non-matching C (AD-8). Types / prototypes: ngif.h. Description: docs/re/ngif.md.
  *
  * The PC particle effects behind fx.c: seven zfx particle types on the engine's particle emitter
  * (the zobjPEmit vtable, slots 0..5 / 7 inherited), each with a spawn function (fills ZfxParticle

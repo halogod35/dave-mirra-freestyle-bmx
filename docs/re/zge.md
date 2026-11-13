@@ -1,9 +1,9 @@
-# The ZGE engine objects and the small engine modules (DM-061)
+# The ZGE engine objects and the small engine modules
 
 Sources: `decomp/src/NgEngine/Zge/` `zobj.c`, `ZgeMods/zobjCamera.c`, `zobjModel.c`, `zobjLight.c`,
 `zobjPEmit.c`, `zge.c`, `zinput.c`, `ztoken.c`, `ZgeMods/zFont.c`, `zprofile.c`, `ztimer.c`, `zheap.c`,
 `Pc/pcinput.c`, `Pc/pcmovie.c`, `Pc/pcProfile.c`, `Com/ZglRw/zrwRamDisk.c`; types `decomp/include/zobj.h`,
-`zpc.h`, `ztools.h`; test `tests/test_decomp_dm061.py`. Evidence tags as in CONTRIBUTING.md AD-5: **[V]** read
+`zpc.h`, `ztools.h`; test `tests/test_decomp_zobj.py`. Evidence tags as in CONTRIBUTING.md AD-5: **[V]** read
 from the code or the exe (the test reads the tables and call sites back), **[I]** inferred. Nothing
 here is verified in game. Input devices: [input-camera.md](input-camera.md) 2.4.
 
@@ -53,7 +53,7 @@ ATTACHED flag and a stale parent pointer. Harmless in the shipped game: `zobjAtt
 | model | 0x00560FD0 static, 0x00560FA8 animated (models with 2+ frames; slot 0 0x00488D30 also frees the zanim node table) | every slot forwards to the zrwModel function table 0x00560E94; setActive / Hide / Show toggle zrwModel flag 2 (hidden); `zobjModelRenderAll` draws every model object |
 | light | 0x00561858 | types 0-3 index the RenderWare light type table 0x00563408; setRotation turns the quaternion into an axis and sets it as the light direction; flags 1/2 = light atomics / world |
 | camera | 0x00560518 | data = four matrices (view, its inverse, rotation only, yaw only) rebuilt on demand (`zobjCameraGetMatrix`), invalidated by setPosition / setRotation; created at (0, 0, -100) looking at the origin with a 55-degree field of view (0x271C) |
-| particle emitter | 0x00562098 | data `ZobjPEmitData` (0x3C): position, rotation, scale, active; destroy / update / create are in DM-059's gap files |
+| particle emitter | 0x00562098 | data `ZobjPEmitData` (0x3C): position, rotation, scale, active; destroy / update / create are in the ZglRw pass's gap files |
 
 ## 3. The script tokenizer (`ztoken.c`) [V]
 
@@ -64,8 +64,8 @@ end of the line; `/*` and `*/` (as separate tokens) nest. Preprocessor: `#INCLUD
 `#ifndef name` / `#endif` are read and **ignored** (no conditional compilation). `$name` expands to its
 value; `$* $+ $- $/ a b` evaluate integers (decimal, `0x..` or `$..` hex). Includes nest three deep;
 the symbol table is 0x400 bytes of `$NAME@value`. Quirks [V]: a successful `$$$file` include returns
-"no token"; `#INCLUDE` / `$$$` failures print the include stack and end the stream. The DM-061 port in
-the test tokenizes Scene.Txt exactly like DM-043's stand-in (case aside).
+"no token"; `#INCLUDE` / `$$$` failures print the include stack and end the stream. The ZGE object pass port in
+the test tokenizes Scene.Txt exactly like the zScene pass's stand-in (case aside).
 
 ## 4. Fonts (`zFont.c`) [V layout, I meaning]
 
@@ -87,7 +87,7 @@ The seven files of `bin\movie` (added 2026-11-13: acclaim, amish, credits, intro
 zaxis) all fit: stream 0 is **Cinepak** (`cvid`) 320x240, 24-bit, 15 fps; stream 1 PCM 16-bit, mono
 37 800 or 38 700 Hz (sampleSize 2), credits stereo 44 100 Hz (sampleSize 4). Cinepak is decoded by the
 system's `iccvid` codec through `AVIStreamGetFrameOpen`; without it no frame is drawn (the audio still
-plays). Which movie is played when is zrwZglPlayMovie's and the front end's business (DM-059,
+plays). Which movie is played when is zrwZglPlayMovie's and the front end's business (the ZglRw pass,
 [frontend.md](frontend.md)).
 
 ## 6. The RAM disk file interface (`zrwRamDisk.c`) [V]
@@ -115,7 +115,7 @@ AddFile / End.
 ## 8. Discovered and open
 
 - The C runtime starts at `_fpmath` 0x004A4A20, not 0x004A4A80 (build_symbols `LIB_RANGES` moved).
-- Holes left for other cards: zfile.c 0x004853A0 / 0x004854C0 / 0x004859B0, ziff.c 0x0049A740
+- Holes left for later: zfile.c 0x004853A0 / 0x004854C0 / 0x004859B0, ziff.c 0x0049A740
   (ziffShutdown, called by zgeShutdown) and four more, zScene.c 0x00490B50 / 0x00490C6C, zrwCol.c
   0x00494C40 (called by zgeShutdown), ztaginf.c / zrwModelRender 0x0048F3C0 (2 KB), zscnpts/zrwCam
   0x004921B0, zrwShadow/zcompres 0x0049B3D0, 0x0049C440: code that is not yet a Ghidra function.

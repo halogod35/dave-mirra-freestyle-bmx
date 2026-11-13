@@ -3,11 +3,11 @@
  * Original: C:\NgEngine\Zge\Com\ZglRw\zrwCam.c
  * Evidence: [V] path string 0x00561E04 (asserts of zrwCamCreateFrameBuffers 0xF2/0xF8, zrwCamInit
  *           0x10A, SetResolution 0x149); "RwCam:" message; the camera driver table 0x00561D88 (15
- *           slots, all here). DM-059 moved here the frame-buffer helpers 0x004921B0-0x0049233F (the
+ *           slots, all here). The ZglRw pass moved here the frame-buffer helpers 0x004921B0-0x0049233F (the
  *           hole after zscnpts.c, same asserts) and the accessors 0x00493060-0x00493159 (from
  *           gap_zrwCam__pcinput, table slots 10, 11, 14).
- * 29 functions, VA 0x004921B0-0x00493159 (DM-059 created 11).
- * DM-059 (draft). Non-matching C (AD-8). Types: zglrw.h. Description: docs/re/zrw.md 7.
+ * 29 functions, VA 0x004921B0-0x00493159 (11 new functions).
+ * Draft. Non-matching C (AD-8). Types: zglrw.h. Description: docs/re/zrw.md 7.
  *
  * ZGL cameras wrap RwCameras. The screen has one frame buffer + z buffer (g_zrwFrameBuffer /
  * g_zrwZBuffer, the resolution g_zrwScreenW x H); each camera gets sub-rasters of them for its
@@ -39,20 +39,20 @@ static int32_t       s_initialized;   /* 0x00674018 */
 static ZmemFreeList *s_pool;          /* 0x0067401C ZglCamera, 2 */
 static ZglCamera    *s_current;       /* 0x00674020 */
 
-/* VA 0x004921b0, 28 bytes, [I] DM-059 created, status draft (no caller found) */
+/* VA 0x004921b0, 28 bytes, [I] new function, status draft (no caller found) */
 int zrwCamBeginUpdateRaw(ZglCamera *cam)
 {
     g_zrwCamera = cam->rwCamera;
     return RwCameraBeginUpdate(g_zrwCamera) != NULL;
 }
 
-/* VA 0x004921d0, 13 bytes, [I] DM-059 created, status draft */
+/* VA 0x004921d0, 13 bytes, [I] new function, status draft */
 void zrwCamEndUpdateRaw(void)
 {
     RwCameraEndUpdate(g_zrwCamera);
 }
 
-/* VA 0x004921e0, 99 bytes, [I] DM-059 created, status draft (no caller found)
+/* VA 0x004921e0, 99 bytes, [I] new function, status draft (no caller found)
  * A sub-raster of `parent` for the rectangle (ints from the four floats of `rect`). */
 void *zrwCamCreateSubRaster(void *parent, const float *rect, int32_t type)
 {
@@ -65,14 +65,14 @@ void *zrwCamCreateSubRaster(void *parent, const float *rect, int32_t type)
     return sub;
 }
 
-/* VA 0x00492250, 35 bytes, [I] DM-059 created, status draft */
+/* VA 0x00492250, 35 bytes, [I] new function, status draft */
 void zrwCamSetRasters(ZglCamera *cam, void *raster, void *zRaster)
 {
     RwCameraSetRaster(cam->rwCamera, raster);
     RwCameraSetZRaster(cam->rwCamera, zRaster);
 }
 
-/* VA 0x00492280, 62 bytes, [I] DM-059 created, status draft (App_Open shutdown path) */
+/* VA 0x00492280, 62 bytes, [I] new function, status draft (App_Open shutdown path) */
 int zrwCamDestroyFrameBuffers(void)
 {
     if (g_zrwZBuffer != NULL) {
@@ -86,7 +86,7 @@ int zrwCamDestroyFrameBuffers(void)
     return 1;
 }
 
-/* VA 0x004922c0, 128 bytes, [I] DM-059 created, status draft (App_Open) */
+/* VA 0x004922c0, 128 bytes, [I] new function, status draft (App_Open) */
 int zrwCamCreateFrameBuffers(void)
 {
     g_zrwFrameBuffer = RwRasterCreate(g_zrwScreenW, g_zrwScreenH, 0, RWRASTER_CAMERA);
@@ -102,7 +102,7 @@ int zrwCamCreateFrameBuffers(void)
     return 1;
 }
 
-/* VA 0x004924f0, 252 bytes, [I] DM-059 created, status draft (slot 13; only with no camera alive) */
+/* VA 0x004924f0, 252 bytes, [I] new function, status draft (slot 13; only with no camera alive) */
 int zrwCamSetResolution(int32_t width, int32_t height)
 {
     ZmemFreeNode *n = zmemFreeListFirst(s_pool);
@@ -136,7 +136,7 @@ int zrwCamInit(void)
     return zrwShadowInit() != 0;
 }
 
-/* VA 0x00492480, 105 bytes, [I] DM-059 created, status draft (slot 1) */
+/* VA 0x00492480, 105 bytes, [I] new function, status draft (slot 1) */
 int zrwCamShutdown(void)
 {
     if (s_initialized) {
@@ -252,7 +252,7 @@ void zrwCamSetFov(ZglCamera *cam, int fov)
     }
 }
 
-/* VA 0x00492ab0, 12 bytes, [I] DM-059 created, status draft (slot 5) */
+/* VA 0x00492ab0, 12 bytes, [I] new function, status draft (slot 5) */
 int16_t zrwCamGetFov(ZglCamera *cam)
 {
     return cam->fov;
@@ -283,7 +283,7 @@ void zrwCamSetMatrix(ZglCamera *cam, const RwMatrix *m, const float *pos)
     cam->rwMatrix = *f;
 }
 
-/* VA 0x00492c10, 8 bytes, [I] DM-059 created, status draft (slot 7) */
+/* VA 0x00492c10, 8 bytes, [I] new function, status draft (slot 7) */
 RwMatrix *zrwCamGetMatrix(ZglCamera *cam)
 {
     return &cam->zgeMatrix;

@@ -1,12 +1,12 @@
 /*
  * zaxis/Bmx/Src/com/menu/gui/guimain.c
- * Original: (no path string; the name follows its "GUIMAIN:" messages, DM-040)
+ * Original: (no path string; the name follows its "GUIMAIN:" messages)
  * Evidence: [V] the "GUIMAIN:" literals 0x00559D64-0x0055A128 are referenced only from
  *           0x004375D0-0x00439460; [I] the element accessors / line / box code between them by
  *           link order (0x00437460-0x004399E6, after guiinput.c, before guisfile.c), by their
  *           callers and because they touch only g_guiElements / g_guiStyle.
  * 86 functions, VA 0x00437460-0x004399e6.
- * DM-056 (draft). Non-matching C (AD-8). Types: gui.h, zprim.h, zmem.h. Notes: docs/re/frontend.md.
+ * Draft. Non-matching C (AD-8). Types: gui.h, zprim.h, zmem.h. Notes: docs/re/frontend.md.
  *
  * The element manager: the element pool, the sorted draw list, screen loading (guiLoadScreen,
  * guiLoadScreenNow + guisfile.c), the slide-in animation, the message plumbing (guiSendMessage,

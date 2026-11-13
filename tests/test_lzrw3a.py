@@ -1,4 +1,4 @@
-"""DM-042: LZRW3-A (ZAL compression method 1, exe 0x0049BD10) codec and its use in zal.py."""
+"""LZRW3-A (ZAL compression method 1, exe 0x0049BD10) codec and its use in zal.py."""
 import os
 import random
 

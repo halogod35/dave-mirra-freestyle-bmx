@@ -5,7 +5,7 @@
  *           (0x56 .. 0x81) and the name of the ZGE function they stand for; [I] ngappEmptyHook
  *           (0x0045A1A0, a bare "ret" between zoverii.c and this file).
  * 8 functions, VA 0x0045a1a0-0x0045a322.
- * DM-057 (draft). Non-matching C (AD-8). Types / prototypes: ngif.h. Description: docs/re/ngif.md.
+ * Draft. Non-matching C (AD-8). Types / prototypes: ngif.h. Description: docs/re/ngif.md.
  *
  * ZGE (the PlayStation engine) functions the PC port does not have: each one prints
  * "<file> <line> <name>" through the debug printf (silent in the release build) and returns.

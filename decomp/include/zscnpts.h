@@ -1,5 +1,5 @@
 /*
- * zscnpts.h - NgEngine/Zge/ZgeMods/zscnpts.c: scene points (Scene._sd SCPT forms) (DM-043).
+ * zscnpts.h - NgEngine/Zge/ZgeMods/zscnpts.c: scene points (Scene._sd SCPT forms).
  * File format: docs/formats/LEVEL.md section 5.3.
  *
  * Every SCPT becomes a ZscnPoint on a singly linked list (newest first). Game code looks points

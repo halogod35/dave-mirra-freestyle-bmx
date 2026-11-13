@@ -1,12 +1,12 @@
-"""DM-017/DM-019 hands-on-handlebars check: put the posed rider on the posed bike and measure the hands.
+"""Hands-on-handlebars check: put the posed rider on the posed bike and measure the hands.
 
 Usage:  tools/testing/py.sh tools/research/arm_pose_check.py [--motions 8,5,36] [--rider DaveMirra1.ZMD] [--bike DMbike01.zmd]
                                             [--offsets out/pose/offs8.json --offsets-motion 8]
 
 For each frame: the bike is posed with the clip's bike section, the rider with its rider section.
 The rider is placed so that the mid-point of its feet sits on the mid-point of the pedals (translation
-only; both models share model units and axes). Reported for the current rotations (DM-019: the engine's
-F q F conjugation + NgIFzactor's literal arm table) and the legacy DM-017 ones (Rx(180), no F):
+only; both models share model units and axes). Reported for the current rotations (the engine's
+F q F conjugation + NgIFzactor's literal arm table) and the legacy ones (Rx(180), no F):
   feet->pedals   distance of each foot frame to its pedal frame (checks the placement)
   hand->bar      distance of each hand frame to the nearest vertex of the Handlebars mesh
   hand->bar-end  distance of each hand to the centroid of that side's bar-end vertices (|x| > 0.22, top 0.2)
@@ -82,8 +82,8 @@ def main():
     a = ap.parse_args()
     rider, bsk, bars, bank = setup(a.game, a.rider, a.bike)
     mids = [int(x) for x in a.motions.split(",")]
-    for label, kw in (("DM-019 (F q F, literal)", {}), ("DM-017 legacy (Rx180)", {"legacy": True}),
-                      ("literal, no F (DM-016)", {"frf": False})):
+    for label, kw in (("F q F, literal", {}), ("legacy (Rx180)", {"legacy": True}),
+                      ("literal, no F", {"frf": False})):
         s = summarize(rider, bsk, bars, bank, mids, **kw)
         print(f"{label:24s} median feet->pedals {s['feet']:.3f}  hand->bar {s['bar']:.3f}  hand->bar-end {s['barend']:.3f}  "
               f"hand->grip-frame {s['grip']:.3f}  hand gap {s['gap']:.3f}")

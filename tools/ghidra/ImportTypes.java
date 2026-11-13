@@ -1,4 +1,4 @@
-// Import the recovered structs from decomp/include into the program (DM-040).
+// Import the recovered structs from decomp/include into the program.
 //
 // Reads <includeDir>/ghidra_types.txt: header names (parsed in that order, as one translation
 // unit) and "size <Type> <bytes>" checks. Preprocessor lines and the text between

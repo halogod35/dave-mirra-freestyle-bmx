@@ -1,5 +1,5 @@
 /*
- * zoverii.h - Bmx/src/com/zge/bmx/zoverii.c: the overlay primitive layer (DM-054).
+ * zoverii.h - Bmx/src/com/zge/bmx/zoverii.c: the overlay primitive layer.
  *
  * Offsets [V] (field use in zoverii.c and in overlay.c / overlymp.c), names [I].
  *
@@ -179,7 +179,7 @@ typedef char zoverii_h_size_check[(sizeof(ZoverPolyF4) == 0x24 && sizeof(ZoverPo
                                    sizeof(ZoverFont) == 0x0C && sizeof(ZoverFontHeader) == 0x0C &&
                                    sizeof(ZoverFontRecord) == 0x0D && sizeof(ZoverSprite) == 0x14) ? 1 : -1];
 
-/* zoverii.c (DM-054) */
+/* zoverii.c */
 int      zoveriiInit(void);                                                            /* 0x004578F0 */
 int      zoveriiFlush(void);                                                           /* 0x00457B00 */
 int      zoveriiSetLayer(uint8_t layer);                                               /* 0x00457F50 */

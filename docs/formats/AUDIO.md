@@ -1,11 +1,11 @@
 # Sound banks `bin\audio\*.zsd` (ZSND)
 
-Owner: DM-015 (Agent D); DM-055 (Agent H11) settled the fields from the decompiled sound code.
+The fields were settled from the decompiled sound code.
 Code: `tools/dmbmx/formats/audio.py`, CLI `dmbmx audio list|extract|replace|ztrk-dump`.
 Exe: `winLoad.c` (`zsndRegisterAsset` **0x0046FD00**), `winStrm.c` (streams), `winChan.c` (the software mixer), `zsndseq.c` (ZTRK sequencer), `bmxsound.c` (the game layer; `bmxsoundOpen` 0x0044DDA0 opens `SFXCOM.ZSD`, `MUSIC.ZSD`, `SPEECH.ZSD`). How the game uses all this: `docs/re/sound.md`.
 Tags: [V] verified (disassembly/decompilation and/or code run over all 22 banks), [I] inferred.
 
-> **Name clash:** the 22 `bin\audio\*.zsd` files are **sound banks** (magic `ZSND`). The 12 `assets\<Level>\*.ZSD` files are **level scenes** (magic `SCEN`, chunk tree `SCEN{SCDF, SCFI…}`, see `docs/re/integrity-checks.md` #9 and DM-013). Tools tell them apart by the first 4 bytes.
+> **Name clash:** the 22 `bin\audio\*.zsd` files are **sound banks** (magic `ZSND`). The 12 `assets\<Level>\*.ZSD` files are **level scenes** (magic `SCEN`, chunk tree `SCEN{SCDF, SCFI…}`, see `docs/re/integrity-checks.md` #9 and the level reader). Tools tell them apart by the first 4 bytes.
 
 ## 1. Summary
 
@@ -14,7 +14,7 @@ Tags: [V] verified (disassembly/decompilation and/or code run over all 22 banks)
 - [V] A bank is either **resident** (sfx: read whole, the mixer plays from memory) or **streamed** (music, speech: only bytes `[0, +0x0C)` are read; the stream code opens the file again at a sample file's offset). The caller decides (`zsndLoadAsset(path, resident, &handle)`).
 - [V] Encodings, which the bank itself does not record:
   - **sfx banks** (they have sample defs): **signed 16-bit mono PCM**, at the sample def's rate (8000-32000 Hz). Supporting evidence: every loop end lies inside `size/2` frames, and 32 of 72 looping defs end exactly on frame `size/2 − 1`.
-  - **music** (no sample defs): **IMA-ADPCM, mono, 16-bit, 44100 Hz**, one continuous stream per track: low nibble first, predictor 0, step index 0 at the start, no block headers. The flags 0x44 pushed at 0x0044E860 reach the stream opener `zsndStreamOpenFile` 0x00472030 (0x40 → 44100 Hz; no 0x100 → mono; no 0x800 → ADPCM, which forces 1 channel and step 7). Decoder: `zsndImaDecode` 0x004724C0, tables 0x0055F1AC (index, int32) / 0x0055F1EC (step, uint16). The 10 tracks run 120-136 s each. [V] DM-055: a port of the exe's chunked reader + decoder gives the same samples as `audio.ima_decode` on all 10 tracks.
+  - **music** (no sample defs): **IMA-ADPCM, mono, 16-bit, 44100 Hz**, one continuous stream per track: low nibble first, predictor 0, step index 0 at the start, no block headers. The flags 0x44 pushed at 0x0044E860 reach the stream opener `zsndStreamOpenFile` 0x00472030 (0x40 → 44100 Hz; no 0x100 → mono; no 0x800 → ADPCM, which forces 1 channel and step 7). Decoder: `zsndImaDecode` 0x004724C0, tables 0x0055F1AC (index, int32) / 0x0055F1EC (step, uint16). The 10 tracks run 120-136 s each. [V] a port of the exe's chunked reader + decoder gives the same samples as `audio.ima_decode` on all 10 tracks.
   - **speech**: a stream bank with one 32-byte zero blob. [V] `bmxsoundOpen` loads its header and nothing ever streams from it.
 - [V] `write(read(b)) == b` for all 22 banks.
 
@@ -76,7 +76,7 @@ Envelope times (`audio.ENV_TIME_MS`, table 0x0055EB7C): index → ms, 1, 2, 3, .
 
 ### 3.1 ZTRK byte code [V]
 
-Decoder: `zsndSeqDecodeEvent` 0x0047D490 (+ `zsndSeqPeekDelta` 0x0047D450); `audio.ztrk_decode` / `ztrk_encode` round-trip all 42 tracks byte for byte, and a port of the exe's decoder agrees with them event by event (`tests/test_decomp_dm055.py`). `dmbmx audio ztrk-dump BANK` prints them.
+Decoder: `zsndSeqDecodeEvent` 0x0047D490 (+ `zsndSeqPeekDelta` 0x0047D450); `audio.ztrk_decode` / `ztrk_encode` round-trip all 42 tracks byte for byte, and a port of the exe's decoder agrees with them event by event (`tests/test_decomp_sound.py`). `dmbmx audio ztrk-dump BANK` prints them.
 
 A record is `"ZTRK"` + events; it ends where the next record (or the header area) starts. An event is
 
@@ -134,6 +134,6 @@ Sounds are addressed as (bank, voice). `bmxsoundEvent` (0x0044E300) maps the gam
 
 ## 7. Open questions
 
-- Plain-language names for the event codes (menu move / select / back, ...): play-test DM-015-PT4.
+- Plain-language names for the event codes (menu move / select / back, ...): the manual in-game check `sound-tones`.
 - Voice byte +0x11 (0/1, 29 voices): not read on the PC; a PSX SPU flag [I].
-- Settled by DM-055 [V]: voice fields +0x04..+0x11, sample flag bits, `loop_end` (never read), the ZTRK byte code, `speech.zsd` (never streamed).
+- Settled by the sound pass [V]: voice fields +0x04..+0x11, sample flag bits, `loop_end` (never read), the ZTRK byte code, `speech.zsd` (never streamed).

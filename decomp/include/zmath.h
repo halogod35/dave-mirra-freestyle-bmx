@@ -1,6 +1,6 @@
 /*
  * zmath.h - NgEngine maths: trig lookup tables, vectors, matrices (NgEngine/Zge/zmath.c) and
- * quaternions (NgEngine/Zge/zquat.c) (DM-045).
+ * quaternions (NgEngine/Zge/zquat.c).
  *
  * Conventions [V] (from the code):
  *  - Angles are 16-bit binary angles: 65536 = 360 degrees (0x4000 = 90, 0x8000 = 180). The sine

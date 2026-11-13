@@ -1,16 +1,16 @@
 /*
  * NgEngine/Zge/Pc/pcmovie.c
- * Original: unknown (no path string; name invented in the original style, DM-040)
- * Evidence: [I] the "Movie : " literals 0x005634DC-0x0056353C (DM-040 seed), the PcMovie layout shared
- * by every function, link order after zge.c. DM-061 created the eight hole functions and moved
+ * Original: unknown (no path string; name invented in the original style)
+ * Evidence: [I] the "Movie : " literals 0x005634DC-0x0056353C (the skeleton seed), the PcMovie layout shared
+ * by every function, link order after zge.c. The ZGE object pass created the eight hole functions and moved
  * 0x004A1050 in from the pcmovie/zpanorama gap.
  * 22 functions, VA 0x0049fb30-0x004a105a.
- * DM-061 (draft). Non-matching C (AD-8). Types: zpc.h. Description: docs/re/zge.md 5.
+ * Draft. Non-matching C (AD-8). Types: zpc.h. Description: docs/re/zge.md 5.
  *
  * An AVI player: the streams of one file, the first video stream drawn with DrawDib at the current
  * time (GetTickCount based), the first audio stream streamed through waveOut in up to sixteen
  * 32 KB buffers that the window procedure refills on MM_WOM_DONE (pcmovieAudioDone). The game's
- * only user is zrwZglPlayMovie (DM-059); the shipped bin\movie folder is empty (DM-056), so no
+ * only user is zrwZglPlayMovie; the shipped bin\movie folder is empty, so no
  * movie is ever played.
  *
  * The audio stop sequence (waveOutReset + close + free the format) is inlined in five places in

@@ -14,7 +14,7 @@ if TOOLS not in os.environ.get("PYTHONPATH", "").split(os.pathsep):
     os.environ["PYTHONPATH"] = os.pathsep.join(p for p in (TOOLS, os.environ.get("PYTHONPATH")) if p)
 
 GAME_DIR = Path(os.environ.get("DMBMX_GAME_DIR", r"F:\Projects\Dave Mirra freestyle BMX"))
-_EXCLUDE = {"_pristine", "_testgame", "wt", "dave-mirra-bmx", "dave-mirra-pro-bmx"}
+_EXCLUDE = {"_pristine", "_testgame", "wt", "dave-mirra-bmx", "dave-mirra-freestyle-bmx"}
 
 
 def corpus_files(ext):

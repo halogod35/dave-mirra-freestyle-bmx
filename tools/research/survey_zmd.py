@@ -8,7 +8,7 @@ from pathlib import Path
 from dmbmx.core.chunks import parse_4cc_ex, parse_rw_ex, walk
 
 GAME = Path(sys.argv[1] if len(sys.argv) > 1 else os.environ.get("DMBMX_GAME_DIR", r"F:\Projects\Dave Mirra freestyle BMX"))
-EXCL = {"_pristine", "_testgame", "wt", "dave-mirra-bmx", "dave-mirra-pro-bmx"}
+EXCL = {"_pristine", "_testgame", "wt", "dave-mirra-bmx", "dave-mirra-freestyle-bmx"}
 
 
 def files():

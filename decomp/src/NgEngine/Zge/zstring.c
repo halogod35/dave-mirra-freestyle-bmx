@@ -4,7 +4,7 @@
  * Evidence: [V] path string 0x00560590 (string sets, zTextGet, macros); [I] the rest by link order
  *           (0x00482420-0x00483014, between zobjCamera.c and zquat.c).
  * 39 functions, VA 0x00482420-0x00483014.
- * Decompiled by DM-044 (non-matching C, AD-8). Types: decomp/include/zstring.h.
+ * Decompiled (non-matching C, AD-8). Types: decomp/include/zstring.h.
  *
  * Three parts:
  *  1. text-id tables ("STRS" string sets), zTextGet and "=name=" macro expansion;
@@ -12,8 +12,8 @@
  *     contain the inline code), memcpy/memmove/memset written out by hand, and zHashName;
  *  3. 0x00482BD0-0x00483014: name registries of the particle-effect system (effect types,
  *     affectors, spawn functions; registered by 0x0045F780 with names such as "spark", "gravity").
- *     They follow zstring.c in link order and use no other module's literals, so DM-040 put them
- *     here [I]; they may well be a separate object without an assert path (Discovered work).
+ *     They follow zstring.c in link order and use no other module's literals, so the skeleton put them
+ *     here [I]; they may well be a separate object without an assert path (open question).
  */
 #include <stdarg.h>
 #include "decomp.h"
@@ -251,7 +251,7 @@ int zstringCompareN(const char *a, const char *b, size_t n)
 /* VA 0x004828c0, 110 bytes, [I] row, status draft */
 uint32_t zHashName(const char *name)
 {
-    /* The asset/bone id hash (DM-010; dmbmx.core.hash.zhash): case-insensitive,
+    /* The asset/bone id hash (dmbmx.core.hash.zhash): case-insensitive,
      * h = sum((i+1) * C[i]) + sum((C[i] + C[i-1] * 0xFFFF) << 16), C = toupper as signed char. */
     uint32_t h = 0;
     int i;

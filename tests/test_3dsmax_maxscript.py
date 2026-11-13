@@ -1,4 +1,4 @@
-"""DM-060: the pure-MAXScript importer (tools/3dsmax/maxscript/DaveMirraImport.ms), executed by a
+"""The pure-MAXScript importer (tools/3dsmax/maxscript/DaveMirraImport.ms), executed by a
 MAXScript-subset interpreter (tests/maxscript_interp.py) because 3ds Max is not installed:
 its parser must agree with dmparse on every file, and its scene building passes the same checks as the
 Python importer against the recording 3ds Max mock."""

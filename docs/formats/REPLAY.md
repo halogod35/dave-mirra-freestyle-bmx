@@ -1,9 +1,9 @@
 # REPLAY: replay buffers and the replay.zal records
 
-Owner: DM-052 (Agent H8). Code: `tools/dmbmx/formats/replay.py` (reader, writer, event codec, playback and
+Code: `tools/dmbmx/formats/replay.py` (reader, writer, event codec, playback and
 recorder ports), CLI `dmbmx replay list|dump`. Decomp: `decomp/src/zaxis/Bmx/Src/com/action/replay.c`,
 `decomp/include/replay.h`. Tests: `tests/test_replay_unit.py`, `tests/test_replay_corpus.py`,
-`tests/test_cli_replay.py`, `tests/test_decomp_dm052.py`. Answers DM-016's open question 5 (ANIM.md 6).
+`tests/test_cli_replay.py`, `tests/test_decomp_prop_replay_fx.py`. Answers the first motion reader's open question 5 (ANIM.md 6).
 
 ## 1. What a replay is [V]
 

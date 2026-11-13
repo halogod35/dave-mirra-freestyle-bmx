@@ -1,5 +1,5 @@
 /*
- * dyn.h - the crash rag doll ("dyn*") and the limb IK of Bmx/src/com/zge/bmx/dyn.c (DM-058).
+ * dyn.h - the crash rag doll ("dyn*") and the limb IK of Bmx/src/com/zge/bmx/dyn.c.
  *
  * A DynBody is a small particle system (Verlet-style: position, previous position, velocity) with
  * three kinds of links:

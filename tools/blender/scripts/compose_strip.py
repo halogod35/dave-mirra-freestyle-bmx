@@ -1,4 +1,4 @@
-"""Tile PNG renders into one image with Blender headless (no PIL in the venv). DM-019 render strip.
+"""Tile PNG renders into one image with Blender headless (no PIL in the venv). Used for the arm-pose render strip.
 
     blender -b --factory-startup --python tools/blender/scripts/compose_strip.py -- out.png cols a.png b.png ...
 

@@ -5,10 +5,10 @@
  *           (0x95, 0x96), zresLoadPlayerTable (0x117, 0x118), zresGetPlayer (0x135),
  *           zresGetBikeEntry (0x199), zresOpenLibraries (0x1E9 .. 0x201) and
  *           zresAddMaterialToLoadList (0x28C .. 0x2B0); [I] the rest by link order and globals.
- * 19 functions, VA 0x0046b7c0-0x0046c207 (DM-057 created 8 functions; the three after
+ * 19 functions, VA 0x0046b7c0-0x0046c207 (the NgIF pass created 8 functions; the three after
  * zresFreeImages that the module map gave this file - zrollerStartup / Init / Shutdown - print
  * "ZROLLER:" and use NgIFzroller's globals, so they moved to NgIFzroller.c).
- * DM-057 (draft). Non-matching C (AD-8). Types / prototypes: ngif.h. Description: docs/re/ngif.md.
+ * Draft. Non-matching C (AD-8). Types / prototypes: ngif.h. Description: docs/re/ngif.md.
  *
  * "zres": the game's fixed resources. The asset libraries (MiscData, Tables, Replay, Material
  * .ZAL), two IFF tables read once - the map table (Tables.ZAL asset 0: FORM { ZMHD count, 100;

@@ -1,6 +1,6 @@
-"""Motion bank (motion.zal) and motion clips: reader / writer / evaluator (DM-016). Spec: docs/formats/ANIM.md.
+"""Motion bank (motion.zal) and motion clips: reader / writer / evaluator. Spec: docs/formats/ANIM.md.
 
-motion.zal (DM-010) holds one LZO1X group (id 0). Its payload is a *headerless* ZAL (``u16 flags,
+motion.zal holds one LZO1X group (id 0). Its payload is a *headerless* ZAL (``u16 flags,
 u16 count`` + group table, offsets from byte 0) with 238 motions, ids 1..238 = the motion number the
 game code uses ([V] action.c fills a table of 238 pointers in bank order, rider.c indexes it by id).
 
@@ -35,7 +35,7 @@ from dmbmx.core.errors import FormatError, LimitError, TruncatedError, need
 from dmbmx.formats import zal
 
 __all__ = ["MotionError", "Motion", "Record", "MotionBank", "RIDER_CHANNELS", "BIKE_CHANNELS",
-           "euler_to_quat", "engine_to_model", "channel_rotation", "ARM_FIX", "ARM_FIX_DM017", "read_bank", "Pose"]
+           "euler_to_quat", "engine_to_model", "channel_rotation", "ARM_FIX", "ARM_FIX_LEGACY", "read_bank", "Pose"]
 
 FMT = "MOTION"
 RIDER_CHANNELS = ("Hips", "Chest", "Head", "LeftUpArm", "LeftLowArm", "LeftHand", "RightUpArm",
@@ -247,14 +247,14 @@ class Motion:
     # -- evaluate -------------------------------------------------------------
     def sample(self):
         """Per-frame poses (list of :class:`Pose`, one per frame, frame k at k*frame_ms ms),
-        following the game's decoder (zactorDecodeMotion 0x00472B10, DM-053): absolute init values;
+        following the game's decoder (zactorDecodeMotion 0x00472B10): absolute init values;
         then, per frame step, the next group of delta records (records with the time of the first
         pending one) if it is due (time <= k * frame_ms), and every channel adds its current delta.
         As in the game: one record group per step; a delta persists until replaced; a non-rider
         section with section flag 0x02 is never stepped; once the record stream is used up the
         decoder stops (the game ends the clip), so any later frames repeat the last pose. For the
         shipped bank this is the same as applying the records of time k * frame_ms at frame k
-        ([V] tests/test_decomp_dm053.py)."""
+        ([V] tests/test_decomp_zactor_zprim.py)."""
         poses = []
         st = []
         for si, (cnt, sflags, kind) in enumerate(self.sections):
@@ -327,7 +327,7 @@ class Pose:
 
 def euler_to_quat(a):
     """[V] zquatFromEuler 0x004832B0: s16 angles (65536 = 360 deg) -> quaternion (x, y, z, w) = qz * qy * qx
-    (exact maths; the exe goes through its 8192-entry sine table, within 1.7e-3, DM-045)."""
+    (exact maths; the exe goes through its 8192-entry sine table, within 1.7e-3)."""
     hx, hy, hz = (v * math.pi / 65536.0 for v in a)      # half angles
     cx, sx = math.cos(hx), math.sin(hx)
     cy, sy = math.cos(hy), math.sin(hy)
@@ -349,7 +349,7 @@ def quat_mul(a, b):
 
 
 def engine_to_model(q):
-    """[V] zrwModelQuatToRwMatrix 0x00487E70 (DM-045): the engine's node quaternion (Y-down axes) becomes the
+    """[V] zrwModelQuatToRwMatrix 0x00487E70: the engine's node quaternion (Y-down axes) becomes the
     RenderWare frame rotation as (x, -y, -z, w), i.e. R_model = F R(q) F with F = diag(1, -1, -1)."""
     return (q[0], -q[1], -q[2], q[3])
 
@@ -358,16 +358,16 @@ _ZP = euler_to_quat((0, 0, 0x4000))
 _ZM = euler_to_quat((0, 0, -0x4000))
 # Arm corrections, [V] NgIFzactor_ApplyMotionPose 0x004654B0: UpArm q*C, LowArm/Hand C^-1*q*C with
 # C = Cz(+90) left / Cz(-90) right. With the engine's F conjugation (engine_to_model) on every channel this
-# puts the hands on the handlebars (DM-045/DM-019, docs/formats/ANIM.md section 3.1).
+# puts the hands on the handlebars (docs/formats/ANIM.md section 3.1).
 ARM_FIX = {
     "LeftUpArm": (None, _ZP), "LeftLowArm": (_ZM, _ZP), "LeftHand": (_ZM, _ZP),
     "RightUpArm": (None, _ZM), "RightLowArm": (_ZP, _ZM), "RightHand": (_ZP, _ZM),
 }
-ARM_FIX_AS_DECOMPILED = ARM_FIX      # DM-016's name for the same (literal) table
-# Legacy (DM-017, superseded by DM-019): an empirical Rx(180) before the upper arms, used *without* the F
+ARM_FIX_AS_DECOMPILED = ARM_FIX      # the earlier name for the same (literal) table
+# Legacy (superseded by the F conjugation): an empirical Rx(180) before the upper arms, used *without* the F
 # conjugation. It approximated the missing leading F for the arms only. Select with legacy=True.
 _X180 = euler_to_quat((-0x8000, 0, 0))
-ARM_FIX_DM017 = {
+ARM_FIX_LEGACY = {
     "LeftUpArm": (_X180, _ZP), "LeftLowArm": (_ZM, _ZP), "LeftHand": (_ZM, _ZP),
     "RightUpArm": (_X180, _ZM), "RightLowArm": (_ZP, _ZM), "RightHand": (_ZP, _ZM),
 }
@@ -378,10 +378,10 @@ def channel_rotation(name, euler, arm_fix=None, *, legacy=False, frf=None):
     channel ``name`` (rider or bike) for its Euler angles: Euler -> quaternion, the NgIFzactor arm table,
     then the engine -> model conjugation F q F (:func:`engine_to_model`).
 
-    ``legacy=True`` reproduces DM-017 (Rx(180) arm table, no F). ``arm_fix`` overrides the table and
+    ``legacy=True`` reproduces the legacy chain (Rx(180) arm table, no F). ``arm_fix`` overrides the table and
     ``frf`` the conjugation (default: on unless legacy)."""
     q = euler_to_quat(euler)
-    table = arm_fix if arm_fix is not None else (ARM_FIX_DM017 if legacy else ARM_FIX)
+    table = arm_fix if arm_fix is not None else (ARM_FIX_LEGACY if legacy else ARM_FIX)
     pre, post = table.get(name, (None, None))
     if pre is not None:
         q = quat_mul(pre, q)
@@ -434,7 +434,7 @@ def read_bank(data):
     return MotionBank.read(data)
 
 
-# --------------------------------------------------------------------------- forward kinematics (DM-017; F conjugation DM-019)
+# --------------------------------------------------------------------------- forward kinematics (F conjugation)
 
 def _qmat(q):
     x, y, z, w = q

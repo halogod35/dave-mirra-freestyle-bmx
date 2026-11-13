@@ -1,5 +1,5 @@
 /*
- * zprim.h - Bmx/Src/com/zge/zprim.c: 2D primitives for the menus (DM-053).
+ * zprim.h - Bmx/Src/com/zge/zprim.c: 2D primitives for the menus.
  *
  * Offsets [V] (field use in zprim.c and its callers in frontend.c / guimain.c), names [I].
  *
@@ -115,7 +115,7 @@ typedef struct ZprimFrame {
 
 typedef struct ZprimImage {
     uint16_t count;              /* +0x00 frames */
-    uint16_t flags;              /* +0x02 bit 0: a 256-entry (16-bank) palette for a 4-bit sprite (DM-066: not one
+    uint16_t flags;              /* +0x02 bit 0: a 256-entry (16-bank) palette for a 4-bit sprite (not one
                                     palette per frame; all 33 such sprites have one frame) */
     uint16_t width;              /* +0x04 */
     uint16_t height;             /* +0x06 */
@@ -126,7 +126,7 @@ typedef struct ZprimImage {
     ZprimFrame frame[1];         /* +0x14 [count] */
 } ZprimImage;
 
-typedef struct ZprimPalette {     /* the block is always 0x204 bytes (DM-066) */
+typedef struct ZprimPalette {     /* the block is always 0x204 bytes */
     uint16_t unk_00;
     uint16_t count;              /* +0x02 */
     uint16_t colour[1];          /* +0x04 [count] 15-bit colours, red in the low bits; 0x7C1F = transparent */
@@ -146,13 +146,13 @@ typedef struct ZprimGlyph {
 
 typedef struct ZprimFont {
     uint16_t count;              /* +0x00 glyphs; >= 0x100: search by code, else indexed from glyph[0].code */
-    uint16_t lineHeight;         /* +0x02 line height (zprimGetFontHeight; DM-064, was "flags") */
+    uint16_t lineHeight;         /* +0x02 line height (zprimGetFontHeight; was "flags") */
     uint32_t pixels;             /* +0x04 offset of the glyph bitmap (bpp bits per pixel) */
-    uint16_t width;              /* +0x08 bitmap width in pixels (4-bit: row bytes = width / 2) (DM-066; was "stride") */
-    uint16_t height;             /* +0x0A bitmap rows (DM-066) */
+    uint16_t width;              /* +0x08 bitmap width in pixels (4-bit: row bytes = width / 2) (was "stride") */
+    uint16_t height;             /* +0x0A bitmap rows */
     void   **materials;          /* +0x0C 32 materials made by NgIFpsx (freed with the font) */
-    uint32_t palette;            /* +0x10 offset of the 16-bank ZprimPalette (DM-066) */
-    uint16_t bpp;                /* +0x14 bits per pixel; passed to the glyph draw (DM-066) */
+    uint32_t palette;            /* +0x10 offset of the 16-bank ZprimPalette */
+    uint16_t bpp;                /* +0x14 bits per pixel; passed to the glyph draw */
     uint16_t unk_16;
     ZprimGlyph glyph[1];         /* +0x18 [count] */
 } ZprimFont;
@@ -161,58 +161,58 @@ typedef struct ZprimFont {
 typedef char zprim_h_size_check[(sizeof(ZprimAsset) == 0x10 && sizeof(ZprimState) == 0x54 &&
                                  sizeof(ZprimFrame) == 0x10 && sizeof(ZprimGlyph) == 0x0A) ? 1 : -1];
 
-/* zprim.c (DM-053) */
+/* zprim.c */
 int         zprimInit(void);                                                           /* 0x004779E0 */
 void        zprimShutdown(void);                                                       /* 0x00477B50 */
 void        zprimOpenLibrary(const char *path);                                        /* 0x00477BA0 */
 void        zprimDrawBackground(void);                                                 /* 0x00477BE0 */
 void        zprimFlush(void);                                                          /* 0x00477D20 */
 void        zprimSetClip(int x0, int y0, int x1, int y1);                              /* 0x00477DA0 */
-void        zprimSetBaseState(void);                                                   /* 0x00477DF0 (DM-064) */
+void        zprimSetBaseState(void);                                                   /* 0x00477DF0 */
 void        zprimResetState(void);                                                     /* 0x00477E80 */
 void        zprimPushState(void);                                                      /* 0x00477F10 */
-void        zprimDropState(void);                                                      /* 0x00477FB0 (DM-064) */
+void        zprimDropState(void);                                                      /* 0x00477FB0 */
 void        zprimSetAttr(int attr, uint32_t value);                                    /* 0x00478050 */
 uint32_t    zprimGetAttr(int attr);                                                    /* 0x00478370 */
-void        zprimSetBackgroundPicture(ZprimAsset *picture);                            /* 0x004788C0 (DM-064) */
-void        zprimSetBackgroundSprite(ZprimAsset *sprite, int16_t type, uint16_t frame, int16_t x, int16_t y); /* 0x00478980 (DM-064) */
+void        zprimSetBackgroundPicture(ZprimAsset *picture);                            /* 0x004788C0 */
+void        zprimSetBackgroundSprite(ZprimAsset *sprite, int16_t type, uint16_t frame, int16_t x, int16_t y); /* 0x00478980 */
 void        zprimSetFont(ZprimAsset *font);                                            /* 0x00478A50 */
-ZprimAsset *zprimGetFont(void);                                                        /* 0x00478AE0 (DM-064) */
+ZprimAsset *zprimGetFont(void);                                                        /* 0x00478AE0 */
 void        zprimSetSprite(ZprimAsset *sprite);                                        /* 0x00478B60 */
 void        zprimSetScale(float x, float y);                                           /* 0x00478BF0 */
 void        zprimResetScale(void);                                                     /* 0x00478C80 */
-ZprimAsset *zprimGetSprite(void);                                                      /* 0x00478D00 (DM-064) */
+ZprimAsset *zprimGetSprite(void);                                                      /* 0x00478D00 */
 void        zprimSetRGB(uint32_t r, uint8_t g, uint8_t b, int attr);                   /* 0x00478D80 */
-void        zprimGetColor(void);                                                       /* 0x00478DC0 (DM-064) asserts */
+void        zprimGetColor(void);                                                       /* 0x00478DC0 asserts */
 void        zprimDrawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1);             /* 0x00478DF0 */
 void        zprimDrawRect(int16_t x0, int16_t y0, int16_t x1, int16_t y1);             /* 0x00478F00 */
 ZprimAsset *zprimLoadPicture(uint32_t id, int keep);                                   /* 0x00479010 */
-void        zprimFreePicture(ZprimAsset *picture);                                     /* 0x004791C0 (DM-064) */
-uint16_t    zprimGetPictureWidth(ZprimAsset *picture);                                 /* 0x004791E0 (DM-064) */
-uint16_t    zprimGetPictureHeight(ZprimAsset *picture);                                /* 0x00479210 (DM-064) */
+void        zprimFreePicture(ZprimAsset *picture);                                     /* 0x004791C0 */
+uint16_t    zprimGetPictureWidth(ZprimAsset *picture);                                 /* 0x004791E0 */
+uint16_t    zprimGetPictureHeight(ZprimAsset *picture);                                /* 0x00479210 */
 void        zprimCopyMaterial(ZprimAsset *src, ZprimAsset *dst);                       /* 0x00479280 */
 void        zprimReplaceVRAMGrey(ZprimAsset *src, ZprimAsset *dst, uint32_t level);    /* 0x00479300 */
 void        zprimSelectPaletteBank(ZprimAsset *src, ZprimAsset *dst, uint32_t bank);   /* 0x00479500 */
 ZprimAsset *zprimLoadSprite(uint32_t id, int keep);                                    /* 0x00479660 */
 ZprimAsset *zprimCreateSprite(uint16_t width, uint16_t height, uint16_t frames);       /* 0x00479880 */
-void        zprimTouchAsset(ZprimAsset *asset);                                        /* 0x00479A80 (DM-064) */
-void        zprimResetImage(ZprimAsset *asset, uint16_t width, uint16_t height, uint16_t bpp, uint16_t colours); /* 0x00479AB0 (DM-064) */
+void        zprimTouchAsset(ZprimAsset *asset);                                        /* 0x00479A80 */
+void        zprimResetImage(ZprimAsset *asset, uint16_t width, uint16_t height, uint16_t bpp, uint16_t colours); /* 0x00479AB0 */
 ZprimAsset *zprimCreateImage(uint16_t width, uint16_t height, uint16_t bpp, uint16_t colours); /* 0x00479B90 */
 void        zprimFree(ZprimAsset *asset);                                              /* 0x00479CD0 */
 void        zprimDrawSprite(uint32_t frame, int16_t x, int16_t y);                     /* 0x00479CF0 */
 uint16_t    zprimGetSpriteWidth(ZprimAsset *sprite, uint16_t frame);                   /* 0x00479FA0 */
 uint16_t    zprimGetSpriteHeight(ZprimAsset *sprite, uint16_t frame);                  /* 0x0047A070 */
-uint16_t    zprimGetSpriteFrames(ZprimAsset *sprite);                                  /* 0x0047A140 (DM-064) */
-void        zprimDecompressFrame(ZprimAsset *src, uint16_t srcFrame, ZprimAsset *dst, uint16_t dstFrame); /* 0x0047A1E0 (DM-064) */
-void       *zprimGetFramePixels(ZprimImage *img, uint16_t frame);                      /* 0x0047A300 (DM-064) */
-int         zprimRleDecode(const uint8_t *src, uint8_t *dst);                          /* 0x0047A330 (DM-064) */
+uint16_t    zprimGetSpriteFrames(ZprimAsset *sprite);                                  /* 0x0047A140 */
+void        zprimDecompressFrame(ZprimAsset *src, uint16_t srcFrame, ZprimAsset *dst, uint16_t dstFrame); /* 0x0047A1E0 */
+void       *zprimGetFramePixels(ZprimImage *img, uint16_t frame);                      /* 0x0047A300 */
+int         zprimRleDecode(const uint8_t *src, uint8_t *dst);                          /* 0x0047A330 */
 ZprimAsset *zprimLoadFont(uint32_t id, int keep);                                      /* 0x0047A420 */
-void        zprimFreeFont(ZprimAsset *font);                                           /* 0x0047A5E0 (DM-064) */
-void        zprimFontStub(void);                                                       /* 0x0047A600 (DM-064) */
+void        zprimFreeFont(ZprimAsset *font);                                           /* 0x0047A5E0 */
+void        zprimFontStub(void);                                                       /* 0x0047A600 */
 void        zprimDrawTextFixed(const uint8_t *s, int x, int16_t y);                    /* 0x0047A620 */
-void        zprimTextStub(void);                                                       /* 0x0047AA60 (DM-064) */
+void        zprimTextStub(void);                                                       /* 0x0047AA60 */
 void        zprimDrawText(const uint8_t *s, int x, int16_t y);                         /* 0x0047AA80 */
-uint16_t    zprimGetFontHeight(ZprimAsset *font);                                      /* 0x0047AF10 (DM-064: was zprimGetFontFlags) */
+uint16_t    zprimGetFontHeight(ZprimAsset *font);                                      /* 0x0047AF10 (was zprimGetFontFlags) */
 int16_t     zprimGetTextWidth(ZprimAsset *font, const uint8_t *s);                     /* 0x0047AFD0 */
 ZprimAsset *zprimLoadGroupImage(uint32_t groupId, uint16_t imageId);                   /* 0x0047B220 */
 int         zprimGroupLoaded(uint32_t slot);                                           /* 0x0047B3D0 */
@@ -229,8 +229,8 @@ ZprimAsset *zprimSelectGroupEntry(uint32_t slot, uint32_t index);               
 ZprimAsset *zprimFindAsset(int16_t id);                                                /* 0x0047BAC0 */
 ZprimAsset *zprimFindInGroups(uint32_t id);                                            /* 0x0047BAF0 */
 ZprimAsset *zprimLoadScreen(uint32_t id, int keep);                                    /* 0x0047BB90 */
-void        zprimFreeScreen(ZprimAsset *screen);                                       /* 0x0047BD00 (DM-064) */
-void        zprimScreenStub(void);                                                     /* 0x0047C010 (DM-064) */
+void        zprimFreeScreen(ZprimAsset *screen);                                       /* 0x0047BD00 */
+void        zprimScreenStub(void);                                                     /* 0x0047C010 */
 void        zprimDrawTextToSprite(ZprimAsset *font, const uint8_t *s, uint32_t x, uint32_t y,
                                   ZprimAsset *sprite, uint16_t frame, uint8_t colour); /* 0x0047BD20 */
 int32_t     zprimMakeMaterial(uint32_t width, uint32_t height, uint32_t bpp, const uint8_t *pixels,

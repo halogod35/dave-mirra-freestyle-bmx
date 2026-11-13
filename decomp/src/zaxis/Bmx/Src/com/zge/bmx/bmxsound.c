@@ -5,10 +5,10 @@
  *           asset file", "prop/level sound type out of range", ...) in bmxsoundOpen, bmxsoundClose
  *           and bmxsoundEvent; [I] the rest: between them / called only from here, and they use the
  *           module's data (0x0055B530-0x0055B55B, 0x00574668-0x005746B3).
- *           DM-055 moved the three functions DM-040 had put first (0x0044DC30-0x0044DD23) to
+ *           The sound pass moved the three functions the skeleton had put first (0x0044DC30-0x0044DD23) to
  *           frontend.c: "APP: Shutdown MENU" (0x0055B518) follows frontend.c's literals and
  *           pairs with frontendInitApp's "APP: Init MENU"; they call the GUI, not the sound code.
- * 10 functions, VA 0x0044DD40-0x00450043. DM-055 (draft). Non-matching C (AD-8).
+ * 10 functions, VA 0x0044DD40-0x00450043. Draft. Non-matching C (AD-8).
  * Types: zsound.h. The event map: docs/re/sound.md section 6 (and dmbmx.formats.audio.EVENTS).
  *
  * The game's sound layer. bmxsoundOpen starts the mixer (22050 Hz stereo), the sequencer
@@ -25,7 +25,7 @@
  * Music: one stream over MUSIC.ZSD's 10 IMA-ADPCM tracks; bmxsoundUpdate starts the level's track
  * (g_bmxsoundLevelTrack) and, when one ends, the next (g_bmxsoundMusicCycle).
  * The PSX reverb requests (zsndcSetEffect type 2) are refused by the PC mixer.
- * DM-055 created bmxsoundSetUpdateRate / bmxsoundProbe / bmxsoundStub (ILT thunks only) and
+ * The sound pass created bmxsoundSetUpdateRate / bmxsoundProbe / bmxsoundStub (ILT thunks only) and
  * bmxsoundTimerProc (timeSetEvent's callback).
  */
 #include <math.h>
@@ -235,7 +235,7 @@ static uint8_t rollVolume(uint32_t v)
 static int setMode(uint32_t a, uint32_t b, uint32_t c, uint32_t d)
 {
     char     name[32];
-    RwV3d    farPos;      /* not "far": <windows.h> defines it away (DM-064) */
+    RwV3d    farPos;      /* not "far": <windows.h> defines it away */
     uint32_t i;
 
     if ((uint32_t)g_bmxsoundMode == a)

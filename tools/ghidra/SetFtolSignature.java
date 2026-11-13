@@ -1,4 +1,4 @@
-// DM-048 (optional RE tool): give the CRT's __ftol 0x004A4A80 its real x87 signature,
+// Optional RE tool: give the CRT's __ftol 0x004A4A80 its real x87 signature,
 // long long __ftol(float10 x) with x in ST0 and the result in EDX:EAX (custom storage). Without it the
 // decompiler drops every float->int conversion's argument ("__ftol()"); with it the expression shows.
 // Usage (headless, writes the project): -postScript SetFtolSignature.java

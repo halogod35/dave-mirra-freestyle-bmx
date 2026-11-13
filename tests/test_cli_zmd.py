@@ -1,4 +1,4 @@
-"""CLI smoke tests for `dmbmx zmd` (DM-011)."""
+"""CLI smoke tests for `dmbmx zmd`."""
 import subprocess
 import sys
 

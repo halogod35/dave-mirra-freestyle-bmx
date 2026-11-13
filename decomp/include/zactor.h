@@ -1,6 +1,6 @@
 /*
  * zactor.h - Bmx/Src/com/zge/zactor.c: actors (the rider and bike objects of the game code) and
- * the motion.zal clip decoder (DM-053; DM-016 started it with a placeholder ZActor).
+ * the motion.zal clip decoder (it began as a placeholder ZActor).
  *
  * Offsets [V] (field use in zactor.c, NgIFzactor.c, rider.c and physics.c), names [I].
  *
@@ -36,7 +36,7 @@
 /* ZMotionState.decodeFlags */
 #define ZMOTION_WIDE          0x0010u   /* clip flags bit 15: 16-bit angles (all shipped clips) */
 
-/* motion play flags (the BmxRider motion slot flags, DM-047) the decoder looks at */
+/* motion play flags (the BmxRider motion slot flags) the decoder looks at */
 #define ZMOTION_RESTART       0x0002u   /* decode the init records (frame 0) */
 #define ZMOTION_MIRROR        0x0008u   /* swap left/right channels, negate y/z angles and x translation */
 #define ZMOTION_CUT           0x0080u   /* restart without the crossfade from the previous clip */
@@ -131,7 +131,7 @@ typedef struct ZActor {
     uint32_t unk_024;
     RwV3d    scale;              /* +0x028 (1, 1, 1) */
     uint32_t unk_034;
-    RwV3d    extent;             /* +0x038 zactorSetExtent; radius = its largest component (DM-064) */
+    RwV3d    extent;             /* +0x038 zactorSetExtent; radius = its largest component */
     uint32_t unk_044;
     ZActorAnim *anim;            /* +0x048 */
     uint32_t unk_04c;
@@ -141,7 +141,7 @@ typedef struct ZActor {
     uint32_t unk_060;
     uint16_t unk_064;
     uint8_t  unk_066[0x10A];
-    uint16_t modelId;            /* +0x170 LOD 0 model id (zactorSetModel / zactorSetLodModel 0) (DM-064) */
+    uint16_t modelId;            /* +0x170 LOD 0 model id (zactorSetModel / zactorSetLodModel 0) */
     uint16_t lod;                /* +0x172 zactorSetLod [I] */
     void    *user;               /* +0x174 zactorSetUser / zactorGetUser */
     uint32_t targetId;           /* +0x178 zactorSetTarget [I] */
@@ -173,10 +173,10 @@ typedef struct ZactorBankEntry {
     const uint8_t  *data;        /* +0x04 the clip */
 } ZactorBankEntry;               /* 0x08 */
 
-/* DM-064: the model id of LOD i (0..3), a 0x10-stride table from +0x194 */
+/* the model id of LOD i (0..3), a 0x10-stride table from +0x194 */
 #define ZACTOR_LOD_MODEL(a, i) (*(uint16_t *)((uint8_t *)(a) + 0x194 + (i) * 0x10))
 
-/* zactorGetMotionTags' output record (DM-064; no clip ships tags: header extra is 0) */
+/* zactorGetMotionTags' output record (no clip ships tags: header extra is 0) */
 typedef struct ZactorTag {
     RwV3d    pos;                /* +0x00 s16 / 8, rotated by the global heading */
     float    time;               /* +0x0C s16 / 1024 */
@@ -193,47 +193,47 @@ typedef char zactor_h_size_check[(sizeof(ZMotionSection) == 0x04 && sizeof(ZMoti
                                   offsetof(ZActor, target) == 0x17C && offsetof(ZActor, lodData) == 0x194 &&
                                   offsetof(ZActor, radius) == 0x1D0) ? 1 : -1];
 
-/* zactor.c (DM-053) */
-void zactorStub1(void);                                                                              /* 0x004726C0 (DM-064) */
-void zactorCopy(ZActor *dst, const ZActor *src);                                                     /* 0x004726E0 (DM-064) */
-void zactorFree(ZActor *a);                                                                          /* 0x004728C0 (DM-064) */
-void zactorClear(ZActor *a);                                                                         /* 0x004728E0 (DM-064) */
-void zactorSetYaw(ZActor *a, int yaw);                                                               /* 0x00472960 (DM-064) */
-int zactorGetYaw(ZActor *a);                                                                         /* 0x00472990 (DM-064) */
-int zactorToWorldAngle(int angle);                                                                   /* 0x004729C0 (DM-064) */
-int zactorToLocalAngle(int angle);                                                                   /* 0x00472A00 (DM-064) */
-RwV3d *zactorGetScale(ZActor *a);                                                                    /* 0x00472AF0 (DM-064) */
-void zactorSampleMotion(ZActor *a, int16_t (*rot)[3], const ZMotionHeader *m, int frames, uint8_t flags); /* 0x004739C0 (DM-064) */
-void zactorLoadMotionBankTemp(uint32_t bankId);                                                      /* 0x00475140 (DM-064) */
-void zactorStub2(void);                                                                              /* 0x004752C0 (DM-064) */
-ZactorBank *zactorGetBank(int index);                                                                /* 0x004752E0 (DM-064) */
-void zactorSetModel(ZActor *a, uint16_t model);                                                      /* 0x00475430 (DM-064) */
-void zactorSetLodModel(ZActor *a, uint16_t lod, uint16_t model);                                     /* 0x00475460 (DM-064) */
-uint16_t zactorGetModel(ZActor *a);                                                                  /* 0x004754D0 (DM-064) */
-uint8_t zactorGetMotionTagCount(const ZMotionHeader *m);                                             /* 0x004754F0 (DM-064) */
-uint8_t zactorGetMotionTags(const ZMotionHeader *m, ZactorTag *out);                                 /* 0x00475520 (DM-064) */
-uint8_t zactorGetFirstMotionTag(const ZMotionHeader *m, ZactorTag *out);                             /* 0x00475730 (DM-064) */
-void zactorSetLod(ZActor *a, uint8_t lod);                                                           /* 0x004758F0 (DM-064) */
-void zactorSetRadius(ZActor *a, float radius);                                                       /* 0x00475920 (DM-064) */
-void zactorSetExtent(ZActor *a, const RwV3d *extent);                                                /* 0x00475940 (DM-064) */
-int zactorAddAngle(int angle, int delta);                                                            /* 0x00475A00 (DM-064) */
-void zactorSetTarget(ZActor *a, const RwV3d *pos, uint32_t id);                                      /* 0x00475AD0 (DM-064) */
-void zactorEnableTag(ZActor *a, int tag);                                                            /* 0x00475B10 (DM-064) */
-void zactorDisableTag(ZActor *a, int tag);                                                           /* 0x00475B50 (DM-064) */
-void zactorSetFlag20(ZActor *a);                                                                     /* 0x00475B90 (DM-064) */
-void zactorClearFlag20(ZActor *a);                                                                   /* 0x00475BB0 (DM-064) */
-void zactorStub3(void);                                                                              /* 0x00475BD0 (DM-064) */
-void zactorSetFrameRate(int16_t rate);                                                               /* 0x00475BF0 (DM-064) */
-void zactorStub4(void);                                                                              /* 0x00475C20 (DM-064) */
-void zactorSetUser(ZActor *a, void *user);                                                           /* 0x00475C40 (DM-064) */
-void *zactorGetUser(ZActor *a);                                                                      /* 0x00475C60 (DM-064) */
-void zactorGetRootPos(ZActor *a, RwV3d *out);                                                        /* 0x00475C80 (DM-064) */
-void zactorTurnHead(ZActor *a, int16_t delta);                                                       /* 0x004760B0 (DM-064) */
-void zactorGetChannel(ZActor *a, uint16_t channel, int16_t *euler);                                  /* 0x00476190 (DM-064) */
-int zactorGetSkeleton(ZActor *a);                                                                    /* 0x00476200 (DM-064) */
-uint8_t zactorGetFrameCount(ZActor *a);                                                              /* 0x00476250 (DM-064) */
-void zactorGetRotation(ZActor *a, int16_t *euler);                                                   /* 0x004762A0 (DM-064) */
-void zactorSetRotation(ZActor *a, int16_t *euler);                                                   /* 0x00476340 (DM-064) */
+/* zactor.c */
+void zactorStub1(void);                                                                              /* 0x004726C0 */
+void zactorCopy(ZActor *dst, const ZActor *src);                                                     /* 0x004726E0 */
+void zactorFree(ZActor *a);                                                                          /* 0x004728C0 */
+void zactorClear(ZActor *a);                                                                         /* 0x004728E0 */
+void zactorSetYaw(ZActor *a, int yaw);                                                               /* 0x00472960 */
+int zactorGetYaw(ZActor *a);                                                                         /* 0x00472990 */
+int zactorToWorldAngle(int angle);                                                                   /* 0x004729C0 */
+int zactorToLocalAngle(int angle);                                                                   /* 0x00472A00 */
+RwV3d *zactorGetScale(ZActor *a);                                                                    /* 0x00472AF0 */
+void zactorSampleMotion(ZActor *a, int16_t (*rot)[3], const ZMotionHeader *m, int frames, uint8_t flags); /* 0x004739C0 */
+void zactorLoadMotionBankTemp(uint32_t bankId);                                                      /* 0x00475140 */
+void zactorStub2(void);                                                                              /* 0x004752C0 */
+ZactorBank *zactorGetBank(int index);                                                                /* 0x004752E0 */
+void zactorSetModel(ZActor *a, uint16_t model);                                                      /* 0x00475430 */
+void zactorSetLodModel(ZActor *a, uint16_t lod, uint16_t model);                                     /* 0x00475460 */
+uint16_t zactorGetModel(ZActor *a);                                                                  /* 0x004754D0 */
+uint8_t zactorGetMotionTagCount(const ZMotionHeader *m);                                             /* 0x004754F0 */
+uint8_t zactorGetMotionTags(const ZMotionHeader *m, ZactorTag *out);                                 /* 0x00475520 */
+uint8_t zactorGetFirstMotionTag(const ZMotionHeader *m, ZactorTag *out);                             /* 0x00475730 */
+void zactorSetLod(ZActor *a, uint8_t lod);                                                           /* 0x004758F0 */
+void zactorSetRadius(ZActor *a, float radius);                                                       /* 0x00475920 */
+void zactorSetExtent(ZActor *a, const RwV3d *extent);                                                /* 0x00475940 */
+int zactorAddAngle(int angle, int delta);                                                            /* 0x00475A00 */
+void zactorSetTarget(ZActor *a, const RwV3d *pos, uint32_t id);                                      /* 0x00475AD0 */
+void zactorEnableTag(ZActor *a, int tag);                                                            /* 0x00475B10 */
+void zactorDisableTag(ZActor *a, int tag);                                                           /* 0x00475B50 */
+void zactorSetFlag20(ZActor *a);                                                                     /* 0x00475B90 */
+void zactorClearFlag20(ZActor *a);                                                                   /* 0x00475BB0 */
+void zactorStub3(void);                                                                              /* 0x00475BD0 */
+void zactorSetFrameRate(int16_t rate);                                                               /* 0x00475BF0 */
+void zactorStub4(void);                                                                              /* 0x00475C20 */
+void zactorSetUser(ZActor *a, void *user);                                                           /* 0x00475C40 */
+void *zactorGetUser(ZActor *a);                                                                      /* 0x00475C60 */
+void zactorGetRootPos(ZActor *a, RwV3d *out);                                                        /* 0x00475C80 */
+void zactorTurnHead(ZActor *a, int16_t delta);                                                       /* 0x004760B0 */
+void zactorGetChannel(ZActor *a, uint16_t channel, int16_t *euler);                                  /* 0x00476190 */
+int zactorGetSkeleton(ZActor *a);                                                                    /* 0x00476200 */
+uint8_t zactorGetFrameCount(ZActor *a);                                                              /* 0x00476250 */
+void zactorGetRotation(ZActor *a, int16_t *euler);                                                   /* 0x004762A0 */
+void zactorSetRotation(ZActor *a, int16_t *euler);                                                   /* 0x00476340 */
 void              zactorInit(void);                                                   /* 0x00472630 */
 ZActor           *zactorAlloc(void);                                                  /* 0x00472730 */
 ZActor           *zactorCreate(int kind);                                             /* 0x00472780 */

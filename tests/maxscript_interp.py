@@ -1,4 +1,4 @@
-"""A small interpreter for the MAXScript subset used by tools/3dsmax/maxscript/DaveMirraImport.ms (DM-060).
+"""A small interpreter for the MAXScript subset used by tools/3dsmax/maxscript/DaveMirraImport.ms.
 
 3ds Max is not installed on this PC, so the tests run the importer's MAXScript *source* with this
 interpreter: the parsing functions against the game files, and the scene-building functions against
@@ -8,14 +8,14 @@ properties or undeclared variables raise, so a typo in the .ms fails the tests.
 Supported subset (what the importer uses above its "UI" marker):
   -- comments, "strings" with \\ \" \n escapes, numbers (int, float, 0x hex), #names, #(arrays),
   [x, y, z] point3 literals, (blocks; separated by newlines or ;), fn name args = expr,
-  fn name args key:default = expr (keyword parameters with a default, DM-063),
+  fn name args key:default = expr (keyword parameters with a default),
   struct Name (f1, f2), local/global declarations, if/then/else, if/do, while/do,
   for i = a to b [by s] do, for x in arr do, return, throw, max modify mode,
   assignment = += -= *= /=, or/and/not, == != < > <= >=, + - * /, as integer|string|float,
   calls by juxtaposition with keyword arguments (f a b key:v), zero-argument calls f(),
   property access a.b, indexing a[i] (1-based), 'x' adjacency rules: a[i] / a.b without spaces,
-  the context expressions 'animate on <expr>' and 'at time <operand> <expr>' (DM-062),
-  'with undo on|off <expr>' and 'with redraw on|off <expr>' (DM-063).
+  the context expressions 'animate on <expr>' and 'at time <operand> <expr>',
+  'with undo on|off <expr>' and 'with redraw on|off <expr>'.
 MAXScript semantics kept: case-insensitive names, 1-based arrays and strings, integer / integer
 division truncates, strings compare case-sensitively, integers are 32-bit (bit.* wraps like the
 C int it is; + - * that would overflow raise here, because 3ds Max would silently wrap), sin/cos

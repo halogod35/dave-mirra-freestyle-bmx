@@ -1,4 +1,4 @@
-"""replay.zal records: saved bmxreplay buffers (DM-052). Spec: docs/formats/REPLAY.md.
+"""replay.zal records: saved bmxreplay buffers. Spec: docs/formats/REPLAY.md.
 
 A record is the part of a replay buffer from header +0x0C to its end (bmxreplayGetSaveArea
 0x00430D70); action.c's attract demo loads record ``rider + 2 * level`` into a fresh buffer and plays

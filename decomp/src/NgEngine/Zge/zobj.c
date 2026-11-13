@@ -2,11 +2,11 @@
  * NgEngine/Zge/zobj.c
  * Original: C:\NgEngine\Zge\zobj.c
  * Evidence: [V] path string referenced by 3 function(s); the others [I] (link order, the shared
- * globals 0x006722D0-0x006722E0, the ZObj layout). DM-061 created 19 functions in the holes of the
+ * globals 0x006722D0-0x006722E0, the ZObj layout). The ZGE object pass created 19 functions in the holes of the
  * file (Ghidra had only 11) and moved 0x00486EE0 in from the zprop/zobj gap (it is the hierarchy
  * update that zobjUpdateAll passes to the child iterator).
  * 33 functions, VA 0x00486ee0-0x00487acd.
- * DM-061 (draft); DM-064 moved zobjPrintCB / zobjDumpAll (0x00487A00 / 0x00487A50, DM-059's
+ * Draft; the clean-up moved zobjPrintCB / zobjDumpAll (0x00487A00 / 0x00487A50, the ZglRw pass's
  * draft) in from gap_zobj__zrwModel.c. Non-matching C (AD-8). Types: zobj.h. Description: docs/re/zge.md 2.
  *
  * The ZGE object: a position + rotation + optional parent link + a vtable that forwards to the
@@ -14,7 +14,7 @@
  * root object into the renderer, and through the hierarchy those of the attached children (world =
  * parent matrix * local).
  *
- * The model frame helper 0x004891B0 is in DM-059's gap file and keeps its current name here.
+ * The model frame helper 0x004891B0 is in the ZglRw pass's gap file and keeps its current name here.
  * zobjForEachChild 0x004879C0 came over from gap_zobj__zrwModel.c (attributed by link order).
  */
 #include "decomp.h"
@@ -458,7 +458,7 @@ int zobjForEachChild(ZObj *obj, int (__cdecl *fn)(ZObj *child, void *arg), void 
 {
     ZObj *child;
 
-    /* DM-061 moved this from gap_zobj__zrwModel.c: it walks the zobj hierarchy */
+    /* The ZGE object pass moved this from gap_zobj__zrwModel.c: it walks the zobj hierarchy */
     if (obj->link == 0)
         return 1;
     for (child = obj->link->child; child; child = child->link->next) {
@@ -472,10 +472,10 @@ int zobjForEachChild(ZObj *obj, int (__cdecl *fn)(ZObj *child, void *arg), void 
 /* VA 0x00487a00, 73 bytes, [I] row, status draft */
 int zobjPrintCB(ZObj *obj, void *unused)
 {
-    /* (zmemFreeListForEach callback of zobjDumpAll) DM-064 moved it here from gap_zobj__zrwModel.c
-     * (DM-059's code): it prints one pool entry. Original bug [V, disassembly]: when the type's slot 8
+    /* (zmemFreeListForEach callback of zobjDumpAll) the clean-up moved it here from gap_zobj__zrwModel.c
+     * (the ZglRw pass's code): it prints one pool entry. Original bug [V, disassembly]: when the type's slot 8
      * returns non-NULL the code prints "%s\n" without pushing the result, so the format reads a stale
-     * stack word. DM-059 read slot 8 as a name getter; DM-061 names it getBounds (a model's def +
+     * stack word. The ZglRw pass read slot 8 as a name getter; the ZGE object pass names it getBounds (a model's def +
      * 0x14) [I]. */
     (void)unused;
     if (obj->vtbl->getBounds != 0 && obj->vtbl->getBounds(obj) != 0) {
@@ -489,7 +489,7 @@ int zobjPrintCB(ZObj *obj, void *unused)
 /* VA 0x00487a50, 126 bytes, [I] row, status draft */
 void zobjDumpAll(void)
 {
-    /* (zge.c's debug dump) DM-064 moved it here from gap_zobj__zrwModel.c. Memory = element size x
+    /* (zge.c's debug dump) the clean-up moved it here from gap_zobj__zrwModel.c. Memory = element size x
      * used count of both pools (objects and hierarchy links), then one line per object. */
     g_pfnDebugPrintf("ZOBJ: MemAllocated:%d, Objects in use:%d\n",
                      zmemFreeListGetElemSize(g_zobjPool) * zmemFreeListGetUsedCount(g_zobjPool) +

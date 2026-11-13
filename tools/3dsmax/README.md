@@ -1,11 +1,12 @@
 # 3ds Max tools: Dave Mirra Freestyle BMX file spec, parser and 3ds Max importers
 
-Everything needed to read the game's files outside the game. The folder is self-contained and has no
-dependency on the rest of this repository.
+Everything needed to read the game's files outside the game. The code in this folder has no dependency on
+the rest of this repository; the format specification it implements is
+[docs/formats/SPEC.md](../../docs/formats/SPEC.md) ("SPEC" below).
 
 | Path | What |
 |---|---|
-| `SPEC.md` | The file format specification: ZMD, MATI/MADF/TBMP/TPNG, level ZSD (SCEN/SCDF/SCFI), Mat._sd, ZAL (+ LZO1X), FORM (PLHD/PLYR, ZMHD/ZMAP), STRS, the motion bank, ZSND, SAVE.DAT, RenderWare chunks, the zhash name hash and the coordinate system |
+| [`docs/formats/SPEC.md`](../../docs/formats/SPEC.md) | The file format specification: ZMD, MATI/MADF/TBMP/TPNG, level ZSD (SCEN/SCDF/SCFI), Mat._sd, ZAL (+ LZO1X), FORM (PLHD/PLYR, ZMHD/ZMAP), STRS, the motion bank, ZSND, SAVE.DAT, RenderWare chunks, the zhash name hash and the coordinate system |
 | `parser/dmparse.py` | Simple reference parser: one file, Python 3.8+ standard library only |
 | `maxscript/DaveMirraImport.ms` | 3ds Max importer in pure MAXScript (3ds Max **2017** or newer; no Python needed) |
 | `python/dave_mirra_import.py` (+ `dmparse.py` next to it) | 3ds Max importer in Python / pymxs (3ds Max **2022** or newer) |
@@ -108,7 +109,7 @@ each with an optional `exactNormals:true` and `flipNormals:true`; the two ZMD on
     **instances**, placed and rotated as in the game. The user property `dmbmx_def_id` holds the definition.
     The rotation is the stored matrix as is. Before v1.2 (Python) / v1.3 (MAXScript) the yaw had the wrong
     sign (+80° showed as −80°). The game renders props through its mirrored quaternion converter
-    (SPEC §2.6, DM-065).
+    (SPEC §2.6).
   - `Tags`: the collision faces, one mesh per tag code (`tag_1f41`, …; user property `dmbmx_tag_code`),
     **hidden**. Unhide them to see grind/trick/surface zones.
   - `ScenePoints`: Dummies `Player`, `PlayerT`, `Globals` and 3 × `SpotLight` (user property
@@ -169,7 +170,7 @@ each with an optional `exactNormals:true` and `flipNormals:true`; the two ZMD on
   For every one of the 115 models, both produce the right vertex/face/UV counts, materials and bitmaps,
   bone hierarchy and skin weights, and every vertex lands at the game's world position (checked against
   the main library). Real-Max behaviour (Skin modifier evaluation, Edit_Normals, Qt dialog, bone display)
-  is play-test **DM-060-PT1** (passed), and for exact normals **DM-063-PT1**.
+  is a manual test in 3ds Max (passed), and another one for exact normals.
 - **Bones** aim at their main child by default (see "Riders"). The joint positions are exact, and the skin
   and motion are unchanged: every vertex lands where it does with game-frame bones, at the bind pose and at
   every key (tested). The bone orientation and length are cosmetic, and a different main-child rule would
@@ -193,7 +194,7 @@ each with an optional `exactNormals:true` and `flipNormals:true`; the two ZMD on
 - **Exact normals** cost one Edit_Normals call per face corner plus two per normal: about 2,600 calls for
   a bike, 5,400 for a rider and 32,000-47,000 for a level (World ~95% of them). Both importers set them in
   one pass per mesh, with the modifier current in the Modify panel once, and undo and redraw off. Expected:
-  about a second for a model and a few seconds to ~20 s extra for a level [I], to be measured in DM-063-PT1.
+  about a second for a model and a few seconds to ~20 s extra for a level [I], to be measured in 3ds Max.
   - They are the game's data, kept as is. In **ProTourDirt** and **WoodwardStreet** most floor normals point
     down (against the face winding: 85% and 70% of the world's faces), so with exact normals those floors
     shade as if lit from below. The other levels agree with the winding on 91-100% of the world's faces.
@@ -214,5 +215,5 @@ each with an optional `exactNormals:true` and `flipNormals:true`; the two ZMD on
 | `tests/test_3dsmax_max_python.py` | the Python importer on every model and every level, with the pymxs mock |
 | `tests/test_3dsmax_maxscript.py` | the MAXScript importer source on every model and every level, through `tests/maxscript_interp.py` + the mock |
 | `tests/test_3dsmax_normals.py` | exact normals: the Edit_Normals mock's rules, both importers on a synthetic mesh (missing / zero / non-unit normals) and on real models and a level (same normals), the level-normal facts. The every-model and every-level imports above run with exact normals on (`max_checks.check_normals`: right vertices, unit length, = dmparse in Max world space, winding kept face by face) |
-| `tests/test_3dsmax_dm065.py` | DM-065: the prop rotation pinned to the exe (the mirrored quaternion converter) and to the game's prop collision boxes on all 12 levels; glTF prop matrices; bones aimed at children (rule, both importers, joints/skin/keys identical to game-frame bones at every key); the createBone/Skin mock rules; "flip normals to faces" (rule, every level, MAXScript = Python) |
+| `tests/test_3dsmax_props_bones.py` | The prop rotation pinned to the exe (the mirrored quaternion converter) and to the game's prop collision boxes on all 12 levels; glTF prop matrices; bones aimed at children (rule, both importers, joints/skin/keys identical to game-frame bones at every key); the createBone/Skin mock rules; "flip normals to faces" (rule, every level, MAXScript = Python) |
 | `tests/test_3dsmax_maxscript_motion.py` | the MAXScript motion path: LZO1X/ZAL/clip decoder = dmparse on all 238 clips frame by frame, and keyed rider/bike imports = the Python importer's keys |

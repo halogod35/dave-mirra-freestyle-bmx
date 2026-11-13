@@ -1,4 +1,4 @@
-"""DM-013: level folders round-trip byte-for-byte through the decoded object model (AD-3)."""
+"""Level folders round-trip byte-for-byte through the decoded object model (AD-3)."""
 import math
 import struct
 

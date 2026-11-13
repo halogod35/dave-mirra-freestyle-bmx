@@ -1,10 +1,10 @@
 # Rider physics (`physics.c`) and what it reads from the levels
 
-DM-048. Source: `decomp/src/zaxis/Bmx/Src/com/action/physics.c` (50 functions, VA 0x0041FA20-0x0042DE22),
+Source: `decomp/src/zaxis/Bmx/Src/com/action/physics.c` (50 functions, VA 0x0041FA20-0x0042DE22),
 types `decomp/include/physics.h` and the physics fields of `rider.h`, Python port
 `tools/dmbmx/formats/physics.py`, collision-tree decoder `tools/dmbmx/formats/rwcoll.py`, tests
-`tests/test_decomp_dm048.py`; the tree builder and the walk ports are DM-049 (3.1,
-`tests/test_rwcoll_build.py`). Exe = the 2000-11-22 PC build. Evidence tags as in CONTRIBUTING.md AD-5:
+`tests/test_decomp_physics.py`; the tree builder and the walk ports: 3.1,
+`tests/test_rwcoll_build.py`. Exe = the 2000-11-22 PC build. Evidence tags as in CONTRIBUTING.md AD-5:
 **[V]** read from the code (disassembly / decompilation) or checked over the corpus by code;
 **[I]** inferred. Nothing here is verified in-game.
 
@@ -37,10 +37,10 @@ the rotation. `bmxphysSetState` = exit[old] + enter[new]; an enter function may 
 that finds no target keeps the old state; StateInitGrind on a quarterpipe coping may return ROLL).
 
 **Ghidra had missed 15 functions** [V]: they are reached only through these tables or through the
-incremental-link thunk table (0x00401005..). `decomp/symbols/symbols.csv` rows (card DM-048) create them:
+incremental-link thunk table (0x00401005..). `decomp/symbols/symbols.csv` rows create them:
 0x004203A0, 0x00420F00, 0x004210C0, 0x00421190, 0x00422830, 0x00422E50, 0x004243B0, 0x00424A10,
 0x00425610, 0x00425740, 0x00425760, 0x00425910, 0x00425940, 0x00428DF0, 0x0042BA50 (34 KB, 3x the
-code DM-040 had attributed to physics.c). The real `bmxphysUpdatePositionAir` is 0x00428DF0; DM-040's
+code the skeleton had attributed to physics.c). The real `bmxphysUpdatePositionAir` is 0x00428DF0; the skeleton's
 seed of that name (0x0042DAD0) only prints the same message and is renamed `bmxphysSetSurfaceFromHit`.
 `bmxphysInit` 0x0041FA20 / `bmxphysShutdown` 0x0041FA40 (called from action.c) came from the
 overlay/physics gap.
@@ -61,7 +61,7 @@ keep only the id), **flags** remapped at +0x15.
 | 2 | spine | id = the edge-tag code of its coping edge [V: 1,591/1,591 class-2 face ids are edge codes; 1-8 distinct ids per level] (`bmxphysFindTaggedEdge`: nearest edge with that code; the surface becomes that edge; "quarterpipe face with no assigned edge, ID=%d" and class 0 when missing). Going up it within 200 below the coping and 300 of its plane, the air **hops over** the coping: lands (dist + 150) beyond, flight time from 0.85 x the take-off speed (min 15 frames), rolled over. Grind button = grind the coping |
 | 3 | vert wall | id = coping edge [V 106/106, WoodwardVert only]. Air going up it (facing the coping plane within 55 deg): FAKIE (land back on the wall), aligned to the ramp and kept 120 off the coping plane, velocity across the plane removed, **no horizontal speed** (straight up and down), a 180 turn scheduled for the way down; LIP guard keeps the rider inside unless there is room behind the coping |
 | 4-8 | launch ramps | the take-off horizontal speed is capped at **11, 15, 21, 23, 35** (classes 4..8; 16 for anything else), x (1 + sin a) when the ramp is within 30 deg of 45 deg |
-| 9 | trigger | **not solid**: a wheel or the body touching it calls `bmxpropHitTrigger(slot, face)` (prop.c 0x0042EF60, DM-052: breaks the prop whose OBJI id = the face code) and passes through. (No class 9 face in the corpus.) |
+| 9 | trigger | **not solid**: a wheel or the body touching it calls `bmxpropHitTrigger(slot, face)` (prop.c 0x0042EF60, the prop/replay/fx pass: breaks the prop whose OBJI id = the face code) and passes through. (No class 9 face in the corpus.) |
 | 10 | launch pad | the **id is a launch speed** (corpus ids 30-50): velocity loses its normal component and gains `id` units/frame along the face normal, state AIR, sound 0x109 |
 | 11-15 | - | no case: treated as 0 |
 
@@ -110,9 +110,9 @@ geometry edit that adds, removes or re-orders triangles must rebuild this block 
 so each node's are contiguous) or collision silently uses the wrong triangles; `rwcoll.check(sector)`
 reports a stale tree. Editing vertex positions only is safe for the tree if no triangle crosses its
 split plane afterwards. Tag._sd must be kept in step separately (it carries the tags and the grind
-edges). `World.colSectorSize` is resolved in 3.1 (DM-049).
+edges). `World.colSectorSize` is resolved in 3.1.
 
-### 3.1 Rebuilding the tree (DM-049)
+### 3.1 Rebuilding the tree
 
 **How RW loads, sizes and saves the block** [V, decompiled from a private Ghidra copy]:
 
@@ -225,7 +225,7 @@ control).
 There is **no explicit maximum speed**: speed is bounded by the drags, the take-off caps and the
 crash thresholds. Bike tuning per rider (rider +0xC68..0xC87, `rider_Create`): centre-of-mass height
 50, weight-transfer divisor 5, spring divisor 0.2, suspension {min -15, max 25, stiffness 0.3,
-damping 0.1 / 0.1} (the suspension cheat; 0 otherwise [I, DM-046]), wheels at x = 55.25 / -36.52,
+damping 0.1 / 0.1} (the suspension cheat; 0 otherwise [I, the game.c pass]), wheels at x = 55.25 / -36.52,
 radius 24.65.
 
 ## 5. The integrators (summary)
@@ -255,18 +255,18 @@ the other wheel's speed into this wheel; the set-state from "none" calls exit[CR
 
 ## 6. Open
 
-- ~~`World.colSectorSize`, format bit 0x40000000~~ resolved in 3.1 (DM-049). Still open: RW's own split
+- ~~`World.colSectorSize`, format bit 0x40000000~~ resolved in 3.1. Still open: RW's own split
   choice (3.1), and whether the triangle test 0x004BEAB0 culls back faces.
 - Exact meanings of materials 4, 7, 8, 0xB and of edge kind 3; face flags 0x08 / 0x40 (not read here).
-- The rider-state values `rider_00431dd0(r, level)` that physics tests (rider.c, DM-047).
+- The rider-state values `rider_00431dd0(r, level)` that physics tests (rider.c, the rider.c pass).
 - In-game confirmation of the class meanings (a play-test could retag a face to class 10 with id 40
   and expect a launch).
 
-## 7. The crash rag doll and the limb IK (`dyn.c`, DM-058)
+## 7. The crash rag doll and the limb IK (`dyn.c`, the dyn.c pass)
 
 Source: `decomp/src/zaxis/Bmx/Src/com/zge/bmx/dyn.c` (74 functions, VA 0x00450060-0x00457897, the old
 `gap_bmxsound__zoverii.c`), types `decomp/include/dyn.h` and `BmxIk` in `rider.h`, tests
-`tests/test_decomp_dm058.py`. The file has no strings, so its name is [I]: it takes DM-047's `dyn*` prefix
+`tests/test_decomp_dyn.py`. The file has no strings, so its name is [I]: it takes the rider.c pass's `dyn*` prefix
 and sits between bmxsound.c and zoverii.c, which are linked in alphabetical order within `com\zge\bmx\`. It
 is one object file [I]: the rag doll and the IK share helpers, and their .bss statics interleave
 (0x005746C4-0x00574D0C). Its .data is two floats at 0x0055B958. The last function of the old gap,
@@ -371,7 +371,7 @@ friction 0.4 and 3 springs of weight 16. The bike's matrix is the triangle's fra
 - **Sticky Crash** (cheat): `dynSetStickyCrash` makes a particle that touches anything fixed for good.
 
 Some functions are never called:
-- DM-058 created four that are reachable only through their incremental-link thunks: `dynBrace` (arms held
+- The dyn.c pass created four that are reachable only through their incremental-link thunks: `dynBrace` (arms held
   out 54 / 29 units in front of the shoulders), `dynSetLimitsOff`, `dynSetLimitsOn` and `dynIkSetLooseGains`.
 - Also uncalled: `dynAddBendSpring`, `dynAddAngleSpring` (its solver is empty), `dynAddAxisLimit` and
   `dynIkBlendAxes`.
@@ -403,7 +403,7 @@ These angles go to the actor's **decoder block 1** (`ZActorAnim.block[1].rot`). 
 
 ### 7.6 The limb IK [V]
 
-The IK state is `BmxRider.ik` (`BmxIk`, at +0xD98, 0x1D8 bytes). DM-046/047 called it a camera block, and named
+The IK state is `BmxRider.ik` (`BmxIk`, at +0xD98, 0x1D8 bytes). The game.c pass/the rider.c pass called it a camera block, and named
 `dynIkReset` / `dynIkMeasure` `cameraInitRider` / `cameraMeasureRider`.
 
 `dynIkMeasure` (called by riderCreate) reads the limb lengths from the model with `zactorGetPartLength`. A

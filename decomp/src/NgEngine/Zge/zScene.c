@@ -2,9 +2,9 @@
  * NgEngine/Zge/zScene.c
  * Original: C:\NgEngine\Zge\zScene.c
  * Evidence: [V] path string referenced by 16 functions; the others [I] (link order, the globals
- * 0x00673F70-0x00673FFB, the def/entry pools). DM-043 moved 0x00491D80-0x00491EE0 to zscnpts.c.
+ * 0x00673F70-0x00673FFB, the def/entry pools). The zScene pass moved 0x00491D80-0x00491EE0 to zscnpts.c.
  * 39 functions, VA 0x00490180-0x00491d7f.
- * DM-043 (draft). Non-matching C (AD-8). Types: decomp/include/zscene.h.
+ * Draft. Non-matching C (AD-8). Types: decomp/include/zscene.h.
  * Level format: docs/formats/LEVEL.md (sections 1 and 3); Python reference tools/dmbmx/formats/level.py.
  *
  * Two halves:
@@ -16,9 +16,9 @@
 #include "decomp.h"
 #include "zanim.h"
 
-/* other modules (current names until their cards land) */
+/* other modules (current names until they are decompiled) */
 int      zfontInit(void);                                /* 0x004A27A0 zFont.c */
-int      zfontShutdown(void);                            /* 0x004A2800 zFont.c (DM-061) */
+int      zfontShutdown(void);                            /* 0x004A2800 zFont.c */
 int      ztokenOpen(const char *path);                        /* 0x004A1120 */
 int      ztokenClose(void);                                   /* 0x004A11E0 */
 int      ztokenNext(char *buf, int size);                     /* 0x004A1220 */

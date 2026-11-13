@@ -7,10 +7,10 @@
  *           order); [I] zrollerStartup / Init / Shutdown (0x0046C220..: "ZROLLER: Failed to
  *           intialize ZRES", this file's globals), the gap functions and the silent stubs by link
  *           order, up to winChan.c.
- * 92 functions, VA 0x0046c220-0x0046d923 (DM-057 took 3 functions from NgIFzres.c and the 2 + 5
+ * 92 functions, VA 0x0046c220-0x0046d923 (the NgIF pass took 3 functions from NgIFzres.c and the 2 + 5
  * of the zres/zroller and zroller/winChan gaps, and created the 48 printing stubs, 15 silent
  * stubs and zrollerFreeRecordCb).
- * DM-057 (draft). Non-matching C (AD-8). Types / prototypes: ngif.h. Description: docs/re/ngif.md.
+ * Draft. Non-matching C (AD-8). Types / prototypes: ngif.h. Description: docs/re/ngif.md.
  *
  * "zroller" is the PSX engine's level runner; on the PC it keeps: the rider / bike actors and
  * their shadow models, the player descriptors (rider, style, bike), the prop rails, the world

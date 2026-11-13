@@ -1,4 +1,4 @@
-"""Blender scene -> ZMD (DM-022).
+"""Blender scene -> ZMD.
 
 Rebuilds the glTF document of the import (the ``dmbmx_gltf`` JSON on the root object) from the current
 Blender data: meshes (positions, normals, UVs, colours, material per face, vertex groups), frame

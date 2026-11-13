@@ -1,5 +1,5 @@
 /*
- * bmxprop.h - game-side props (Bmx/Src/com/action/prop.c) (DM-052).
+ * bmxprop.h - game-side props (Bmx/Src/com/action/prop.c).
  *
  * The engine loads the placed props of Prop._sd (zprop.h, Zprop) and NgIFzbsp gives every prop a
  * 500-byte collision record (NgPropCol below, allocated lazily by zbspPropColCreate). prop.c adds
@@ -91,7 +91,7 @@ typedef struct NgPropCol {
     Zprop   *prop;       /* +0x1F0 the engine prop */
 } NgPropCol;             /* 0x1F4 */
 
-/* NgPropCol.flags (DM-057: every reader in the exe, [V] by a scan of the game code for tests of +2 / +3).
+/* NgPropCol.flags (every reader in the exe, [V] by a scan of the game code for tests of +2 / +3).
  * NGPROPCOL_OFF = "knocked": zbspPropSetMode 0, set by physics.c when a rider crashes hard into the
  * prop (wall impact, knock_prop) and never cleared; zbspFindEdgesNear and the debug draw skip the
  * rails of props with MOVING, OFF, FLAG100 or HIDDEN, and zbspPropSetRotation stops moving the

@@ -1,4 +1,4 @@
-"""Headless Blender check of `dmbmx export` output (DM-020). Not part of the pytest run.
+"""Headless Blender check of `dmbmx export` output. Not part of the pytest run.
 
 Imports every .glb in a folder into Blender and compares it with what dmbmx reads from the
 source ZMD (vertex/triangle counts, bone counts, frame empties, upright orientation, winding).
@@ -110,7 +110,7 @@ def main(argv):
     src = {}
     for d, dirs, files in os.walk(a.game_dir):
         if Path(d) == Path(a.game_dir):
-            dirs[:] = [x for x in dirs if x not in {"_pristine", "_testgame", "wt", "dave-mirra-bmx", "dave-mirra-pro-bmx"}]
+            dirs[:] = [x for x in dirs if x not in {"_pristine", "_testgame", "wt", "dave-mirra-bmx", "dave-mirra-freestyle-bmx"}]
         for f in files:
             if f.lower().endswith(".zmd"):
                 src[Path(f).stem.lower()] = Path(d) / f

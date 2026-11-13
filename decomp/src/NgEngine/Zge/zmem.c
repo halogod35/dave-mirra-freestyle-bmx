@@ -2,16 +2,16 @@
  * NgEngine/Zge/zmem.c
  * Original: C:\NgEngine\Zge\zmem.c
  * Evidence: [V] path string 0x00560904 referenced by most functions here (the string-referencing
- *           functions that Ghidra only created in DM-044 are marked "[I] row" by the generator);
+ *           functions that Ghidra only created in the zmem pass are marked "[I] row" by the generator);
  *           the rest by link order, globals and calls.
- * 41 functions, VA 0x004859b0-0x00486909 (DM-064 created zmemDump 0x004859B0 and zmemSetHeader
+ * 41 functions, VA 0x004859b0-0x00486909 (the clean-up created zmemDump 0x004859B0 and zmemSetHeader
  * 0x004859C0 in front).
- * Decompiled by DM-044 (non-matching C, AD-8). Types: decomp/include/zmem.h.
+ * Decompiled (non-matching C, AD-8). Types: decomp/include/zmem.h.
  *
  * Four allocators live here (see zmem.h): the general zmemAlloc/zmemFree (platform heap, or a
  * "redirect" memory pool), the static/temp stack arena, fixed-size "free lists" and first-fit
  * "memory pools". The names follow the exe's own messages: "Free list pool has been exhausted."
- * vs "zmemPoolFree(): Memory has been previously freed." (DM-041/042 had the two swapped).
+ * vs "zmemPoolFree(): Memory has been previously freed." (the zfile pass/the zasset pass had the two swapped).
  * zmemAlloc is inlined into most callers in the binary; here it is called.
  */
 #include "decomp.h"
@@ -44,7 +44,7 @@ int           g_zmemPoolSystemInitialized;                /* 0x006722B0 */
 /* VA 0x004859b0, 1 bytes, [I] row, status draft */
 void zmemDump(void)
 {
-    /* (DM-064 created; zgeDump 0x0049FA60 calls it after zobjDumpAll). An empty debug dump: the
+    /* (new function; zgeDump 0x0049FA60 calls it after zobjDumpAll). An empty debug dump: the
      * release build compiled its body out. It sits between zfile.c's last and zmem.c's first function;
      * zmem.c is the guess [I] (a memory report is what a ZGE dump would print next). */
 }
@@ -52,7 +52,7 @@ void zmemDump(void)
 /* VA 0x004859c0, 42 bytes, [I] row, status draft */
 void zmemSetHeader(uint32_t *hdr, uint32_t size, uint32_t unused, uint32_t kind)
 {
-    /* (DM-064 created; no caller) Writes a zmemAlloc block header: the size in bits 0-29, the kind
+    /* (new function; no caller) Writes a zmemAlloc block header: the size in bits 0-29, the kind
      * (ZMEM_KIND_*) in bits 30-31. The third argument is unused. */
     (void)unused;
     *hdr = (kind << ZMEM_KIND_SHIFT) | (size & ZMEM_SIZE_MASK);
@@ -698,5 +698,5 @@ void zmemPoolWalk(ZmemPool *pool, ZmemPoolWalkFn fn, void *user)
     }
 }
 
-/* 0x00486910 zpropListsInit, 0x00486930 zpropShutdown and 0x00486940 zpropListsFree (DM-044 drafted them
- * here) moved to ZgeMods/zprop.c in the DM-043 integration. */
+/* 0x00486910 zpropListsInit, 0x00486930 zpropShutdown and 0x00486940 zpropListsFree (the zmem pass drafted them
+ * here) moved to ZgeMods/zprop.c when the zScene pass was merged. */

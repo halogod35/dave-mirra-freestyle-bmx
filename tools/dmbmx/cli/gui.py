@@ -1,4 +1,4 @@
-"""dmbmx gui: menu modding (DM-066). Menu art, screens and fonts of Intwrap.zal, the menu / HUD texts of
+"""dmbmx gui: menu modding. Menu art, screens and fonts of Intwrap.zal, the menu / HUD texts of
 MiscData.ZAL and the HUD fonts. Usage notes: docs/tools/menu-modding.md.
 
   gui list <Intwrap.zal> [--screen ID]            groups and assets; with --screen, its elements and texts

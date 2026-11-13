@@ -19,7 +19,7 @@ Grammar (RW chunk = ``u32 type, u32 size, u32 version``; version 0x00000301 ever
 
 The object model re-encodes every struct; unknown chunks stay raw :class:`Chunk` objects.
 Writing rebuilds the collision tree of every sector whose geometry changed since it was read
-(DM-049, :meth:`World.rebuild_collision`) and recomputes ``colSectorSize``; unedited sectors keep
+(:meth:`World.rebuild_collision`) and recomputes ``colSectorSize``; unedited sectors keep
 their original bytes.
 Materials and textures reuse the ZMD classes (:class:`dmbmx.formats.zmd.Material`).
 """
@@ -136,7 +136,7 @@ class AtomicSector:
 
     :meth:`geometry_changed` tells whether ``vertices``/``triangles`` differ from what was read
     (a sector built in code counts as changed); :meth:`rebuild_collision` rebuilds ``coll`` and
-    re-orders ``triangles`` (DM-049).
+    re-orders ``triangles``.
     """
     __slots__ = ("mat_base", "inf", "sup", "coll_present", "unused", "vertices", "normals", "prelit",
                  "uvs", "uvs2", "triangles", "coll", "ext", "bin_mesh", "version", "_geom")
@@ -442,7 +442,7 @@ class World:
         self.num_vertices = sum(len(s.vertices) for s in secs)
         self.col_sector_size = rwcoll.col_sector_size(secs)
 
-    # -- collision (DM-049) ------------------------------------------------
+    # -- collision ------------------------------------------------
     def rebuild_collision(self, force=False, split=True):
         """Rebuild the collision tree of every sector whose geometry changed (all sectors with
         ``force``). A sector that does not fit one tree (more than 31 triangles that no split

@@ -1,4 +1,4 @@
-"""glTF (.glb) -> ZMD importer (DM-021). Pure stdlib.
+"""glTF (.glb) -> ZMD importer. Pure stdlib.
 
 Rebuilds a ZMD from a .glb written by :func:`dmbmx.convert.gltf.export_glb` and then edited
 (vertex positions/normals/UVs/colours, topology, skin weights, textures, frame transforms).
@@ -30,7 +30,7 @@ __all__ = ["import_glb", "ImportReport", "GltfImportError", "stripify", "strip_t
 
 BINMESH_MODES = ("auto", "strips", "lists")
 PALETTISED_MODES = ("promote", "quantize")
-COLOR_KEY = (255, 0, 255)     # DM-014 [V] 0x00498661: this RGB in a BMP becomes transparent
+COLOR_KEY = (255, 0, 255)     # [V] 0x00498661: this RGB in a BMP becomes transparent
 MAX_VERTICES = 65535          # triangle indices are u16 in the RW geometry struct
 _NCOMP = {"SCALAR": 1, "VEC2": 2, "VEC3": 3, "VEC4": 4, "MAT4": 16}
 _COMP = {5120: ("b", 127.0), 5121: ("B", 255.0), 5122: ("h", 32767.0), 5123: ("H", 65535.0),
@@ -933,7 +933,7 @@ def _tpng(png, name, rep):
 
 
 def _keyed_rgb_rows(rgba_rows):
-    """RGBA rows -> RGB rows; pixels with alpha < 128 become the colour key (DM-014 rule)."""
+    """RGBA rows -> RGB rows; pixels with alpha < 128 become the colour key (the game's rule)."""
     out, keyed = [], 0
     key = bytes(COLOR_KEY)
     for r in rgba_rows:
@@ -949,7 +949,7 @@ def _keyed_rgb_rows(rgba_rows):
 
 def _tbmp(png, header, tail, name, rep, palettised="promote"):
     """Edited TBMP. 24-bit slots keep their header (resized if needed). Palettised slots keep their
-    indices when painted with the same palette; otherwise they are promoted to a 24-bit BMP (DM-014: the
+    indices when painted with the same palette; otherwise they are promoted to a 24-bit BMP (the
     loader reads any 4/8/24-bit BMP in any slot) or, with ``palettised='quantize'``, mapped to the original
     palette. Alpha < 128 becomes the colour key 255,0,255 (transparent in game)."""
     info = imaging.bmp_info(_fake_bmp(header))
@@ -971,7 +971,7 @@ def _tbmp(png, header, tail, name, rep, palettised="promote"):
         else:
             from dmbmx.formats import texture
             rgba = b"".join(imaging.png_to_rgba_rows(img))
-            rep.change(f"texture {name}: {info.bpp}-bit palettised BMP promoted to 24-bit (DM-014: any "
+            rep.change(f"texture {name}: {info.bpp}-bit palettised BMP promoted to 24-bit (any "
                        "4/8/24-bit BMP loads in any slot)")
             return texture.encode_bmp(texture.Image(w, h, rgba), key=COLOR_KEY)
     else:

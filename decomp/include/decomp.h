@@ -1,6 +1,6 @@
 /*
- * decomp.h - umbrella header for the NgBMX.exe reconstruction (DM-040).
- * Every generated source file includes this. Module cards add their own headers here.
+ * decomp.h - umbrella header for the NgBMX.exe reconstruction.
+ * Every generated source file includes this. Each decompiled module adds its own headers here.
  */
 #ifndef DECOMP_H
 #define DECOMP_H
@@ -18,17 +18,17 @@
 #include "zrwworld.h"
 #include "zscene.h"
 #include "zactor.h"
-#include "zprim.h"     /* DM-053 */
+#include "zprim.h"
 #include "save.h"
 #include "rider.h"
-#include "contrler.h"   /* DM-051 */
-#include "camera.h"     /* DM-051 */
+#include "contrler.h"
+#include "camera.h"
 #include "game.h"
-#include "bmxprop.h"    /* DM-052 */
-#include "replay.h"     /* DM-052 */
-#include "fx.h"         /* DM-052 */
-#include "zoverii.h"    /* DM-054 */
-#include "overlay.h"    /* DM-054 */
-#include "gui.h"        /* DM-056 */
+#include "bmxprop.h"
+#include "replay.h"
+#include "fx.h"
+#include "zoverii.h"
+#include "overlay.h"
+#include "gui.h"
 
 #endif /* DECOMP_H */

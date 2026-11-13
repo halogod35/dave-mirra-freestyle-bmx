@@ -1,4 +1,4 @@
-"""dmbmx motion list|dump: inspect the motion bank in motion.zal (DM-016). glTF output: dmbmx export --anims."""
+"""dmbmx motion list|dump: inspect the motion bank in motion.zal. glTF output: dmbmx export --anims."""
 import json
 import os
 from pathlib import Path

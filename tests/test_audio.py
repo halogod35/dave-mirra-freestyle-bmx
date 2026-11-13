@@ -1,4 +1,4 @@
-"""DM-015 sound banks: unit (synthetic), corpus round-trip (22 banks), IMA codec, replace, fuzz, CLI."""
+"""Sound banks: unit (synthetic), corpus round-trip (22 banks), IMA codec, replace, fuzz, CLI."""
 import math
 import struct
 import wave

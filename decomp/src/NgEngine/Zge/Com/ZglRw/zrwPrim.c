@@ -3,11 +3,11 @@
  * Original: C:\NgEngine\Zge\Com\ZglRw\zrwPrim.c
  * Evidence: [V] path string 0x0056173C (assert of zrwPrimInit 0x248); the primitive driver table
  *           0x00561720 (7 slots); [I] the rest by link order and the globals 0x00672890-0x006728B3.
- *           DM-059 moved here the buffer and clipping helpers 0x0048C5C0-0x0048CC2F (the
+ *           The ZglRw pass moved here the buffer and clipping helpers 0x0048C5C0-0x0048CC2F (the
  *           zList / zrwPrim gap; they use this file's buffers) and the draw functions 0x0048CCF0-
  *           0x0048D6EF (the zrwPrim / ztaginf gap; table slots 2-6).
- * 12 functions, VA 0x0048C5C0-0x0048D6EF (DM-059 created 3).
- * DM-059 (draft). Non-matching C (AD-8). Types: ngif.h (ZglVertex, ZglLine/Tri/Quad), zglrw.h.
+ * 12 functions, VA 0x0048C5C0-0x0048D6EF (3 new functions).
+ * Draft. Non-matching C (AD-8). Types: ngif.h (ZglVertex, ZglLine/Tri/Quad), zglrw.h.
  * Description: docs/re/zrw.md 8.
  *
  * ZGL immediate mode: lines, triangles, quads and polygons of ZglVertex (ZGE position, u, v,
@@ -49,14 +49,14 @@ static float s_zBias;                  /* 0x006728B0 */
 
 #define ALIGN16(p) ((void *)(((size_t)(p) + 0xF) & ~(size_t)0xF))
 
-/* VA 0x0048c5c0, 41 bytes, [I] DM-059 created, status draft (no caller found) */
+/* VA 0x0048c5c0, 41 bytes, [I] new function, status draft (no caller found) */
 void zrwPrimReserve2D(uint32_t n)
 {
     s_prim.im2dCap = (n & ~0x1Fu) + 0x20;
     s_prim.im2d = (uint8_t *)zmemResize(s_prim.im2d, s_prim.im2dCap * sizeof(ZrwIm2DVertex) + 0xF);
 }
 
-/* VA 0x0048c5f0, 46 bytes, [I] DM-059 created, status draft (no caller found) */
+/* VA 0x0048c5f0, 46 bytes, [I] new function, status draft (no caller found) */
 void zrwPrimReserve3D(uint32_t n)
 {
     s_prim.im3dCap = (n & ~0x1Fu) + 0x20;
@@ -165,7 +165,7 @@ int zrwPrimInit(void)
     return 1;
 }
 
-/* VA 0x0048ccb0, 61 bytes, [I] DM-059 created, status draft (slot 1) */
+/* VA 0x0048ccb0, 61 bytes, [I] new function, status draft (slot 1) */
 int zrwPrimShutdown(void)
 {
     if (s_prim.initialized) {
@@ -338,7 +338,7 @@ void zrwPrimDrawQuads(uint32_t flags, const ZglQuad *quads, int count, const RwM
     }
 }
 
-/* the table's draw slots take const void * (DM-064: casts, the functions keep their real types) */
+/* the table's draw slots take const void * (casts, the functions keep their real types) */
 #define PRIM_SLOT(f) ((void (__cdecl *)(uint32_t, const void *, int, const RwMatrix *))(f))
 const ZglPrimApi g_zglPrimApi = {                                           /* 0x00561720 */
     zrwPrimInit, zrwPrimShutdown, PRIM_SLOT(zrwPrimDrawLines), PRIM_SLOT(zrwPrimDrawTris),

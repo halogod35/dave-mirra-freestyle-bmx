@@ -85,7 +85,7 @@ def _kids(chunk, where):
 
 def name_hash(name) -> int:
     """Z-Axis name id (bone ids, MDEF/MADF ids, ZAL asset ids) = :func:`dmbmx.core.hash.zhash`
-    (the engine's zHashName, VA 0x004828C0, DM-010). For ASCII names this equals
+    (the engine's zHashName, VA 0x004828C0). For ASCII names this equals
     ``(toupper(last) << 16) + sum((i+1) * toupper(c_i))`` mod 2**32.
     [V] matches 2205/2227 ids in the ZMD corpus; the 22 misses are renamed copies
     (``Hips01`` keeps the id of ``Hips``).
@@ -727,7 +727,7 @@ class Mdef:
         return {e.id: e.name for e in self.entries}
 
 
-# Mati (MATI/MADF/TBMP/TPNG) lives in dmbmx.formats.mati (shared with level Mat._sd, DM-014).
+# Mati (MATI/MADF/TBMP/TPNG) lives in dmbmx.formats.mati (shared with level Mat._sd).
 
 
 # ------------------------------------------------------------------------------- Zmd

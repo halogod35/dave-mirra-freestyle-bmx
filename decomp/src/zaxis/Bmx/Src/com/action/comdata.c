@@ -3,10 +3,10 @@
  * Original: C:\zaxis\Bmx\Src\com\action\comdata.c
  * Evidence: [V] path string 0x00553EB0 referenced by comdataGetGoalInfo; the other two [I]: they sit
  *           directly before it in link order (after the camera gap), touch only the save globals
- *           and are the accessors DM-012/DM-024 called save_InitDefaults / save_GetRecordPtr.
+ *           and are the accessors the save reader and the save editor called save_InitDefaults / save_GetRecordPtr.
  * 3 functions, VA 0x00407ba0-0x0040800d.
- * DM-046 (draft). Non-matching C (AD-8). Types: save.h, game.h. Format: docs/formats/SAVE.md.
- * Python port (tests/test_decomp_dm046.py): tools/dmbmx/formats/progress.py.
+ * Draft. Non-matching C (AD-8). Types: save.h, game.h. Format: docs/formats/SAVE.md.
+ * Python port (tests/test_decomp_game.py): tools/dmbmx/formats/progress.py.
  *
  * "Common data": the parts of the game state that the memory card stores (g_saveBlockA,
  * g_saveRecords, g_saveProfiles; memcard.c copies them to and from SAVE.DAT verbatim).

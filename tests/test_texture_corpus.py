@@ -1,4 +1,4 @@
-"""DM-014 corpus tests: Mat._sd round-trip, MADF invariants, image decode/encode, texture replacement."""
+"""Corpus tests: Mat._sd round-trip, MADF invariants, image decode/encode, texture replacement."""
 import struct
 
 import pytest

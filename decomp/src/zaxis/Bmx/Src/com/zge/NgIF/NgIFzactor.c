@@ -5,10 +5,10 @@
  *           zactorGetAbsolutePartPositionNoPose (0xF4), zactorGetPartLength (0x11B),
  *           zactorGetPartOffset (0x153) and NgIFzactor_ApplyMotionPose (0x1FE); [I] the rest by
  *           the shared part tables 0x005DA1E8..0x005DA2DC and link order.
- * 12 functions, VA 0x004646f0-0x00465a23 (DM-057 created zactorGetPartFrame 0x00464FB0 and
+ * 12 functions, VA 0x004646f0-0x00465a23 (the NgIF pass created zactorGetPartFrame 0x00464FB0 and
  * zactorGetPartOffset 0x00465040 (unreferenced) and took NgIFzactor_ResetPartTables 0x004646F0 from
  * the NgIFpsx gap: it clears this file's tables).
- * DM-057 (draft). Non-matching C (AD-8). Types: zactor.h, prototypes: ngif.h. Description:
+ * Draft. Non-matching C (AD-8). Types: zactor.h, prototypes: ngif.h. Description:
  * docs/re/ngif.md, the arm table and channel lists: docs/formats/ANIM.md section 3.
  *
  * The bridge between the game's actors (zactor.c) and their RenderWare models: which model frame

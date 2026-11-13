@@ -1,4 +1,4 @@
-"""dmbmx tex list|export|replace: embedded textures in .zmd, level Mat._sd and .zal (DM-014)."""
+"""dmbmx tex list|export|replace: embedded textures in .zmd, level Mat._sd and .zal."""
 import json
 import os
 from pathlib import Path
@@ -65,7 +65,7 @@ class Source:
 def _guard_out(path):
     game = Path(os.environ.get("DMBMX_GAME_DIR", r"F:\Projects\Dave Mirra freestyle BMX")).resolve()
     out = Path(path).resolve()
-    allowed = game / "dave-mirra-bmx", game / "dave-mirra-pro-bmx", game / "wt"
+    allowed = game / "dave-mirra-bmx", game / "dave-mirra-freestyle-bmx", game / "wt"
     if (out == game or game in out.parents) and not any(out == a or a in out.parents for a in allowed):
         raise SystemExit(f"refusing to write into the game install ({out}); use out/ (AD-1)")
 
@@ -127,7 +127,7 @@ def run_replace(args):
     _guard_out(args.out)
     s = Source(args.file)
     if s.zal is None and isinstance(s.obj, zal.ZalArchive):
-        raise SystemExit("replace in .zal archives: use `dmbmx zal replace` (DM-023)")
+        raise SystemExit("replace in .zal archives: use `dmbmx zal replace`")
     m = s.obj.texture(args.name)
     if m is None:
         names = ", ".join(t[0] for t in s.textures)

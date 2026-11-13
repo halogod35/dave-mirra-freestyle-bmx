@@ -1,4 +1,4 @@
-"""HUD / overlay fonts (miscdata.zal 0x7531/0x7532/0x7534/0x7535). Spec: docs/formats/ZAL.md 3.1 (DM-054/DM-066).
+"""HUD / overlay fonts (miscdata.zal 0x7531/0x7532/0x7534/0x7535). Spec: docs/formats/ZAL.md 3.1.
 
 ``zoveriiLoadFont`` 0x00459FC0 (zoverii.c) reads
 

@@ -1,8 +1,8 @@
 # Integrity checks in NgBMX.exe: inventory
 
-Owner: DM-012 (save) and DM-030 (everything else), SK-SAVE. Exe = the 2000-11-22 PC build, SHA-256 `97aa9077…0d09a2`.
+Exe = the 2000-11-22 PC build, SHA-256 `97aa9077…0d09a2`.
 [V] = verified by disassembly/decompilation (capstone, plus a private Ghidra 12.2 project) and/or code run over the corpus; [I] = inferred.
-Not verified in-game until play-tests DM-012-PT1 / DM-030-PT3 pass.
+Not verified in-game until the manual in-game checks `save-edit` and `integrity` pass.
 
 ## Verdict
 
@@ -19,7 +19,7 @@ All other load-time checks are **magic / version / size** checks. The table list
 | 3 | `save\SAVE.DAT` | magic `1C 51 81 2A` | none (written, never read) | n/a | n/a | V |
 | 4 | PNG in `TPNG` chunks (bikes `*bike*.zmd`, `sfx.zmd`, two `Mat._sd`) | libpng chunk CRC-32 (`png_crc_finish` inlined in each `png_handle_*`, "CRC error" 0x0069D3D0; `png_calculate_crc` 0x00508DE0 → zlib `crc32` 0x00518B20) | RenderWare PNG reader `RtPNGImageRead` 0x005068A0 creates the read struct at 0x005068DE with the default CRC policy (**no `png_set_crc_action` anywhere**) | **critical** chunk (IHDR/PLTE/IDAT/IEND): `png_error` → longjmp → reader returns NULL → `zrwTxr_CreateTextureFromMemory` 0x00497B00 asserts **"Failed to create texture"** (#8) → zrwTxr prints "Error loading texture" and continues **without the texture**. **Ancillary** chunk: warning, the chunk is dropped, the texture loads | write PNGs with any encoder, or `dmbmx integrity fix-png` (recomputes every chunk CRC in place) | V (code), I (in-game; PT3 part B) |
 | 5 | same PNG IDAT data | zlib adler32 of the zlib stream ("incorrect data check" 0x0069D1D0, compare at 0x005119C6) | `inflate` 0x005114B0, reached **only** from libpng (callers 0x00507B42, 0x005171EF, 0x00518614; `inflateInit_` only from 0x005071E6, 0x00508BBE) | libpng "Decompression error" → same as #4 | any zlib compressor | V |
-| 6 | ZAL archives | magic, read byte counts, decompressed size == table size ("ERROR - Size mismatch in decompressed data") | `zasset_ReadAssetData` 0x00480930 (assert at 0x00480B87) | assert (#8); the asset is used as decoded | write the table sizes correctly (DM-023 packer); see `docs/formats/ZAL.md` §2.4: **no checksums** | V |
+| 6 | ZAL archives | magic, read byte counts, decompressed size == table size ("ERROR - Size mismatch in decompressed data") | `zasset_ReadAssetData` 0x00480930 (assert at 0x00480B87) | assert (#8); the asset is used as decoded | write the table sizes correctly (the ZAL repacker packer); see `docs/formats/ZAL.md` §2.4: **no checksums** | V |
 | 7 | ZAL compression | method 1 = LZRW3-A (0x0049BD10), method 2 = LZO1X (0x0049C0AC) in `zcompress_Decompress` 0x0049C080 | n/a | "ZCOMPRES: Decompression failed" print | neither format carries a checksum | V |
 | 8 | (all `zAssertFail` checks) | `zAssertFail` 0x0047ED10 → handler pointer 0x0056147C = 0x00489CF0 | asserts are **live in the release build** | MessageBox "RenderWare(tm) Application Error / \*\*\*ASSERT\*\*\* File/Line/Why … Do you wish to debug?" (Yes = `DebugBreak` → crash, No = continue, Cancel = `PostQuitMessage`) | patch `assert-continue` (always "No") | V |
 | 9 | Level `.ZSD` SCFI entries (type u8 @+0, **size u32 @+4**, name @+8; 0x28 bytes) | component loaded with `zfileLoad(name, size)` 0x00485070: allocate `size`, read exactly `size` | zScene.c loader (assert string 0x00561A54), `zrwWorldFindScfi` 0x004962E0 | file **shorter** than size → read fails → assert "Scene component file not found" → level not loaded. **Longer** → silently truncated to size | `dmbmx integrity resign-zsd LEVEL.ZSD -o OUT` sets every size to the real file length. [V] all 72 corpus entries match their files | V |
@@ -62,6 +62,6 @@ All other load-time checks are **magic / version / size** checks. The table list
 
 ## Open
 
-- In-game confirmation: DM-030-PT3 (`tools/testing/playtest/make_playtest_dm030.py`). Part A: the stock exe rejects a bad-size save and the `nocrc` exe accepts it. Part B: a bike PNG with a bad IDAT CRC gives the "Failed to create texture" assert and a missing texture.
-- Question for the user (via the Director): which files did the Reddit post see fail, and how (message text or symptom)? A PNG hand-edited without fixing its CRC (#4), a `_sd` file that grew or shrank without its SCFI size updated (#9), or a ZAL entry whose sizes weren't updated (#6) all look like a "CRC check" to a modder.
+- In-game confirmation: the manual in-game check `integrity` (`tools/testing/playtest/make_playtest_integrity.py`). Part A: the stock exe rejects a bad-size save and the `nocrc` exe accepts it. Part B: a bike PNG with a bad IDAT CRC gives the "Failed to create texture" assert and a missing texture.
+- Open question: which files did the Reddit post see fail, and how (message text or symptom)? A PNG hand-edited without fixing its CRC (#4), a `_sd` file that grew or shrank without its SCFI size updated (#9), or a ZAL entry whose sizes weren't updated (#6) all look like a "CRC check" to a modder.
 - RenderWare stream version checks (#14) are not surveyed in detail.

@@ -1,7 +1,7 @@
-"""DM-060: the 3ds Max Python importer, driven by a recording mock of pymxs (3ds Max is not installed).
+"""The 3ds Max Python importer, driven by a recording mock of pymxs (3ds Max is not installed).
 For every ZMD: vertex/face/UV counts, material assignment and bitmap files, bone hierarchy, skin
 weights, part parenting, and the final world positions of every vertex (compared with dmbmx).
-DM-063: every ZMD and every level is imported with exact normals (Edit_Normals), checked by
+Every ZMD and every level is imported with exact normals (Edit_Normals), checked by
 max_checks.check_normals."""
 import math
 import sys

@@ -1,4 +1,4 @@
-"""DM-049: the RW per-sector collision-tree builder (dmbmx.formats.rwcoll.build / tree), the ports
+"""The RW per-sector collision-tree builder (dmbmx.formats.rwcoll.build / tree), the ports
 of RW's line and sphere walks, colSectorSize, and the world writer's rebuild / sector split."""
 import copy
 import random

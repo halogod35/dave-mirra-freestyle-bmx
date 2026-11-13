@@ -3,10 +3,10 @@
  * Original: C:\NgEngine\Zge\ZgeMods\zobjLight.c
  * Evidence: [V] path string referenced by 2 function(s); the others [I]: the vtable 0x00561858
  * (destroy, set position, set rotation), the global 0x00673F68, and the zrwLight function table
- * 0x00563428 that every one of them calls. Absorbs the zobjLight/zScene gap (DM-057's three
- * setters); DM-061 created 0x0048FF50/70/90, 0x0048FFF0, 0x00490140 and 0x00490160.
+ * 0x00563428 that every one of them calls. Absorbs the zobjLight/zScene gap (the NgIF pass's three
+ * setters); the ZGE object pass created 0x0048FF50/70/90, 0x0048FFF0, 0x00490140 and 0x00490160.
  * 11 functions, VA 0x0048ff50-0x00490176.
- * DM-061 (draft). Non-matching C (AD-8). Types: zobj.h. Description: docs/re/zge.md 2.4.
+ * Draft. Non-matching C (AD-8). Types: zobj.h. Description: docs/re/zge.md 2.4.
  */
 #include "decomp.h"
 #include "zobj.h"

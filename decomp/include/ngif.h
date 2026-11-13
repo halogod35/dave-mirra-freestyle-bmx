@@ -1,6 +1,6 @@
 /*
  * ngif.h - the NgIF layer (Bmx/src/com/zge/NgIF/*.c): the game's implementation of the ZGE engine
- * interface on top of the PC engine (NgEngine / ZglRw) (DM-057).
+ * interface on top of the PC engine (NgEngine / ZglRw).
  *
  *   NgApp.c        application hooks (init, per-frame, shutdown), level load, lights, loading screen
  *   NgIFfx.c       zfx particle types (spark, shard, splash, dust, poster, ripple, lightning),
@@ -10,7 +10,7 @@
  *   NgIFzactor.c   actor <-> model glue: channel -> frame binding, the arm table, bone positions
  *   NgIFzbsp.c     prop and tag collision records (NgPropCol, the edge/face lists), BSP stubs
  *   NgIFzcollide.c segment test (world + props), tag lookup, prop collision shapes and rails
- *   NgIfzmemDMM.c  movable-block heap (DM-044, zmem.h)
+ *   NgIfzmemDMM.c  movable-block heap (zmem.h)
  *   NgIFzres.c     resources: asset libraries, PLYR table, images
  *   NgIFzroller.c  level / actor creation ("zroller" = the engine's level runner), stubs, the
  *                  frame callback table and the PSX memory-card stubs
@@ -395,7 +395,7 @@ extern void     (__cdecl *g_zglMatSetTexture)(void *mat, void *tex, int arg); /*
 extern void     (__cdecl *g_zrwModelSetFlags)(void *model, uint32_t set, uint32_t clear); /* 0x00560ED8 -> 0x004888C0 */
 extern void    *(__cdecl *g_zglModelFindMaterial)(void *model, uint32_t hash); /* 0x00560EE8 -> 0x00488BD0 */
 extern void     (__cdecl *g_zglModelSetTint)(void *model, const void *rgba);   /* 0x00560EF4 -> 0x00488CA0 */
-extern int      (__cdecl *g_pfnDebugPrintAt)(int16_t x, int16_t y, const char *fmt, ...); /* 0x00560038 -> zdebugPrint (DM-064: was (x, y, colour, text)) */
+extern int      (__cdecl *g_pfnDebugPrintAt)(int16_t x, int16_t y, const char *fmt, ...); /* 0x00560038 -> zdebugPrint (was (x, y, colour, text)) */
 
 /* "not implemented" stubs: MissingZGE.c, NgIFzbsp.c, NgIFzcollide.c, NgIFzroller.c print
  * "%s %d %s\n" with __FILE__, __LINE__ and a description (0x0055BAB8). */

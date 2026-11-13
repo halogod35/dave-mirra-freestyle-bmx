@@ -8,9 +8,9 @@
  *           names "spark", "dust", "shard", "skid", "splash", "ripple" and fx.c's own path string),
  *           and line 0x42F needs about a thousand lines before fxPsxCreateAt.
  * 21 functions, 3074 bytes, VA 0x00408960-0x00409980.
- * DM-052 (draft). Non-matching C (AD-8). Types: fx.h. Description: docs/re/props-replay-fx.md.
+ * Draft. Non-matching C (AD-8). Types: fx.h. Description: docs/re/props-replay-fx.md.
  *
- * DM-052 took in the contrler/fx and fx/game gaps (11 functions) and created eight functions Ghidra
+ * The prop/replay/fx pass took in the contrler/fx and fx/game gaps (11 functions) and created eight functions Ghidra
  * had missed (decomp/symbols/symbols.csv rows): fxPsxFuncNop1/2 and fxPsxFuncCreate (the zfxRegisterFuncTable
  * table 0x00554718), fxDestroyAll / fxDestroy / fxPuff (only ILT thunks, never called),
  * fxPsxOnEvent / fxPsxOnSpawn (hooks fxInit stores in 0x005F34B4 / 0x005F34B8).
@@ -51,7 +51,7 @@ RwV3d      g_fxSkidOrigin;              /* 0x0056B6D0 (0, 0, 0) */
 void      *const g_fxPsxFuncs[3] = {    /* 0x00554718 zfxRegisterFuncTable */
     (void *)fxPsxFuncCreate, (void *)fxPsxFuncNop1, (void *)fxPsxFuncNop2
 };
-/* initialised data of the exe, not reproduced here (tests/test_decomp_dm052.py reads them back): */
+/* initialised data of the exe, not reproduced here (tests/test_decomp_prop_replay_fx.py reads them back): */
 extern uint8_t      g_fxCollectFlash[20];   /* 0x00554724 zfxFlash parameters (00 FB 00 04 00 FC 00 03 ...) */
 extern uint8_t      g_fxPuffEffect[32];     /* 0x00554738 zfxCreate block, position at +0x0C */
 extern const FxBodyPoint g_fxBodyPoints[42];/* 0x00554798 */

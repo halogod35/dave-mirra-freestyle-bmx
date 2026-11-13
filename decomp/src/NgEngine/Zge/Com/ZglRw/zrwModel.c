@@ -4,9 +4,9 @@
  * Evidence: [V] path string 0x00560F1C (asserts of zrwModelInit 0x2D1, zrwModelGetMaterial 0x5F0);
  *           the model driver table 0x00560E78 (slots 0, 1, 8-31 point here); [I] the rest by link
  *           order, the globals 0x006722E8-0x00672303 and the RpClump plugin offset 0x00560E70.
- * 51 functions, VA 0x00487AD0-0x00488D2B (DM-059 created 18; zrwModelFindDefEntry 0x00487AD0 and
+ * 51 functions, VA 0x00487AD0-0x00488D2B (18 new functions; zrwModelFindDefEntry 0x00487AD0 and
  * zrwModelSetColour / ApplyColour 0x00488CA0 / 0x00488CC0 came from the gap files on both sides).
- * DM-059 (draft). Non-matching C (AD-8). Types: zglrw.h. Description: docs/re/zrw.md 2.
+ * Draft. Non-matching C (AD-8). Types: zglrw.h. Description: docs/re/zrw.md 2.
  *
  * Coordinates: the engine (ZGE) works in its own units with y and z pointing the other way; the RW
  * world position of a ZGE point p is (p.x * s + o.x, o.y - p.y * s, o.z - p.z * s) with
@@ -56,7 +56,7 @@ static void zrwModelMatrixIdentity(RwMatrix *m)
 
 /* ------------------------------------------------------------------ functions */
 
-/* VA 0x00487ad0, 66 bytes, [I] DM-059 (from gap_zobj__zrwModel), status draft
+/* VA 0x00487ad0, 66 bytes, [I] (from gap_zobj__zrwModel), status draft
  * The MDEF entry (name, id) with this id, NULL if none. */
 ZglModelDefEntry *zrwModelFindDefEntry(ZglModel *model, uint32_t id)
 {
@@ -67,21 +67,21 @@ ZglModelDefEntry *zrwModelFindDefEntry(ZglModel *model, uint32_t id)
     return NULL;
 }
 
-/* VA 0x00487b20, 21 bytes, [I] DM-059 created, status draft (App_Open) */
+/* VA 0x00487b20, 21 bytes, [I] new function, status draft (App_Open) */
 void zrwModelOpen(void)
 {
     s_zrwModel.rot = RwMatrixCreate();
     s_zrwModel.tmp = RwMatrixCreate();
 }
 
-/* VA 0x00487b40, 27 bytes, [I] DM-059 created, status draft (App_Open's shutdown) */
+/* VA 0x00487b40, 27 bytes, [I] new function, status draft (App_Open's shutdown) */
 void zrwModelClose(void)
 {
     RwMatrixDestroy(s_zrwModel.rot);
     RwMatrixDestroy(s_zrwModel.tmp);
 }
 
-/* VA 0x00487b60, 34 bytes, [I] DM-059 created, status draft
+/* VA 0x00487b60, 34 bytes, [I] new function, status draft
  * RpClumpForAllAtomics callback: flags = flags & mask[0] | mask[1]; bumps the atomic's +0x14. */
 void *zrwModelAtomicFlagsCB(void *atomic, uint32_t *mask)
 {
@@ -100,7 +100,7 @@ void zrwModelSetAtomicFlags(void *clump, uint32_t clear, uint32_t set)
     RpClumpForAllAtomics(clump, (void *)zrwModelAtomicFlagsCB, mask);
 }
 
-/* VA 0x00487bc0, 43 bytes, [I] DM-059 created, status draft (geometry flags callback) */
+/* VA 0x00487bc0, 43 bytes, [I] new function, status draft (geometry flags callback) */
 void *zrwModelGeometryFlagsCB(void *atomic, uint32_t *mask)
 {
     void *geom = *(void **)((uint8_t *)atomic + 0x1C);
@@ -148,7 +148,7 @@ void zrwModelSetCollision(ZglModel *model, int on)
         zrwModelClumpInWorld(model->colClump, on);
 }
 
-/* VA 0x00487d90, 22 bytes, [I] DM-059 created, status draft (RpClump plugin constructor) */
+/* VA 0x00487d90, 22 bytes, [I] new function, status draft (RpClump plugin constructor) */
 void *zrwModelClumpPluginCtor(void *clump, int offset)
 {
     (void)offset;
@@ -157,7 +157,7 @@ void *zrwModelClumpPluginCtor(void *clump, int offset)
     return clump;
 }
 
-/* VA 0x00487db0, 5 bytes, [I] DM-059 created, status draft (destructor) */
+/* VA 0x00487db0, 5 bytes, [I] new function, status draft (destructor) */
 void *zrwModelClumpPluginDtor(void *clump)
 {
     return clump;
@@ -172,7 +172,7 @@ int zrwModelSetClumpOwner(void *clump, ZglModel *model)
     return 1;
 }
 
-/* VA 0x00487de0, 20 bytes, [I] DM-059 created, status draft (no caller found) */
+/* VA 0x00487de0, 20 bytes, [I] new function, status draft (no caller found) */
 ZglModel *zrwModelGetClumpOwner(void *clump)
 {
     if (g_zrwModelPluginOffset < 1)
@@ -180,7 +180,7 @@ ZglModel *zrwModelGetClumpOwner(void *clump)
     return *(ZglModel **)((uint8_t *)clump + g_zrwModelPluginOffset);
 }
 
-/* VA 0x00487e00, 22 bytes, [I] DM-059 created, status draft (second plugin: never registered) */
+/* VA 0x00487e00, 22 bytes, [I] new function, status draft (second plugin: never registered) */
 void *zrwModelPlugin2Ctor(void *obj, int offset)
 {
     (void)offset;
@@ -189,13 +189,13 @@ void *zrwModelPlugin2Ctor(void *obj, int offset)
     return obj;
 }
 
-/* VA 0x00487e20, 5 bytes, [I] DM-059 created, status draft */
+/* VA 0x00487e20, 5 bytes, [I] new function, status draft */
 void *zrwModelPlugin2Dtor(void *obj)
 {
     return obj;
 }
 
-/* VA 0x00487e30, 29 bytes, [I] DM-059 created, status draft */
+/* VA 0x00487e30, 29 bytes, [I] new function, status draft */
 int zrwModelPlugin2Set(void *obj, void *value)
 {
     if (g_zrwModelPlugin2Offset < 1)
@@ -204,7 +204,7 @@ int zrwModelPlugin2Set(void *obj, void *value)
     return 1;
 }
 
-/* VA 0x00487e50, 20 bytes, [I] DM-059 created, status draft */
+/* VA 0x00487e50, 20 bytes, [I] new function, status draft */
 void *zrwModelPlugin2Get(void *obj)
 {
     if (g_zrwModelPlugin2Offset < 1)
@@ -291,7 +291,7 @@ static void zrwModelPoseParts(ZglModel *model)
     }
 }
 
-/* VA 0x00488110, 126 bytes, [I] DM-059 created, status draft (no caller found; inlined in Update) */
+/* VA 0x00488110, 126 bytes, [I] new function, status draft (no caller found; inlined in Update) */
 void zrwModelUpdateParts(ZglModel *model)
 {
     zrwModelPoseParts(model);
@@ -312,7 +312,7 @@ int zrwModelInit(void)
     return 1;
 }
 
-/* VA 0x00488200, 71 bytes, [I] DM-059 created, status draft (slot 1) */
+/* VA 0x00488200, 71 bytes, [I] new function, status draft (slot 1) */
 int zrwModelShutdown(void)
 {
     if (s_zrwModel.initialized) {
@@ -412,7 +412,7 @@ void zrwModelGetPartMatrix(ZglModel *model, ZglModelPart *part, float *out, int 
     zrwZglMatrixFromRw(out, (flags & 1) ? RwFrameGetLTM(part->frame) : RwFrameGetMatrix(part->frame));
 }
 
-/* VA 0x004884f0, 8 bytes, [I] DM-059 created, status draft (slot 17) */
+/* VA 0x004884f0, 8 bytes, [I] new function, status draft (slot 17) */
 ZglModelPart *zrwModelGetPartParent(ZglModel *model, ZglModelPart *part)
 {
     (void)model;
@@ -621,7 +621,7 @@ ZglMaterial *zrwModelGetMaterial(ZglModel *model, uint32_t index)
     return NULL;
 }
 
-/* VA 0x00488ca0, 31 bytes, [I] DM-059 (from gap_zrwModel__zobjModel), status draft (slot 31)
+/* VA 0x00488ca0, 31 bytes, [I] (from gap_zrwModel__zobjModel), status draft (slot 31)
  * Model tint: kept in model->colour and applied by zrwModelRenderColouredCB at draw time. */
 void zrwModelSetColour(ZglModel *model, const RwRGBA *colour)
 {
@@ -629,7 +629,7 @@ void zrwModelSetColour(ZglModel *model, const RwRGBA *colour)
     zrwModelForEachMaterial(model, (void *)zrwModelRenderColouredCB);
 }
 
-/* VA 0x00488cc0, 108 bytes, [I] DM-059 (from gap_zrwModel__zobjModel), status draft
+/* VA 0x00488cc0, 108 bytes, [I] (from gap_zrwModel__zobjModel), status draft
  * rpGEOMETRYMODULATEMATERIALCOLOR (0x40) on, and every material of the first geometry gets the
  * colour. */
 void zrwModelApplyColour(ZglModel *model, const RwRGBA *colour)

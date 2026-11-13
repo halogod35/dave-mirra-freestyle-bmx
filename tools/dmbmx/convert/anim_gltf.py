@@ -1,13 +1,13 @@
-"""Add motion.zal animations to a dmbmx .glb (DM-016). Used by ``dmbmx export --anims``.
+"""Add motion.zal animations to a dmbmx .glb. Used by ``dmbmx export --anims``.
 
 For each motion, every frame node whose name is a motion channel (rider: Hips..RightFoot; bike:
 Hipsdeck..SeatGrip) gets a LINEAR rotation track: the game's per-frame local rotation
 (:func:`dmbmx.formats.motion.channel_rotation`: Euler -> quaternion, the arm table, and the engine ->
-model conversion (x, -y, -z, w) of zrwModelQuatToRwMatrix 0x00487E70, DM-019),
+model conversion (x, -y, -z, w) of zrwModelQuatToRwMatrix 0x00487E70),
 which **replaces** the frame's bind rotation (NgIFzactor_004654b0 sets the frame quaternion; the
 translation stays the bind translation). Animated nodes are converted from ``matrix`` to TRS.
 
-The rider's Hips channel already stands the skeleton up in a Y-up world, so the DM-020 upright
+The rider's Hips channel already stands the skeleton up in a Y-up world, so the exporter's upright
 root rotation (Rx(-90)) is removed when rider tracks are added (docs/formats/ANIM.md section 5).
 Root motion (actor translation) is not exported: its units are world units, not model units.
 """

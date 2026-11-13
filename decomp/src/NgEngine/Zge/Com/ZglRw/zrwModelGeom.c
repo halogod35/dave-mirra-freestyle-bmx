@@ -3,8 +3,8 @@
  * Original: C:\NgEngine\Zge\Com\ZglRw\zrwModelGeom.c
  * Evidence: [V] path string 0x00562F74 (asserts of Init 0x4E, NotCoded 0x86, Lock 0xBA, Unlock 0xDC);
  *           model driver slots 32-38 (0x00560EF8-0x00560F10).
- * 9 functions, VA 0x0049DF90-0x0049E1EA (DM-059 created 8).
- * DM-059 (draft). Non-matching C (AD-8). Types: zglrw.h. Description: docs/re/zrw.md 2.3.
+ * 9 functions, VA 0x0049DF90-0x0049E1EA (8 new functions).
+ * Draft. Non-matching C (AD-8). Types: zglrw.h. Description: docs/re/zrw.md 2.3.
  *
  * Vertex access to a model's LOD-0 geometry (morph target 0) for deforming effects. Vertex numbers
  * are 1-based; positions convert between RW and ZGE units.
@@ -27,7 +27,7 @@ void zrwModelGeomInit(void)
     s_zrwModelGeomInitialized = 1;
 }
 
-/* VA 0x0049dfc0, 25 bytes, [I] DM-059 created, status draft (no caller found) */
+/* VA 0x0049dfc0, 25 bytes, [I] new function, status draft (no caller found) */
 int zrwModelGeomShutdown(void)
 {
     if (s_zrwModelGeomInitialized)
@@ -35,7 +35,7 @@ int zrwModelGeomShutdown(void)
     return 1;
 }
 
-/* VA 0x0049dfe0, 15 bytes, [I] DM-059 created, status draft (model slot 32) */
+/* VA 0x0049dfe0, 15 bytes, [I] new function, status draft (model slot 32) */
 void zrwModelSetUpdateCallback(ZglModel *model, void (__cdecl *fn)(ZglModel *))
 {
     model->updateCB = fn;
@@ -48,7 +48,7 @@ int zrwModelGeomNotCoded(void)
     return 0;
 }
 
-/* VA 0x0049e010, 6 bytes, [I] DM-059 created, status draft (model slot 34: index -> vertex number) */
+/* VA 0x0049e010, 6 bytes, [I] new function, status draft (model slot 34: index -> vertex number) */
 int zrwModelGeomVertexNumber(int index)
 {
     return index + 1;
@@ -81,7 +81,7 @@ int zrwModelGeomUnlock(ZglModel *model)
     return 1;
 }
 
-/* VA 0x0049e110, 104 bytes, [I] DM-059 created, status draft (model slot 37: vertex n in ZGE units) */
+/* VA 0x0049e110, 104 bytes, [I] new function, status draft (model slot 37: vertex n in ZGE units) */
 int zrwModelGeomGetVertex(ZglModel *model, int n, float *out)
 {
     const RwV3d *v = &model->def->lockedVerts[n - 1];
@@ -91,7 +91,7 @@ int zrwModelGeomGetVertex(ZglModel *model, int n, float *out)
     return 1;
 }
 
-/* VA 0x0049e180, 104 bytes, [I] DM-059 created, status draft (model slot 38) */
+/* VA 0x0049e180, 104 bytes, [I] new function, status draft (model slot 38) */
 int zrwModelGeomSetVertex(ZglModel *model, int n, const float *in)
 {
     RwV3d *v = &model->def->lockedVerts[n - 1];

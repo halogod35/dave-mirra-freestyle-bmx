@@ -1,4 +1,4 @@
-"""DM-018: rider + bike combo glTF export (structure, counts, placement, wheels, CLI, Blender)."""
+"""Rider + bike combo glTF export (structure, counts, placement, wheels, CLI, Blender)."""
 import math
 import os
 import subprocess
@@ -123,7 +123,7 @@ def test_blender_combo_check(tmp_path):
 
 
 def test_offsets_engine_fill_off_pedal_frames(models):
-    """DM-047: off-pedal frames follow the game's placement F(-bike translation) / 100 + the clip's constant."""
+    """Off-pedal frames follow the game's placement F(-bike translation) / 100 + the clip's constant."""
     r, b, rd, bd, bank = models
     mo = bank.motion(59)
     info = {}

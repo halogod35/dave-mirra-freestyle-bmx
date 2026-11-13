@@ -1,6 +1,6 @@
-"""Rider + bike in one animated glTF (DM-018). CLI: ``dmbmx export-combo``.
+"""Rider + bike in one animated glTF. CLI: ``dmbmx export-combo``.
 
-Both models are exported with DM-020's exporter, given their motion tracks by DM-016/017's
+Both models are exported with the ZMD exporter, given their motion tracks by the motion
 :mod:`dmbmx.convert.anim_gltf`, then merged into one .glb:
 
     scene
@@ -10,12 +10,12 @@ Both models are exported with DM-020's exporter, given their motion tracks by DM
                                  + a translation track: the rider is placed on the bike every frame
 
 Placement: per frame, the rider root is translated so that the mid-point of its feet frames sits on
-the mid-point of the bike's pedal frames (DM-017, ``tools/research/arm_pose_check.py``). [V] median foot-to-pedal
-error 0.068. Frames where the feet leave the pedals (tricks) follow the game's own placement (DM-047,
+the mid-point of the bike's pedal frames (``tools/research/arm_pose_check.py``). [V] median foot-to-pedal
+error 0.068. Frames where the feet leave the pedals (tricks) follow the game's own placement (
 :func:`engine_offsets`): the clip's bike-section translation b is the bike's offset from the rider in
 engine (ZGE) units, 100 x model units with Y and Z negated, so the rider root sits at F(-b) / 100 from
 the bike root plus a constant, calibrated per clip on its on-pedal frames ([V] median 0.023 over all
-clips; ENGINE_OFFSET when a clip has no such frame). ``fill="interpolate"`` keeps DM-018's linear
+clips; ENGINE_OFFSET when a clip has no such frame). ``fill="interpolate"`` keeps the earlier linear
 interpolation between on-pedal frames.
 
 Wheels: the clips have no wheel channels. With ``spin_wheels`` the BackWheel/FrontWheel frames get a
@@ -49,12 +49,12 @@ ENGINE_SCALE = 0.01                # [V] ZGE (engine) units = 100 x RW/model uni
 ENGINE_OFFSET = (0.007, -0.251, 0.044)  # [V] fit: DaveMirra1 on DMbike01, median over 1,246 on-pedal frames
 DEFAULT_OFFSET = (0.0, 0.6, 0.0)   # [V] typical feet-on-pedals placement (rider root ~0.6 above Hipsdeck)
 FOOT_TOLERANCE = 0.15              # a frame whose feet are farther than this from the pedals is "off the bike"
-                                   # (DM-019: with the engine F q F the feet sit 0.09-0.12 from the pedal frames
-                                   # while pedalling, the feet ~0.37 apart vs pedals ~0.2; was 0.12 under DM-017)
+                                   # (with the engine F q F the feet sit 0.09-0.12 from the pedal frames
+                                   # while pedalling, the feet ~0.37 apart vs pedals ~0.2; was 0.12 with the legacy arm table)
 
 
 def engine_offsets(motion, offset=ENGINE_OFFSET):
-    """Per frame: the rider root relative to the bike root as the game places them (DM-047): the bike
+    """Per frame: the rider root relative to the bike root as the game places them: the bike
     section's translation b (ZGE units; physics places the rider actor at bike - b, zactorGetBikeOffset 0x00474DE0) in
     model space, F(-b) * ENGINE_SCALE with F = diag(1, -1, -1), plus a constant ``offset`` (the rider
     model's root vs the actor origin)."""
@@ -182,7 +182,7 @@ def merge_glbs(parts, root_name="combo", root_extras=None):
     arrays = ("buffers", "bufferViews", "accessors", "images", "samplers", "textures", "materials",
               "meshes", "skins", "nodes", "animations")
     out = {k: [] for k in arrays}
-    out["asset"] = {"version": "2.0", "generator": "dmbmx combo (DM-018)"}
+    out["asset"] = {"version": "2.0", "generator": "dmbmx combo"}
     out_bin = bytearray()
     roots = []
     used_ext = set()

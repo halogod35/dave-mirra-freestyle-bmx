@@ -7,9 +7,9 @@
  *           alphabetical order: guiinput, guimain, guisfile, guitoggl). The help-system stubs
  *           ("GUIMAIN: Failed to init help system") suggest a stubbed-out help module.
  * 15 functions, VA 0x00436520-0x00436c05.
- * DM-056 (draft). Non-matching C (AD-8). Types: gui.h. Notes: docs/re/frontend.md.
+ * Draft. Non-matching C (AD-8). Types: gui.h. Notes: docs/re/frontend.md.
  *
- * 6 of the 15 were not functions in the Ghidra project (DM-056 creates them in decomp/symbols/symbols.csv):
+ * 6 of the 15 were not functions in the Ghidra project (the front-end pass creates them in decomp/symbols/symbols.csv):
  * they are reached through the /INCREMENTAL thunk table only.
  */
 #include "decomp.h"

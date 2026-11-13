@@ -5,9 +5,9 @@
  *           ChunkTBMP, Init, Release, SetFilterMode, the load buffer); the texture driver table
  *           0x005623F0 (15 slots, all in this file); [I] the rest by link order and globals
  *           0x00674290-0x006746BF.
- * 46 functions, VA 0x00497780-0x00498D71 (DM-059 created 17: the table slots reached only through
+ * 46 functions, VA 0x00497780-0x00498D71 (17 new functions: the table slots reached only through
  * 0x005623F0, the paletted / procedural texture constructors and the RW texture plugin).
- * DM-059 (draft). Non-matching C (AD-8). Types: zglrw.h. Description: docs/re/zrw.md 3,
+ * Draft. Non-matching C (AD-8). Types: zglrw.h. Description: docs/re/zrw.md 3,
  * docs/formats/TEXTURE.md 3.
  *
  * ZGL textures wrap RenderWare textures. Images arrive as complete .bmp / .png files (TBMP / TPNG
@@ -48,7 +48,7 @@
 #define ZRWTXR_PLUGIN_ID 0xFF01    /* RwTextureRegisterPlugin id of the owner pointer */
 
 /* ------------------------------------------------------------------ other modules */
-/* the in-memory file the RW image readers read from (zrwRamDisk.c, DM-061) */
+/* the in-memory file the RW image readers read from (zrwRamDisk.c) */
 void  zrwRamDiskBegin(void);                                   /* 0x004A3500 install the memory file system */
 void  zrwRamDiskAddFile(const void *buf, int len, const char *ext); /* 0x004A3580 add a memory file */
 void  zrwRamDiskEnd(void);                                   /* 0x004A35C0 restore the RW file system */
@@ -163,7 +163,7 @@ RwImage *zrwTxr_ReadDds(const char *name)
     return NULL;
 }
 
-/* VA 0x00497a90, 22 bytes, [I] DM-059 created, status draft
+/* VA 0x00497a90, 22 bytes, [I] new function, status draft
  * RwTexture plugin constructor: owner = NULL. */
 void *zrwTxrPluginConstructor(void *rwTexture, int offset)
 {
@@ -173,13 +173,13 @@ void *zrwTxrPluginConstructor(void *rwTexture, int offset)
     return rwTexture;  /* [I] the code returns nothing useful; RW only tests non-NULL */
 }
 
-/* VA 0x00497ab0, 5 bytes, [I] DM-059 created, status draft (plugin destructor: nothing to free) */
+/* VA 0x00497ab0, 5 bytes, [I] new function, status draft (plugin destructor: nothing to free) */
 void *zrwTxrPluginDestructor(void *rwTexture)
 {
     return rwTexture;
 }
 
-/* VA 0x00497ac0, 29 bytes, [I] DM-059 created, status draft (no caller found) */
+/* VA 0x00497ac0, 29 bytes, [I] new function, status draft (no caller found) */
 int zrwTxrSetOwnerOfRwTexture(void *rwTexture, void *owner)
 {
     if (g_zrwTxrPluginOffset < 1)
@@ -298,7 +298,7 @@ ZglTexture *zrwTxr_CreateTextureFromMemory(void *buf, int len, const char *name,
     return tex;
 }
 
-/* VA 0x00497db0, 616 bytes, [I] DM-059 created, status draft
+/* VA 0x00497db0, 616 bytes, [I] new function, status draft
  * An 8-bit paletted texture from raw pixels + a 256-entry RGBA palette (0x300 bytes are copied:
  * [I] the caller passes RGB triplets padded to RGBA?). If the driver has no PAL8 raster it falls back
  * to a 16-bit 1555 raster and converts every pixel, 0x7C1F (magenta) -> 0 (transparent), the
@@ -370,7 +370,7 @@ fail:
     return NULL;
 }
 
-/* VA 0x00498020, 231 bytes, [I] DM-059 created, status draft
+/* VA 0x00498020, 231 bytes, [I] new function, status draft
  * An empty texture raster of the given size and depth (zrwMatCreateProcedural). */
 ZglTexture *zrwTxrCreateProceduralTexture(int width, int height, int depth, const char *name)
 {
@@ -407,19 +407,19 @@ fail:
     return NULL;
 }
 
-/* VA 0x00498110, 27 bytes, [I] DM-059 created, status draft (no caller found) */
+/* VA 0x00498110, 27 bytes, [I] new function, status draft (no caller found) */
 void zrwTxrLock(ZglTexture *tex)
 {
     RwRasterLock(RwTextureGetRaster(tex->rwTexture), 0, 1);
 }
 
-/* VA 0x00498130, 23 bytes, [I] DM-059 created, status draft (no caller found) */
+/* VA 0x00498130, 23 bytes, [I] new function, status draft (no caller found) */
 void zrwTxrUnlock(ZglTexture *tex)
 {
     RwRasterUnlock(RwTextureGetRaster(tex->rwTexture));
 }
 
-/* VA 0x00498150, 68 bytes, [I] DM-059 created, status draft (no caller found)
+/* VA 0x00498150, 68 bytes, [I] new function, status draft (no caller found)
  * Fills a ZGL texture from an existing RwTexture. */
 int zrwTxrWrapRwTexture(void *rwTexture, ZglTexture *tex, int width, int height, int depth)
 {
@@ -433,7 +433,7 @@ int zrwTxrWrapRwTexture(void *rwTexture, ZglTexture *tex, int width, int height,
     return 1;
 }
 
-/* VA 0x004981a0, 78 bytes, [I] DM-059 created, status draft
+/* VA 0x004981a0, 78 bytes, [I] new function, status draft
  * RwTextureSetReadCallBack hook: the old reader, then the engine's filtering and addressing. */
 void *zrwTxrReadCallBack(const char *name, const char *mask)
 {
@@ -501,7 +501,7 @@ int zrwTxr_ChunkTDDS(void *iff)
     return 1;
 }
 
-/* VA 0x00498330, 184 bytes, [I] DM-059 created, status draft (no caller found)
+/* VA 0x00498330, 184 bytes, [I] new function, status draft (no caller found)
  * Pixel / palette entry `index` of a locked raster buffer -> RwRGBA (RwRGBASetFromPixel). */
 void zrwTxrPixelToRGBA(const void *pixels, uint32_t format, int index, RwRGBA *out)
 {
@@ -578,14 +578,14 @@ static void zrwTxrSetupDictionary(void)
     }
 }
 
-/* VA 0x004985c0, 122 bytes, [I] DM-059 created, status draft
+/* VA 0x004985c0, 122 bytes, [I] new function, status draft
  * A fresh texture dictionary + the image readers (App_Open, after RwEngineStart). */
 void zrwTxrOpenDictionary(void)
 {
     zrwTxrSetupDictionary();
 }
 
-/* VA 0x00498640, 32 bytes, [I] DM-059 created, status draft (App_Open's shutdown path) */
+/* VA 0x00498640, 32 bytes, [I] new function, status draft (App_Open's shutdown path) */
 void zrwTxrCloseDictionary(void)
 {
     RwTexDictionaryDestroy(g_zrwTxr.texDict);
@@ -613,7 +613,7 @@ int zrwTxr_Init(void)
     return 1;
 }
 
-/* VA 0x00498790, 68 bytes, [I] DM-059 created, status draft (texture driver slot 1) */
+/* VA 0x00498790, 68 bytes, [I] new function, status draft (texture driver slot 1) */
 int zrwTxrShutdown(void)
 {
     if (g_zrwTxr.initialized) {
@@ -624,7 +624,7 @@ int zrwTxrShutdown(void)
     return 1;
 }
 
-/* VA 0x004987e0, 41 bytes, [I] DM-059 created, status draft (texture driver slot 2: empty object) */
+/* VA 0x004987e0, 41 bytes, [I] new function, status draft (texture driver slot 2: empty object) */
 ZglTexture *zrwTxrCreate(void)
 {
     return zrwTxrNewObject();
@@ -648,7 +648,7 @@ int32_t zrwTxrGetWidth(ZglTexture *tex) { return tex->width; }
 /* VA 0x00498880, 8 bytes, [I] callers, status draft (slot 6) */
 int32_t zrwTxrGetHeight(ZglTexture *tex) { return tex->height; }
 
-/* VA 0x00498890, 8 bytes, [I] DM-059 created, status draft (slot 7) */
+/* VA 0x00498890, 8 bytes, [I] new function, status draft (slot 7) */
 int32_t zrwTxrGetDepth(ZglTexture *tex) { return tex->depth; }
 
 /* VA 0x004988a0, 8 bytes, [I] callers, status draft (slot 8) */
@@ -657,7 +657,7 @@ const char *zrwTxrGetName(ZglTexture *tex) { return tex->name; }
 /* VA 0x004988b0, 8 bytes, [I] callers, status draft (slot 9) */
 uint32_t zrwTxrGetNameHash(ZglTexture *tex) { return tex->nameHash; }
 
-/* VA 0x004988c0, 344 bytes, [I] DM-059 created, status draft (slot 10)
+/* VA 0x004988c0, 344 bytes, [I] new function, status draft (slot 10)
  * The palette of a 4/8-bit texture as RwRGBA[1 << depth] in g_zrwTxr.palette (NULL if not
  * paletted). */
 RwRGBA *zrwTxrGetPalette(ZglTexture *tex)
@@ -748,7 +748,7 @@ void zrwTxrFlush(void)
 {
 }
 
-/* VA 0x00498ba0, 46 bytes, [I] DM-059 created, status draft (no caller found)
+/* VA 0x00498ba0, 46 bytes, [I] new function, status draft (no caller found)
  * ZGL filter mode 0..5 -> rwFILTERNEAREST..rwFILTERLINEARMIPLINEAR. */
 void zrwTxrSetFilterMode(ZglTexture *tex, int mode)
 {
@@ -758,7 +758,7 @@ void zrwTxrSetFilterMode(ZglTexture *tex, int mode)
         zAssertFail("Unknown mode", ZRWTXR_SRC, 0x6D6, 0);
 }
 
-/* VA 0x00498c70, 52 bytes, [I] DM-059 created, status draft (slot 13; follows the jump table of
+/* VA 0x00498c70, 52 bytes, [I] new function, status draft (slot 13; follows the jump table of
  * zrwTxrSetFilterMode) */
 int zrwTxrPrintInfo(ZglTexture *tex)
 {
@@ -768,7 +768,7 @@ int zrwTxrPrintInfo(ZglTexture *tex)
     return 1;
 }
 
-/* VA 0x00498cb0, 62 bytes, [I] DM-059 created, status draft (slot 14) */
+/* VA 0x00498cb0, 62 bytes, [I] new function, status draft (slot 14) */
 void zrwTxrPrintAll(void)
 {
     g_pfnDebugPrintf("ZGLTEXTURE: Objects in use:%d\n", zmemFreeListGetUsedCount(g_zrwTxr.pool));
@@ -777,7 +777,7 @@ void zrwTxrPrintAll(void)
     g_pfnDebugIndent(-1);
 }
 
-/* VA 0x00498cf0, 74 bytes, [V] direct, status draft (no caller found, DM-014) */
+/* VA 0x00498cf0, 74 bytes, [V] direct, status draft (no caller found) */
 void zrwTxr_SetLoadBuffer(void *buf, uint32_t size)
 {
     if (g_zrwTxr.loadBuffer != NULL)
@@ -786,7 +786,7 @@ void zrwTxr_SetLoadBuffer(void *buf, uint32_t size)
     g_zrwTxr.loadBufferSize = size;
 }
 
-/* VA 0x00498d40, 50 bytes, [I] DM-059 created, status draft (no caller found) */
+/* VA 0x00498d40, 50 bytes, [I] new function, status draft (no caller found) */
 void zrwTxrClearLoadBuffer(void)
 {
     if (g_zrwTxr.loadBuffer == NULL)

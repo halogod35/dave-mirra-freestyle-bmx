@@ -3,14 +3,14 @@
  * Original: C:\NgEngine\Zge\ZgeMods\zscnpts.c
  * Evidence: [V] path string at 0x00561d64 (asserts in zscnptsLoad); the rest [I]: they share the
  * globals 0x00674000-0x00674017 (right after zScene.c's 0x00673F70-0x00673FFB) and the 0x50-byte
- * point pool. DM-040 had put 0x00491D80-0x00491EE0 in zScene.c; they are this file's (DM-043).
+ * point pool. The skeleton had put 0x00491D80-0x00491EE0 in zScene.c; they are this file's.
  * 11 functions, VA 0x00491d80-0x004921af.
- * DM-043 (draft). Non-matching C (AD-8). Types: decomp/include/zscnpts.h.
+ * Draft. Non-matching C (AD-8). Types: decomp/include/zscnpts.h.
  * Format: docs/formats/LEVEL.md 5.3; Python reference tools/dmbmx/formats/level.py SceneSd (agrees).
  */
 #include "decomp.h"
 
-/* other modules (current names until their cards land) */
+/* other modules (current names until they are decompiled) */
 int      zrwZglGetValue(int what, void *out, int arg);                 /* zgl getter; 1 = world scale */
 void    *zrwZglAddCallback(int list, int (__cdecl *fn)(void), void *arg, int on); /* add render callback */
 void     zrwZglRemoveCallback(void *task);                                   /* remove render callback */

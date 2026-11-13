@@ -1,4 +1,4 @@
-"""DM-013: level formats on synthetic data (no game files needed)."""
+"""Level formats on synthetic data (no game files needed)."""
 import struct
 
 import pytest

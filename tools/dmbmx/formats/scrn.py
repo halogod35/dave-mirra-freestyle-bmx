@@ -1,4 +1,4 @@
-"""GUI screen groups and SCRN screens (Intwrap.zal group 0). Spec: docs/formats/ZAL.md 3.2 (DM-056).
+"""GUI screen groups and SCRN screens (Intwrap.zal group 0). Spec: docs/formats/ZAL.md 3.2.
 
 The front end's art library ("intart.zal"; on PC the nested ZAL in Intwrap.zal group 0) holds 35
 zprim *groups* (ids 0xE000-0xE022). A group is

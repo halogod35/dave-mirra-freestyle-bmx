@@ -1,5 +1,5 @@
 /*
- * fx.h - game particle effects (Bmx/Src/com/action/fx.c) (DM-052).
+ * fx.h - game particle effects (Bmx/Src/com/action/fx.c).
  *
  * On the PC the effects go through the zfx registry (zstring.h: zfxRegisterSpawner /
  * zfxCallSpawner): NgIFfx's init (0x0045F780) registers the particle types "lightning", "spark",

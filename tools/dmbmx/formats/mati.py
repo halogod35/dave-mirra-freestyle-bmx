@@ -1,4 +1,4 @@
-"""MATI material/texture chunks, shared by ZMD models and level ``Mat._sd`` files (DM-014).
+"""MATI material/texture chunks, shared by ZMD models and level ``Mat._sd`` files.
 
 Spec: docs/formats/TEXTURE.md. Grammar::
 

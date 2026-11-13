@@ -1,6 +1,6 @@
 /*
  * ztaginf.h - NgEngine/Zge/ZgeMods/ztaginf.c: tagged collision faces (Tag._sd) and their kd-tree
- * (DM-043). File format: docs/formats/LEVEL.md section 6.
+ *. File format: docs/formats/LEVEL.md section 6.
  *
  * ztaginfLoad 0x0048DAE0 turns every TAGF record into a ZtagFace (vertices padded to 16 bytes, tag
  * offsets turned into pointers into the TAGI blob) and every TAGN record into a ZtagNode. The

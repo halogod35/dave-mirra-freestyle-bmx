@@ -1,4 +1,4 @@
-"""DM-062: motion clips in the pure-MAXScript importer (tools/3dsmax/maxscript/DaveMirraImport.ms), run by the
+"""Motion clips in the pure-MAXScript importer (tools/3dsmax/maxscript/DaveMirraImport.ms), run by the
 MAXScript-subset interpreter (tests/maxscript_interp.py) because 3ds Max is not installed.
 
 - its LZO1X / ZAL / motion decoder must equal dmparse on all 238 clips, frame by frame and channel by channel;
@@ -212,7 +212,7 @@ def test_ms_keys_match_python_importer(stem, ids, tmp_path):
 
 
 def test_ms_motion_keys_pose(tmp_path):
-    """The DM-060-PT1 expectations for motion 8: head above the hips on every frame; the crank turns."""
+    """The manual in-game check's expectations for motion 8: head above the hips on every frame; the crank turns."""
     mz = _motion_zal()
     root, frames, meshes, folder, keys = _ms_import(_zmd("DaveMirra1"), mz, [8], tmp_path)
     by = {n.name: n for n in frames}

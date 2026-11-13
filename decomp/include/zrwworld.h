@@ -1,6 +1,6 @@
 /*
  * zrwworld.h - NgEngine/Zge/Com/ZglRw/zrwWorld.c: the RenderWare world of a level (BSP._sd), its
- * materials (Mat._sd) and the ZSD index (DM-043). File formats: docs/formats/LEVEL.md 3, 4.
+ * materials (Mat._sd) and the ZSD index. File formats: docs/formats/LEVEL.md 3, 4.
  *
  * The engine core calls the world module through the table g_zrwWorldApi 0x005620E0 (zScene.c uses
  * slots open/close/findScfi). The world itself (RpWorld *) and its origin live in zrwZgl.c globals.

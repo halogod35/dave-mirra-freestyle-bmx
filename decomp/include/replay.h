@@ -1,5 +1,5 @@
 /*
- * replay.h - run recording and playback (Bmx/Src/com/action/replay.c) (DM-052).
+ * replay.h - run recording and playback (Bmx/Src/com/action/replay.c).
  *
  * A replay records one player's pad (buttons and both sticks) as a run-length event stream, plus
  * optional snapshots of the rider, the props and the goal progress so that playback starts from

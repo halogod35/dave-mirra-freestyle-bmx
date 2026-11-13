@@ -1,4 +1,4 @@
-"""DM-013: fuzz every level-file reader (docs/testing.md section 4): smallest + one representative file."""
+"""Fuzz every level-file reader (docs/testing.md section 4): smallest + one representative file."""
 import pytest
 
 from conftest import corpus_files

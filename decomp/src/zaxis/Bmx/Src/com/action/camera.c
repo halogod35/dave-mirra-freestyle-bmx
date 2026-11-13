@@ -7,10 +7,10 @@
  *           are contiguous in link order (action.c's last function actionGetMode ends at 0x004056AA,
  *           comdata.c starts at 0x00407BA0), and the assert line 1183 needs a long file in front of
  *           cameraSetPlayer: cameraUpdate (5.7 KB) is that code.
- * 13 functions, 7160 bytes, VA 0x004056c0-0x00407b85 (DM-064 created 0x00405760, 0x00407730, 0x00407890).
- * DM-051 (draft). Non-matching C (AD-8). Types: camera.h. Description: docs/re/input-camera.md.
+ * 13 functions, 7160 bytes, VA 0x004056c0-0x00407b85 (the clean-up created 0x00405760, 0x00407730, 0x00407890).
+ * Draft. Non-matching C (AD-8). Types: camera.h. Description: docs/re/input-camera.md.
  *
- * DM-051 moved cameraInit, cameraUpdate and cameraApply here from action.c (DM-040 "split" /
+ * The camera pass moved cameraInit, cameraUpdate and cameraApply here from action.c (the skeleton "split" /
  * "callers"), took in the five camera-gap functions (0x00407600-0x00407B85) and found
  * cameraDrawNightVision 0x004074C0, which Ghidra had not created (it is reached only through the
  * draw-callback pointer cameraInit registers; a decomp/symbols/symbols.csv row creates it).
@@ -138,7 +138,7 @@ void cameraInit(void)
 /* VA 0x00405760, 1 bytes, [I] row, status draft */
 void cameraStub(void)
 {
-    /* DM-064 created: a bare ret between cameraInit and cameraUpdate; no caller, thunk 0x00402013 */
+    /* new function: a bare ret between cameraInit and cameraUpdate; no caller, thunk 0x00402013 */
 }
 
 /* VA 0x00405780, 5772 bytes, [I] row, status draft */
@@ -741,7 +741,7 @@ void cameraSetView(uint32_t player, uint32_t view)
 /* VA 0x00407730, 22 bytes, [I] row, status draft */
 uint8_t cameraGetView(uint32_t player)
 {
-    /* DM-064 created: no caller, thunk 0x0040112C */
+    /* new function: no caller, thunk 0x0040112C */
     return g_cameras[player].view;
 }
 
@@ -796,7 +796,7 @@ void cameraSetMode(uint32_t player, int mode)
 /* VA 0x00407890, 22 bytes, [I] row, status draft */
 uint8_t cameraGetMode(uint32_t player)
 {
-    /* DM-064 created: no caller, thunk 0x00401B8B */
+    /* new function: no caller, thunk 0x00401B8B */
     return g_cameras[player].mode;
 }
 

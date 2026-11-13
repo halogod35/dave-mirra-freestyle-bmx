@@ -1,4 +1,4 @@
-"""Z-Axis NgEngine name hash (DM-010).
+"""Z-Axis NgEngine name hash.
 
 [V] Reimplements NgBMX.exe 0x004828C0 (`zHashName`, our name; it is called from zScene.c's NAME parser at
 0x004902D5 and ~100 other sites). The string is upper-cased with the C-locale `toupper` (0x004A593C)

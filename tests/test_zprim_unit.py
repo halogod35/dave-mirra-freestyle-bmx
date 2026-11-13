@@ -1,4 +1,4 @@
-"""zprim images / fonts, STRS tables, HUD fonts and the gui_dir helpers on synthetic data (DM-066)."""
+"""zprim images / fonts, STRS tables, HUD fonts and the gui_dir helpers on synthetic data."""
 import struct
 
 import pytest

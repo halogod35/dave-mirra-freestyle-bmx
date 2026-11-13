@@ -12,7 +12,7 @@ Summary:
     LOD node and use a glTF skin whose joints are all frames (joint index == frame index).
   * **Lossless:** everything that is not geometry/texture pixels is stored as base64 in
     ``extras.dmbmx`` on the nodes (and the source SHA-256 on the root). :func:`restore_zmd`
-    rebuilds the original ZMD byte-for-byte from an unedited .glb (the DM-021 baseline).
+    rebuilds the original ZMD byte-for-byte from an unedited .glb (the importer's baseline).
 """
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ __all__ = ["export_glb", "read_glb", "restore_zmd", "upright_correction", "GltfE
 
 EXTRAS_KEY = "dmbmx"
 EXTRAS_VERSION = 1
-GENERATOR = "dmbmx export (DM-020)"
+GENERATOR = "dmbmx export"
 
 # glTF enums
 FLOAT, UBYTE, USHORT, UINT = 5126, 5121, 5123, 5125
@@ -485,7 +485,7 @@ def restore_zmd(data: bytes) -> bytes:
 
     Uses the buffers for geometry (positions, normals, UVs, prelit colours, triangles) and
     texture pixels, and ``extras.dmbmx`` for everything else. This is the lossless baseline for
-    the DM-021 importer; it does not support edits (topology, new materials, ...).
+    the importer; it does not support edits (topology, new materials, ...).
     """
     js, bin_ = read_glb(data)
     nodes = js["nodes"]

@@ -3,8 +3,8 @@
  * Original: C:\zaxis\Bmx\Src\Pc\zge\sound\winLoad.c
  * Evidence: [V] path string 0x0055EFE8, pushed by every function here except zsndUnloadAsset /
  *           zsndIsAssetLoaded ([I]: between them, and they use g_zsndAssets). The module map
- *           counts 11 [V]: the getters DM-055 created have no Ghidra references yet (-noanalysis).
- * 17 functions, VA 0x0046FB20-0x00470A47. DM-055 (draft). Non-matching C (AD-8).
+ *           counts 11 [V]: the getters the sound pass created have no Ghidra references yet (-noanalysis).
+ * 17 functions, VA 0x0046FB20-0x00470A47. Draft. Non-matching C (AD-8).
  * Types: zsound.h. Bank format: docs/formats/AUDIO.md. Description: docs/re/sound.md.
  *
  * The sound-bank ("audio asset") manager: up to 16 loaded ZSND/WIN banks. A *resident* bank is
@@ -13,7 +13,7 @@
  * hands the stream code the file name, offset and size of one sample file.
  * Loading turns the table offsets into pointers and stamps every voice / sample / track def /
  * keymap with the bank handle (the runtime fields of the file format, 0 on disk).
- * DM-055 created six getters Ghidra had missed (zsndIsAssetLoaded, zsndGetNumSamples,
+ * The sound pass created six getters Ghidra had missed (zsndIsAssetLoaded, zsndGetNumSamples,
  * zsndGetNumPhrases, zsndGetNumKeymaps, zsndGetPhrase; only reached through ILT thunks).
  * There is no checksum: the loader compares "ZSND" and "WIN " and nothing else.
  */

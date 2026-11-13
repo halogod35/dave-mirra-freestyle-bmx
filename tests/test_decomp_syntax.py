@@ -1,4 +1,4 @@
-"""DM-064: syntax-check every C file of the decompilation with clang (through zig).
+"""Syntax-check every C file of the decompilation with clang (through zig).
 
 There is no MSVC on the build PC, but zig ships a complete clang plus the MinGW headers, so
 `zig clang -fsyntax-only` parses and type-checks each translation unit for 32-bit Windows (the

@@ -1,4 +1,4 @@
-"""CLI smoke tests for `dmbmx replay list|dump` (DM-052)."""
+"""CLI smoke tests for `dmbmx replay list|dump`."""
 import json
 
 import pytest

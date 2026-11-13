@@ -1,4 +1,4 @@
-"""Menu art, fonts, texts and HUD fonts over the real data (DM-066): byte-identical round trips of every
+"""Menu art, fonts, texts and HUD fonts over the real data: byte-identical round trips of every
 GUI-group picture / sprite / font, the four HUD fonts and the 16 STRS tables; PNG export -> import
 gives the same bytes; the export directory imports back to the same Intwrap.zal, and an edited one
 still parses and round-trips. Facts stated in docs/formats/ZAL.md 3.3."""

@@ -1,4 +1,4 @@
-"""SCRN / GUI group codec on synthetic data (no game files): layout, errors, editing (DM-056)."""
+"""SCRN / GUI group codec on synthetic data (no game files): layout, errors, editing."""
 import struct
 
 import pytest

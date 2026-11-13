@@ -1,15 +1,15 @@
 # The front end: menus and GUI (frontend.c, gui/*.c)
 
-DM-056. C: `decomp/src/zaxis/Bmx/Src/com/menu/frontend.c` (136 functions),
+C: `decomp/src/zaxis/Bmx/Src/com/menu/frontend.c` (136 functions),
 `decomp/src/zaxis/Bmx/Src/com/menu/gui/guiinput.c` (20), `guimain.c` (86), `guisfile.c`* (1),
 `guitoggl.c` (13 + the generic element handler), `decomp/src/_unassigned/gap_rider__guiinput.c` (15);
 types `decomp/include/gui.h`; screen file format `docs/formats/ZAL.md` 3.2 (`tools/dmbmx/formats/scrn.py`);
-checks `tests/test_decomp_dm056.py`, `tests/test_scrn_*.py`. [V] = checked against the exe or the data by
+checks `tests/test_decomp_frontend.py`, `tests/test_scrn_*.py`. [V] = checked against the exe or the data by
 those tests, [I] = inferred.
 
 95 of the 273 functions were not functions in the Ghidra project: they are reached only through
 /INCREMENTAL thunks (screen handlers, per-frame tasks, element handlers, function pointers).
-`decomp/symbols/symbols.csv` rows of DM-056 create them (ApplySymbols). 0x00439FA1 is the opposite: a bogus
+`decomp/symbols/symbols.csv` rows of the front-end pass create them (ApplySymbols). 0x00439FA1 is the opposite: a bogus
 function Ghidra made at the "draw" case of the generic element handler 0x00439F80 (kept as
 `guiElementDraw`; see guitoggl.c).
 
@@ -110,7 +110,7 @@ rider chosen on the RIDER page.
 | OPTIONS > AUDIO | MUSIC = `volume_0d` (sound channel 1), SOUND FX = `volume_0c` (channel 0), 0..18 | `volume_0d`, `volume_0c` |
 | OPTIONS > CONTROLLER | rows 0..10 -> profile +0x14..+0x3F, layout -> +0x4B | `profile.<p>.dpad.*`, `.control.*`, `.keyboard_layout` |
 
-`save_fields.py` agrees with every offset; DM-056 confirms what it had as [I]: `volume_0c` is the SFX
+`save_fields.py` agrees with every offset; the front-end pass confirms what it had as [I]: `volume_0c` is the SFX
 volume and `volume_0d` the music volume, `cheats_active` holds the CHEATS menu toggles, and the
 `language` values.
 
@@ -146,7 +146,7 @@ falls through to the bike / style / level tests (harmless: each also checks the 
   names, the ticker lines.
 - HIGH SCORES loads STRS 0x7D01 + language (HUD set 0x1xxx: stat labels 0x1094 + stat), CHALLENGES
   0x7D05 + language (single-player set 0x2xxx: the goal texts 0x2089 + 3 (12 level + 4 tier + goal)).
-- Modding (DM-066): `dmbmx gui text-set` changes a text in all four language tables; the menu art,
+- Modding: `dmbmx gui text-set` changes a text in all four language tables; the menu art,
   fonts and screen layouts go through `dmbmx gui export / import` (docs/tools/menu-modding.md, ZAL.md 3.3).
   The big menu font 0x8003 has no lower-case glyphs, so labels must stay upper case.
 - The select screen's info ticker: per rider (`g_feRiderBios` 0x0055AAA0), per bike, per level state;
@@ -155,12 +155,12 @@ falls through to the bike / style / level tests (harmless: each also checks the 
 ## 6. Odd findings
 
 - `frontendRequestExit(int)`: 0 leaves the menus for the game (select screen done, demo), 1 quits the
-  program (QUIT). DM-055 called the parameter `toGame`; it is the reverse (`quit`).
-- `zprimGetFontHeight` (ZprimFont +0x02 `lineHeight`; DM-064 renamed it from `zprimGetFontFlags` / `flags`) is the font's line height (centring, line advance).
+  program (QUIT). The sound pass called the parameter `toGame`; it is the reverse (`quit`).
+- `zprimGetFontHeight` (ZprimFont +0x02 `lineHeight`; the clean-up renamed it from `zprimGetFontFlags` / `flags`) is the font's line height (centring, line advance).
 - The element draw aligns centred / right-aligned text by the width of all lines so far (it measures
   from the first line), so multi-line centred text drifts (a quirk of the original).
 - 0x00479260 (`zprimCopyToPicture`, zprim.c), called by the unused `guiDrawSpriteToBackdrop`, is a bare
-  `ret` on PC (DM-061 created the function).
+  `ret` on PC (the ZGE object pass created the function).
 - The main menu writes nothing; leaving OPTIONS writes SAVE.DAT (`frontendOptionsExit`), and so does the
   game at every level end (SAVE.md 2.4a).
 

@@ -3,7 +3,7 @@
  * Original: C:\NgEngine\Zge\ZgeMods\zprop.c
  * Evidence: [V] path string at 0x00560cb0 (asserts in zpropLoadDef/zpropLoad); the accessors [I]
  * (link order, globals 0x006722B8/0x006722C4).
- * DM-043 (draft). Non-matching C (AD-8). Types: decomp/include/zprop.h.
+ * Draft. Non-matching C (AD-8). Types: decomp/include/zprop.h.
  * Formats: docs/formats/LEVEL.md 5.1 (PropDef._sd) and 5.2 (Prop._sd); Python reference:
  * tools/dmbmx/formats/level.py PropDefSd / PropSd (the code below agrees with it; notes inline).
  *
@@ -11,14 +11,14 @@
  * for every PRBL form of Prop._sd (handler tables in zScene.c). Each handler is entered with the
  * form as the current child of the IFF reader.
  *
- * zpropListsInit / zpropShutdown / zpropListsFree (0x00486910-0x00486A1C) were in zmem.c (DM-040
- * attribution; DM-044 drafted them there too): they only touch this file's two lists, so DM-043
- * takes them here on the Director's instruction (2026-11-12); the merge reconciles the copies.
+ * zpropListsInit / zpropShutdown / zpropListsFree (0x00486910-0x00486A1C) were in zmem.c (the skeleton
+ * attribution; the zmem pass drafted them there too): they only touch this file's two lists, so the zScene pass
+ * moved them here.
  * 8 functions, VA 0x00486910-0x00486ed5.
  */
 #include "decomp.h"
 
-/* other modules (current names until their cards land) */
+/* other modules (current names until they are decompiled) */
 int    zrwZglGetValue(int what, void *out, int arg);       /* zgl getter; 1 = world scale (100.0) */
 void  *zobjModelLoadIff(ZiffFile *iff, int flags);          /* 0x00489090 reads the MODL chunk */
 void   zrwModelSetFlags(void *model, int what, int value); /* model render flag setter [I] */
@@ -50,7 +50,7 @@ int zpropListsInit(void)
 /* VA 0x00486930, 11 bytes, [I] row, status draft */
 int zpropShutdown(void)
 {
-    /* zsceneShutdown; only reached by a direct call (no function in the pre-DM-043 Ghidra DB) */
+    /* zsceneShutdown; only reached by a direct call (no function in an older Ghidra DB) */
     zpropListsFree();
     return 1;
 }
@@ -220,7 +220,7 @@ int zpropLoad(ZiffFile *iff)
          * by zmathMatrixToEuler (x = atan2(m[6], m[10]), y = atan2(-m[2], |m[0], m[1]|),
          * z = atan2(m[1], m[0])) and back to a quaternion by zquatFromEuler (q = qz * qy * qx).
          * zquatToMatrix of that quaternion reproduces the stored rows: the chain is the identity
-         * up to the 16-bit angle quantisation (DM-043 test_prop_rotation_chain_is_identity).
+         * up to the 16-bit angle quantisation (test_prop_rotation_chain_is_identity in tests/test_decomp_zscene.py).
          */
         m[0] = rec.matrix[0]; m[1] = rec.matrix[1]; m[2]  = rec.matrix[2];
         m[4] = rec.matrix[3]; m[5] = rec.matrix[4]; m[6]  = rec.matrix[5];

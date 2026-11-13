@@ -2,7 +2,7 @@
   "exe": "NgBMX.exe",
   "sha256": "97aa9077501f264a1f96fc2ff1ff8d4326be094dd98f2a647c913de9d60d09a2",
   "image_base": "0x00400000",
-  "note": "DM-030: the PC build has no CRC/checksum on any game file; these patches are optional conveniences. Re-signing (dmbmx save fix-crc, dmbmx integrity resign-zsd) is the preferred route.",
+  "note": "The PC build has no CRC/checksum on any game file; these patches are optional conveniences. Re-signing (dmbmx save fix-crc, dmbmx integrity resign-zsd) is the preferred route.",
   "groups": {
     "nocrc": ["save-size-check"],
     "all": ["save-size-check", "assert-continue"]

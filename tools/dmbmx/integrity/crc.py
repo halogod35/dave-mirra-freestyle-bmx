@@ -1,6 +1,6 @@
 """Re-implementation of the game's integrity checks (AD-7 route 1: re-sign, no exe changes).
 
-Inventory so far (docs/re/integrity-checks.md; DM-030 completes it):
+Inventory so far (docs/re/integrity-checks.md):
 
 * SAVE.DAT (memcard load, VA 0x00412190): **no CRC or checksum.** The only
   checks are a successful 0x235C-byte read and ``u32 @4 == 0x235C``.

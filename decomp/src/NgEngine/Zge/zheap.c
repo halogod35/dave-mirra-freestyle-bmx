@@ -1,11 +1,11 @@
 /*
  * NgEngine/Zge/zheap.c
  * Original: unknown (no path string, no literal; name invented in the original style)
- * Evidence: [I] new file (DM-061): nine functions on one Zheap layout after pcProfile.c and before
+ * Evidence: [I] new file: nine functions on one Zheap layout after pcProfile.c and before
  * the C runtime (0x004A4A20 _fpmath); only ztimer.c uses them (the static pop result 0x006764E0
  * follows pcProfile.c's globals).
  * 9 functions, VA 0x004a46c0-0x004a4a1a.
- * DM-061 (draft). Non-matching C (AD-8). Types: ztools.h. Description: docs/re/zge.md 7.
+ * Draft. Non-matching C (AD-8). Types: ztools.h. Description: docs/re/zge.md 7.
  *
  * A binary heap of (u32 key, value) pairs: items[1..count], items[0] a sentinel (0 for a min-heap,
  * 0xFFFFFFFF for a max-heap) that stops the sift-up at the root.

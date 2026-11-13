@@ -1,15 +1,15 @@
 /*
  * NgEngine/Zge/zutil.c
  * Original: C:\NgEngine\Zge\zutil.c
- * Evidence: [V] zutilBBoxTransform (DM-061) asserts with the path string 0x005637E4; the
+ * Evidence: [V] zutilBBoxTransform asserts with the path string 0x005637E4; the
  *           literals right after it (the pool-map box strings 0x005637FC-0x0056385C) and the plane
  *           table 0x00563770 before it are used only by the code at 0x004A2F50-0x004A31F3, which
  *           sits between zFont.c and zrwRamDisk.c ("Error opening RAM disk file." 0x00563878 is
  *           used from 0x004A3200 on). "pBBoxOut==pBBoxIn" 0x005637D0 belongs to a compiled-out
  *           assert of this file.
  * 10 functions, VA 0x004a2c70-0x004a31f3.
- * Decompiled by DM-044 (non-matching C, AD-8); DM-061 created the five box helpers 0x004A2C70-
- * 0x004A2E10 in the hole after zFont.c (DM-044 thought the path string unreferenced).
+ * Decompiled (non-matching C, AD-8); the ZGE object pass created the five box helpers 0x004A2C70-
+ * 0x004A2E10 in the hole after zFont.c (the zmem pass thought the path string unreferenced).
  *
  * A bounding box is float[8]: min x,y,z at [0..2] and max x,y,z at [4..6] (RwBBox-like, 0x20).
  */
@@ -20,7 +20,7 @@
 
 #define ZUTIL_FILE "C:\\NgEngine\\Zge\\zutil.c"
 
-/* zmath helpers in the gap after zrwCol.c (names DM-044 [I]) */
+/* zmath helpers in the gap after zrwCol.c (names [I]) */
 void *zmathPlaneFromPointNormal(float *plane, const float *point, const float *normal);  /* 0x004956F0 */
 int   zmathClipSegmentToPlane(float *p0, float *p1, const float *plane);                 /* 0x00495730 */
 double __cdecl fabs(double x);                                                    /* CRT intrinsic (fabs) */

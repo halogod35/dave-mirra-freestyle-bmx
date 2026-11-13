@@ -3,10 +3,10 @@
  * Original: C:\NgEngine\Zge\ZgeMods\zobjModel.c
  * Evidence: [V] path string referenced by 1 function(s); the others [I]: they are the slots of the
  * two model vtables 0x00560FA8 (animated) / 0x00560FD0 (static) that zobjModelCreate installs, and
- * zobjModelInit/Shutdown share the global 0x00672308. DM-061 created all 15 others in the holes
+ * zobjModelInit/Shutdown share the global 0x00672308. The ZGE object pass created all 15 others in the holes
  * 0x00488D60-0x00488F3F and 0x00488F80.
  * 35 functions, VA 0x00488d30-0x004892af.
- * DM-061 (draft): 0x00488D60-0x00488FA2. DM-064 moved DM-059's drafts in from the gap files
+ * Draft: 0x00488D60-0x00488FA2. The clean-up moved the ZglRw pass's drafts in from the gap files
  * gap_zrwModel__zobjModel.c (0x00488D30, the animated destroy) and gap_zobjModel__zrwMat.c
  * (0x00488FB0-0x004892AF: the constructor, the loaders and the public wrappers around the ZGL model
  * driver), [I] by the vtable 0x00560FA8 and the globals 0x00672308-0x00672310 they share.
@@ -14,8 +14,8 @@
  *
  * A model zobj wraps a zrwModel (handle). Models with fewer than two frames get the static vtable,
  * the others the animated one (whose destroy, 0x00488D30, also frees the zanim node table).
- * The DM-043/047/057 names zrwModelFindFrame / FrameToWorld / FrameOffset / UpdateObj are kept (their
- * callers use them) although these are zobjModel functions. The wrappers keep DM-059's parameter
+ * The earlier names zrwModelFindFrame / FrameToWorld / FrameOffset / UpdateObj are kept (their
+ * callers use them) although these are zobjModel functions. The wrappers keep the ZglRw pass's parameter
  * types (void * / ZanimObj *, as their callers declare them); ZanimObj is the first 0x34 bytes of a
  * ZObj (+0x2C handle = model, +0x30 data = node table).
  */
@@ -55,7 +55,7 @@ const ZobjVtbl g_zobjModelVtbl = {       /* 0x00560FD0 */
 /* VA 0x00488d30, 38 bytes, [I] row, status draft */
 int zobjModelDestroyAnimated(ZObj *obj)
 {
-    /* animated vtable slot 0: destroy; DM-059 */
+    /* animated vtable slot 0: destroy */
     zanimDestroyNodeTable((ZanimObj *)obj);
     if (obj->handle != 0)
         g_zglModelApi.release((ZglModel *)obj->handle);
@@ -183,7 +183,7 @@ int zobjModelShutdown(void)
 /* VA 0x00488fb0, 156 bytes, [I] row, status draft */
 void *zobjModelCreate(void *model)
 {
-    /* (DM-059) A model object for a ZGL model: one-part models get the static class and model flag 1,
+    /* A model object for a ZGL model: one-part models get the static class and model flag 1,
      * others the animated class and a zanim node table. In skeleton debug mode it is taken out of the
      * world. */
     ZObj *obj;
@@ -212,14 +212,13 @@ void *zobjModelCreate(void *model)
 /* VA 0x00489050, 20 bytes, [I] row, status draft */
 int zobjModelSave(void *model, const char *path)
 {
-    /* model slot 4 "save": not coded; DM-059 */
+    /* model slot 4 "save": not coded */
     return g_zglModelApi.save(model, path);
 }
 
 /* VA 0x00489070, 17 bytes, [I] row, status draft */
 void *zobjModelLoadFile(const char *path, int flags)
 {
-    /* DM-059 */
     (void)flags;
     return g_zglModelApi.loadFile(path, 0);
 }
@@ -227,7 +226,6 @@ void *zobjModelLoadFile(const char *path, int flags)
 /* VA 0x00489090, 17 bytes, [I] row, status draft */
 void *zobjModelLoadIff(ZiffFile *iff, int flags)
 {
-    /* DM-059 */
     (void)flags;
     return g_zglModelApi.loadIff(iff, 0);
 }
@@ -235,56 +233,52 @@ void *zobjModelLoadIff(ZiffFile *iff, int flags)
 /* VA 0x004890b0, 15 bytes, [I] row, status draft */
 void zobjModelFree(void *model)
 {
-    /* DM-059 */
     g_zglModelApi.release((ZglModel *)model);
 }
 
 /* VA 0x004890c0, 15 bytes, [I] row, status draft */
 void *zobjModelCreateInstance(void *model)
 {
-    /* DM-059 */
     return g_zglModelApi.createInstance((ZglModel *)model);
 }
 
 /* VA 0x004890d0, 18 bytes, [I] row, status draft */
 int32_t zobjModelGetNumParts(ZanimObj *obj)
 {
-    /* zanim.c; DM-059 */
+    /* zanim.c */
     return g_zglModelApi.getNumParts(ZOBJMODEL(obj));
 }
 
 /* VA 0x004890f0, 23 bytes, [I] row, status draft */
 void zobjModelGetPartIds(ZanimObj *obj, uint32_t *out)
 {
-    /* zanim.c; DM-059 */
+    /* zanim.c */
     g_zglModelApi.getPartIds(ZOBJMODEL(obj), out);
 }
 
 /* VA 0x00489110, 23 bytes, [I] row, status draft */
 void *zrwModelFindFrame(void *model, uint32_t hash)
 {
-    /* DM-059 */
     return g_zglModelApi.findPart(ZOBJMODEL(model), hash);
 }
 
 /* VA 0x00489130, 23 bytes, [I] row, status draft */
 void *zobjModelGetPartParent(void *obj, void *part)
 {
-    /* no caller found; DM-059 */
+    /* no caller found */
     return g_zglModelApi.getPartParent(ZOBJMODEL(obj), (ZglModelPart *)part);
 }
 
 /* VA 0x00489150, 38 bytes, [I] row, status draft */
 void zrwModelFrameToWorld(void *model, void *frame, const float *local, float *out, int update)
 {
-    /* DM-059 */
     g_zglModelApi.partToWorld(ZOBJMODEL(model), (ZglModelPart *)frame, local, out, update);
 }
 
 /* VA 0x00489180, 33 bytes, [I] row, status draft */
 void zrwModelFrameOffset(void *model, void *frame, RwV3d *out, int update)
 {
-    /* the 4th argument is passed but unused; DM-059 */
+    /* the 4th argument is passed but unused */
     (void)update;
     g_zglModelApi.partBindOffset(ZOBJMODEL(model), (ZglModelPart *)frame, (float *)out);
 }
@@ -292,28 +286,27 @@ void zrwModelFrameOffset(void *model, void *frame, RwV3d *out, int update)
 /* VA 0x004891b0, 33 bytes, [I] row, status draft */
 void zobjModelGetPartMatrix(ZObj *obj, void *part, RwMatrix *out, int flags)
 {
-    /* DM-059 */
     g_zglModelApi.getPartMatrix(ZOBJMODEL(obj), (ZglModelPart *)part, (float *)out, flags);
 }
 
 /* VA 0x004891e0, 15 bytes, [I] row, status draft */
 int zobjModelHasNodes(void *obj)
 {
-    /* no caller found; DM-059 */
+    /* no caller found */
     return ((ZanimObj *)obj)->nodes != 0;
 }
 
 /* VA 0x004891f0, 22 bytes, [I] row, status draft */
 ZanimNode *zobjModelFindNode(void *obj, uint32_t hash)
 {
-    /* no caller found; DM-059 */
+    /* no caller found */
     return zanimFindNode(((ZanimObj *)obj)->nodes, hash);
 }
 
 /* VA 0x00489210, 26 bytes, [I] row, status draft */
 void zobjModelSetNodes(ZanimObj *obj, ZanimNodeTable *nodes)
 {
-    /* zanimCreateNodeTable; DM-059 */
+    /* zanimCreateNodeTable */
     obj->nodes = nodes;
     g_zglModelApi.bindParts(ZOBJMODEL(obj), nodes);
 }
@@ -321,7 +314,7 @@ void zobjModelSetNodes(ZanimObj *obj, ZanimNodeTable *nodes)
 /* VA 0x00489230, 111 bytes, [I] row, status draft */
 void zobjModelSetSkeletonMode(int on)
 {
-    /* (no caller found; DM-059) Skeleton debug mode: a ZGL callback (list 2) draws all skeletons. Both
+    /* (no caller found; the ZglRw pass) Skeleton debug mode: a ZGL callback (list 2) draws all skeletons. Both
      * directions run zobjModelHide over every model object [V, disassembly: both call 0x00488F00]. */
     if (on == 0) {
         if (s_skeletonMode) {
@@ -339,6 +332,5 @@ void zobjModelSetSkeletonMode(int on)
 /* VA 0x004892a0, 16 bytes, [I] row, status draft */
 void zrwModelUpdateObj(void *model)
 {
-    /* DM-059 */
     g_zglModelApi.update(ZOBJMODEL(model));
 }

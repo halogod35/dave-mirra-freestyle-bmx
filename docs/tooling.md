@@ -47,7 +47,7 @@ and `pyproject.toml`.
 - Corpus tests read the install via `DMBMX_GAME_DIR` (default `F:\Projects\Dave Mirra freestyle BMX`);
   they skip if it is missing. Helpers in `tests/conftest.py`: `corpus_params('.zmd')`,
   `corpus_files('.zal')`, fixture `game_dir`. Work folders inside the install (`_pristine`, `_testgame`,
-  `wt`, and repo checkouts named `dave-mirra-bmx` or `dave-mirra-pro-bmx`) are excluded from the corpus.
+  `wt`, and repo checkouts named `dave-mirra-bmx` or `dave-mirra-freestyle-bmx`) are excluded from the corpus.
 - `tests/conftest.py` puts `tools/` on `sys.path` and `PYTHONPATH`, so plain `python -m pytest tests`
   from the venv works too.
 - `tests/test_tools.py` smoke-tests the shell tools (read-only).
@@ -85,7 +85,7 @@ tools/ghidra/ghidra.sh gui         # GUI (avoid while a headless run holds the p
   edits `decomp/symbols/symbols.csv` (see `docs/re/module-map.md`, section Rebuilding).
 - Ghidra keeps per-user settings in `%APPDATA%\ghidra\ghidra_12.2_PUBLIC\`.
 
-### Holes: `tools/ghidra/scan_holes.py` (DM-064)
+### Holes: `tools/ghidra/scan_holes.py`
 
 ```bash
 tools/testing/py.sh tools/ghidra/scan_holes.py                    # every game/engine byte outside a function
@@ -94,8 +94,8 @@ tools/testing/py.sh tools/ghidra/scan_holes.py --functions FILE   # against anot
 
 It reads `NgBMX.exe` (from `DMBMX_GAME_DIR`) and `decomp/symbols/functions.csv`. Between two functions it
 accepts padding, jump tables, index tables and import stubs, and reports everything else as a
-hole: its size, whether anything references it, and its first instruction. `tests/test_decomp_dm064.py`
-lists the holes that are allowed, each with its reason. After a card creates functions, re-export
+hole: its size, whether anything references it, and its first instruction. `tests/test_decomp_cleanup.py`
+lists the holes that are allowed, each with its reason. After new functions are created, re-export
 `decomp/symbols/functions.csv` and run it again.
 
 ## C syntax check (zig)
@@ -134,7 +134,7 @@ Z="$DMBMX_ZIG"; L="$(dirname "$Z")/lib"; I="$L/libc/include"
 ```
 
 This clang treats incompatible pointer and function-pointer types as errors. Write casts where
-the exe passes a float array as an `RwV3d *` (DM-064 fixed game.c and physics.c that way).
+the exe passes a float array as an `RwV3d *` (the clean-up fixed game.c and physics.c that way).
 
 ## Game trees: `tools/testing/check_pristine.sh`, `tools/testing/restore_testgame.sh`
 
@@ -162,7 +162,7 @@ tools/testing/restore_testgame.sh --check       # verify _testgame only
 
 - `check_pristine.sh` is read-only. It reports `MISSING`, `DIFFERS` and `EXTRA` files
   (for the install, the work folders `_pristine`, `_testgame`, `wt`, the repo checkouts
-  `dave-mirra-bmx` / `dave-mirra-pro-bmx` and the manifest itself are ignored). Exit 0 = clean, 1 = differences, 2 = setup error.
+  `dave-mirra-bmx` / `dave-mirra-freestyle-bmx` and the manifest itself are ignored). Exit 0 = clean, 1 = differences, 2 = setup error.
 - `restore_testgame.sh` first verifies `_pristine` (refuses to copy from a damaged one), then
   deletes files in `_testgame` that are not in the manifest, re-copies only files that are missing
   or differ, and verifies the result. Idempotent; it never writes to the install or `_pristine`.

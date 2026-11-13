@@ -5,12 +5,12 @@
  * zquatToMatrix, zquatNormalize and zquatInverse (line 0x287 "Division by 0": one inline normalise);
  * the others [I] (link order, between zstring.c's zfx registry and zfile.c).
  * 17 functions, VA 0x00483020-0x00483a5e.
- * DM-045 (draft). Non-matching C (AD-8). Types and conventions: decomp/include/zmath.h.
+ * Draft. Non-matching C (AD-8). Types and conventions: decomp/include/zmath.h.
  *
  * Quaternions are (x, y, z, w). zquatFromEuler builds q = qz * qy * qx from 16-bit binary angles
  * through the zmath sine table, zquatToMatrix gives the RwMatrix of R(q) (rows right/up/at).
  *
- * Note for the animation code (DM-017 open question): the rider's motion channels do NOT reach the
+ * Note for the animation code (an open question from the legacy arm table): the rider's motion channels do NOT reach the
  * RenderWare frames through zquatToMatrix. zrwModelUpdate converts each node quaternion with
  * zrwModelQuatToRwMatrix 0x00487E70, which first maps (x, y, z, w) to (x, -y, -z, w), i.e. it
  * builds F R(q) F with F = diag(1, -1, -1) (the engine's Y-down axes -> RenderWare's). See

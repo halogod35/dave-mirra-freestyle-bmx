@@ -1,4 +1,4 @@
-"""dmbmx replay list|dump: inspect the demo replays in replay.zal (DM-052, docs/formats/REPLAY.md)."""
+"""dmbmx replay list|dump: inspect the demo replays in replay.zal (docs/formats/REPLAY.md)."""
 import json
 import os
 from pathlib import Path

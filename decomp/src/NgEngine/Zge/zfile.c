@@ -3,8 +3,8 @@
  * Original: C:\NgEngine\Zge\zfile.c
  * Evidence: [V] path string 0x00560724 referenced by nearly every function here; the five [I]
  *           ones by link order and literals.
- * 35 functions, VA 0x00483a60-0x004859a7 (DM-064 created zfileSetHeap / ClearHeap / GetSeparator).
- * Decompiled by DM-041 (non-matching C, AD-8). Types: decomp/include/zfile.h.
+ * 35 functions, VA 0x00483a60-0x004859a7 (the clean-up created zfileSetHeap / ClearHeap / GetSeparator).
+ * Decompiled (non-matching C, AD-8). Types: decomp/include/zfile.h.
  *
  * Device-independent file API. A path is "dddd:name" (explicit device, 4-char name) or "name"
  * (default device = the first registered one, "rw00"). Every call is checked with asserts whose
@@ -390,7 +390,7 @@ void zfileFreeLoaded(void *buf)
 /* VA 0x004853a0, 10 bytes, [I] row, status draft */
 void zfileSetHeap(void *pool)
 {
-    /* (DM-064 created; no caller in the exe) Routes zfileLoad*'s buffers to a memory pool (see
+    /* (new function; no caller in the exe) Routes zfileLoad*'s buffers to a memory pool (see
      * loadAlloc). */
     g_zfileHeap = pool;
 }
@@ -398,7 +398,7 @@ void zfileSetHeap(void *pool)
 /* VA 0x004853b0, 11 bytes, [I] row, status draft */
 void zfileClearHeap(void)
 {
-    /* DM-064 created; no caller */
+    /* new function; no caller */
     g_zfileHeap = NULL;
 }
 
@@ -440,7 +440,7 @@ char *zfileBuildPath(const char *dir, const char *name)
 /* VA 0x004854c0, 3 bytes, [I] row, status draft */
 char zfileGetSeparator(void)
 {
-    /* (DM-064 created; no caller): the path separator */
+    /* (new function; no caller): the path separator */
     return 0x5C;   /* '\\' */
 }
 

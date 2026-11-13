@@ -1,4 +1,4 @@
-"""DM-024 save editor: field registry, unlock-all, CLI (synthetic + real save)."""
+"""Save editor: field registry, unlock-all, CLI (synthetic + real save)."""
 import struct
 
 import pytest

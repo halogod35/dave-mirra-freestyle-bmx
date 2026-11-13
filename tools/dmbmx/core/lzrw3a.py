@@ -1,4 +1,4 @@
-"""LZRW3-A (Ross Williams, 1991): ZAL compression method 1 (DM-042).
+"""LZRW3-A (Ross Williams, 1991): ZAL compression method 1.
 
 The exe's codec 1 is LZRW3-A: decoder ``zcompresDecompressLZRW3A`` 0x0049BD10, encoder 0x0049B8E0,
 work buffer 0x4010 bytes = 4096 table pointers (+16 alignment slack). Evidence [V], from the decoder:

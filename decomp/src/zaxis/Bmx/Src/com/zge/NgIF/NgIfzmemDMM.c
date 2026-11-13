@@ -3,10 +3,10 @@
  * Original: C:\zaxis\Bmx\src\com\zge\NgIF\NgIfzmemDMM.c
  * Evidence: [V] path string 0x0055D674 referenced by 8 of the 10 functions; the other two by link
  *           order and the shared globals 0x005F8F30-0x005F8F54.
- * 11 functions, VA 0x0046aca0-0x0046b793 (DM-057 created zmemDMMStats 0x0046B730). The first ten
+ * 11 functions, VA 0x0046aca0-0x0046b793 (the NgIF pass created zmemDMMStats 0x0046B730). The first ten
  * are reached through incremental-link thunks
  * (0x00401037 ...), i.e. called from game code.
- * Decompiled by DM-044 (non-matching C, AD-8). Types: decomp/include/zmem.h (ZmemDMM*).
+ * Decompiled (non-matching C, AD-8). Types: decomp/include/zmem.h (ZmemDMM*).
  *
  * "DMM" (dynamic memory manager, the messages say "ZMEMDMM"): a handle-based heap whose blocks can
  * be moved by zmemDMMOptimize (compaction), so users hold handles and lock them to get a pointer.
@@ -122,7 +122,7 @@ int zmemDMMAllocBlock(ZmemDMMFree *blk, uint32_t size)
     next = blk->next;
     /* re-read after zmemDMMNewHandle: if the new slot was taken from this very block (it was the
      * last free one), blkSize can now be smaller than `size`, and the whole-block branch below
-     * then records a block smaller than requested [V via the port, tests/test_decomp_dm044.py] */
+     * then records a block smaller than requested [V via the port, tests/test_decomp_zmem.py] */
     blkSize = blk->size;
     if (g_zmemDMM.highWater == g_zmemDMM.limit) {
         /* [V] the data reached the handle table: the whole free list is dropped, including any
@@ -389,7 +389,7 @@ int zmemDMMOptimize(void)
 /* VA 0x0046b730, 99 bytes, [I] between, status draft */
 void zmemDMMStats(void)
 {
-    /* DM-057: an unreferenced debug helper (ZMEM_DMM_NONE = -1): it measures the largest free
+    /* The NgIF pass: an unreferenced debug helper (ZMEM_DMM_NONE = -1): it measures the largest free
      * block and the number of handle slots and drops both (the print was compiled out) */
     uint32_t largest = 0;
     int handles = 0;

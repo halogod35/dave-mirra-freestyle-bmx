@@ -5,11 +5,11 @@
  *           actionLoad (0x1F2) and actionSetMode (0x6BC-0x6C2); [I] for actionPickDemoLevel,
  *           actionUpdate, actionShutdown ("APP: Shutdown ACTION") and actionGetMode (link order,
  *           the action globals 0x00551A30-0x00551A43 and 0x0056B3E0-0x0056B3FB).
- * 8 functions, 5072 bytes, VA 0x00403c30-0x004056aa (DM-064 created actionServiceSound 0x004040C0 and documented
+ * 8 functions, 5072 bytes, VA 0x00403c30-0x004056aa (the clean-up created actionServiceSound 0x004040C0 and documented
  * the thunk-only code at 0x00403CC0).
- * DM-051 (draft). Non-matching C (AD-8). Description: docs/re/input-camera.md.
+ * Draft. Non-matching C (AD-8). Description: docs/re/input-camera.md.
  *
- * DM-051 moved DM-040's action_004056c0 / action_00405780 / action_00407470 to camera.c
+ * The camera pass moved the skeleton's action_004056c0 / action_00405780 / action_00407470 to camera.c
  * (cameraInit, cameraUpdate, cameraApply): they only touch the camera globals.
  *
  * The "action" layer is the in-level game loop. actionStartup runs once (motion library, save
@@ -168,7 +168,7 @@ static void actionFade(uint8_t fadeIn)
 
 static void actionReplayIcon(uint8_t icon)
 {
-    overlaySetItem(9, &icon);                      /* 1 "R" record, 2 "P" play, 3 "p" pause, 4 none (DM-054) */
+    overlaySetItem(9, &icon);                      /* 1 "R" record, 2 "P" play, 3 "p" pause, 4 none */
 }
 
 /* VA 0x00403c30, 99 bytes, [V] direct, status draft */
@@ -187,7 +187,7 @@ int actionStartup(void)
     return 1;
 }
 
-/* Code at 0x00403CC0 (5 bytes; DM-064): a tail jump to zactorCloseMotionLibrary, the undo of
+/* Code at 0x00403CC0 (5 bytes): a tail jump to zactorCloseMotionLibrary, the undo of
  * actionStartup [I name]; no caller, only its /INCREMENTAL thunk 0x00401A0A. Ghidra keeps the lone
  * jmp as a thunk function (actionCloseMotions -> 0x00475000), so it has no decomp/functions.csv row. */
 void actionCloseMotions(void)
@@ -299,7 +299,7 @@ int actionLoad(void)
 /* VA 0x004040c0, 8 bytes, [I] row, status draft */
 int actionServiceSound(void)
 {
-    /* DM-064 created: no caller, thunk 0x00401FCD */
+    /* new function: no caller, thunk 0x00401FCD */
     bmxsoundService();
     return 0;
 }
@@ -600,7 +600,7 @@ int actionUpdate(void)
                     if (++g_actionTimer == 30 || g_actionTimer == 3450) {
                         uint8_t snd = (uint8_t)bmxsoundEvent(0x3EC, 0, 0, 0, 0);
 
-                        overlaySetItem(0xD, &snd);   /* the current music track title (OVL_ITEM_TRACK, DM-054) */
+                        overlaySetItem(0xD, &snd);   /* the current music track title (OVL_ITEM_TRACK) */
                         cameraUpdate();
                         break;
                     }

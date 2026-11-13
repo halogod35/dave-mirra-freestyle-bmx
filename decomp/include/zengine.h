@@ -1,7 +1,7 @@
 /*
  * zengine.h - NgEngine core: memory (zmem.h), lists (zlist.h), strings (zstring.h) and the debug /
- * assert layer (zdebug.c). DM-041 started this header; DM-044 decompiled the modules and moved the
- * zmem/zList/zstring declarations into their own headers. Not imported into Ghidra.
+ * assert layer (zdebug.c). The memory, list and string modules keep their
+ * zmem/zList/zstring declarations in their own headers. Not imported into Ghidra.
  */
 #ifndef ZENGINE_H
 #define ZENGINE_H

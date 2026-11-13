@@ -1,4 +1,4 @@
-"""DM-022: Blender add-on packaging + the denormal-safe frame path. The Blender run itself
+"""Blender add-on packaging + the denormal-safe frame path. The Blender run itself
 (tools/blender/scripts/test_addon.py) is opt-in: set DMBMX_RUN_BLENDER=1 (it takes a few minutes)."""
 import ast
 import os

@@ -1,5 +1,5 @@
 /*
- * dmtypes.h - base types for the NgBMX.exe reconstruction (DM-040).
+ * dmtypes.h - base types for the NgBMX.exe reconstruction.
  *
  * The decomp is non-matching C (AD-8). Stubs keep Ghidra's signatures, so this header also maps
  * Ghidra's pseudo-types (undefined4, uint, ...) and the few Win32 types used in prototypes.
@@ -43,7 +43,7 @@ typedef int                bool;
 #endif
 
 /* Win32 types that appear in prototypes (avoid windows.h). The sound files include <windows.h>
- * first; then its own definitions win (DM-064: _WINDEF_ is windef.h's guard, MSVC and MinGW). */
+ * first; then its own definitions win (_WINDEF_ is windef.h's guard, MSVC and MinGW). */
 #if !defined(_WINDEF_) && !defined(_WINDEF_H)
 typedef void *             HWND;
 typedef void *             HINSTANCE;

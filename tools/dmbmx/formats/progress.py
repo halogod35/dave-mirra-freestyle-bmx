@@ -1,8 +1,8 @@
-"""Career progress of SAVE.DAT: challenge goals, rewards and records (DM-046).
+"""Career progress of SAVE.DAT: challenge goals, rewards and records.
 
 A Python port of the game-flow code in NgBMX.exe (decomp/src/zaxis/Bmx/Src/com/action/game.c and
 comdata.c). It works on a ``dmbmx.formats.save.Save`` and agrees with ``save_fields`` (tests:
-tests/test_decomp_dm046.py). Spec: docs/formats/SAVE.md sections 2.2, 2.4 and 7.
+tests/test_decomp_game.py). Spec: docs/formats/SAVE.md sections 2.2, 2.4 and 7.
 
     progress.objective_state(save, rider, level, tier, goal, obj)      # gameGetObjectiveState
     progress.apply_reward(save, rider, (type, param))                  # gameApplyReward

@@ -1,4 +1,4 @@
-"""DM-014 unit tests on synthetic images (no game data) + fuzzing of the image decoders and MATI."""
+"""Unit tests on synthetic images (no game data) + fuzzing of the image decoders and MATI."""
 import struct
 import zlib
 

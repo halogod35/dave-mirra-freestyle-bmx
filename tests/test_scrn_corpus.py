@@ -1,5 +1,5 @@
 """Intwrap.zal GUI groups and SCRN screens: byte-for-byte round trip of all 35 groups and 34 screens,
-the STRS layout rule, and the facts docs/formats/ZAL.md 3.2 states (DM-056)."""
+the STRS layout rule, and the facts docs/formats/ZAL.md 3.2 states."""
 import struct
 
 import pytest

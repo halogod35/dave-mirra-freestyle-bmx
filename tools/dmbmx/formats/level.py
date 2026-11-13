@@ -128,13 +128,13 @@ def matrix_to_rw(m9):
 
 def prop_matrix_to_rw(m9):
     """Prop rotation (PRBL matrix, 9 f32 rows) -> the RW rotation rows the game renders it with: the
-    stored rows **unchanged** (DM-065, LEVEL.md section 2).
+    stored rows **unchanged** (LEVEL.md section 2).
 
     [V] zpropLoad turns the rows into a quaternion q (matrix -> euler -> quaternion, the identity chain),
     and zrwModelUpdate 0x00488650 builds the RW frame with zrwModelQuatToRwMatrixMirror 0x00487FC0
     because ngappInit 0x0045B270 sets ZGL value 0x10 = 1 (g_zrwZglFlags bit 1). The mirror converter is
     ``D (F R(q) F) D`` with D = diag(-1, 1, 1) and F = diag(1, -1, -1); D F = -I, so the RW matrix is the
-    stored one. For a pure yaw this is the opposite sign of ``F M F`` (the pre-DM-065 convention).
+    stored one. For a pure yaw this is the opposite sign of ``F M F`` (the earlier convention).
     [V] Data: the game's own prop collision boxes (zcolBuildPropRails, built in ZGE from the def extents
     and the prop's euler) line up with the placed models to ~1 cm only with this convention."""
     return [tuple(float(m9[3 * r + c]) for c in range(3)) for r in range(3)]

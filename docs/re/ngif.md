@@ -1,8 +1,8 @@
-# The NgIF layer (Bmx/src/com/zge/NgIF) (DM-057)
+# The NgIF layer (Bmx/src/com/zge/NgIF)
 
 C: `decomp/src/zaxis/Bmx/Src/com/zge/NgIF/*.c`; types and prototypes `decomp/include/ngif.h` (plus
 `physics.h` NgColFace / NgColEdge / NgColHit and `bmxprop.h` NgPropCol, completed here). Evidence tags
-as in AD-5; the checks are `tests/test_decomp_dm057.py`.
+as in AD-5; the checks are `tests/test_decomp_ngif.py`.
 
 NgIF ("NextGen InterFace", the version string is "NextGen BMX : Nov 22 2000,15:54:17") is the game's
 implementation of the ZGE engine API on top of the PC engine (NgEngine / ZglRw). The game code was
@@ -20,13 +20,13 @@ stub that prints `"<file> <line> <name>"` through the (silent) debug printf.
 | NgIFzactor.c | 0x004646F0-0x00465A23 | 12 | [V] path 0x0055CA78 | actor <-> model: channels, arm table, part positions |
 | NgIFzbsp.c | 0x00465A50-0x0046951F | 137 | [V] path 0x0055CB34 (113 stubs, 6 asserts) | prop collision records, tag face / edge queries, sphere query, BSP stubs |
 | NgIFzcollide.c | 0x00469530-0x0046AC85 | 17 | [V] path 0x0055D550 | segment test, prop shapes, prop rails |
-| NgIfzmemDMM.c | 0x0046ACA0-0x0046B793 | 11 | [V] path 0x0055D674 (DM-044) | + zmemDMMStats 0x0046B730 (DM-057) |
+| NgIfzmemDMM.c | 0x0046ACA0-0x0046B793 | 11 | [V] path 0x0055D674 | + zmemDMMStats 0x0046B730 |
 | NgIFzres.c | 0x0046B7C0-0x0046C207 | 19 | [V] path 0x0055DA8C | asset libraries, map / player tables, overlay images |
 | NgIFzroller.c | 0x0046C220-0x0046D923 | 92 | [V] path 0x0055E0B4 | level runner: actors, players, rails, start points, draw callbacks, stubs, memory-card stubs |
 
-DM-057 absorbed eight gap files (zoverii/MissingZGE, MissingZGE/NgApp, NgApp/NgIFfx, NgIFfx/NgIFpsx,
+The NgIF pass absorbed eight gap files (zoverii/MissingZGE, MissingZGE/NgApp, NgApp/NgIFfx, NgIFfx/NgIFpsx,
 NgIFpsx/NgIFzactor, NgIFzactor/NgIFzbsp, NgIFzres/NgIFzroller, NgIFzroller/winChan) and created **229
-functions** Ghidra had not made (decomp/symbols/symbols.csv rows, card DM-057): 169 printing stubs (NgIFzbsp 113,
+functions** Ghidra had not made (decomp/symbols/symbols.csv rows): 169 printing stubs (NgIFzbsp 113,
 NgIFzcollide 8, NgIFzroller 48), 15 silent stubs, the zfx draw / update functions and spawners
 (reached only through the type tables and zfxRegisterSpawner), the loading bar, the debug tag view,
 zmemDMMStats, and a few unreferenced helpers. The three functions after zresFreeImages that the
@@ -40,7 +40,7 @@ inside its range (0x0046D350, 0x0046D3A0, 0x0046D3C0, 0x0046D6E0, 0x0046D700), s
 to **NgIFzroller.c**. Five are called, all by the memory-card dialogues (overlay.c's save page,
 frontend.c's load / save / format pages): `zcardSelectPort(slot)` 0x0046D720, `zcardCheck(callback)`
 0x0046D7A0 (the callback never comes, so the page times out), `zcardFormat` 0x0046D8A0 (returns 0 =
-formatted), `zcardStart` 0x0046D8C0 / `zcardStop` 0x0046D8E0 (around every card page); the other twelve
+formatted), `zcardStart` 0x0046D8C0 / `zcardStop` 0x0046D8E0 (around every memory-card page); the other twelve
 are unreferenced (`zcardStub1`..`zcardStub16`). The PC save path itself is memcard.c (SAVE.md).
 
 ## 2. Prop collision (NgIFzbsp.c, NgIFzcollide.c)
@@ -74,7 +74,7 @@ are unreferenced (`zcardStub1`..`zcardStub16`). The PC save path itself is memca
 | **0x0800** | OBJI4 | OBJI byte 4 bit 0 | **nothing** |
 | **0x1000** | OBJI5 | OBJI byte 5 bit 0 | **nothing** |
 
-So DM-052's open items: 0x80 = knocked / rails off (above), 0x400 / 0x800 / 0x1000 are written but have
+So the prop/replay/fx pass's open items: 0x80 = knocked / rails off (above), 0x400 / 0x800 / 0x1000 are written but have
 no reader in this build (all 0 in the corpus OBJI anyway).
 
 **Shapes** (`NgPropShape`, 0x38, `ZpropDefInfo.collision`, `zbspInitPropDefShape`): OBJI byte 0x16 =

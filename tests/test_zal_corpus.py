@@ -1,4 +1,4 @@
-"""ZAL corpus tests (DM-010): byte-identical round-trip of every .zal, nested archives, LZO payloads."""
+"""ZAL corpus tests: byte-identical round-trip of every .zal, nested archives, LZO payloads."""
 import pytest
 from conftest import corpus_files, corpus_params
 

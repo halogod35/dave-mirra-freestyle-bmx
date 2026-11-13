@@ -6,10 +6,10 @@ It opens a small dialog (Qt). From the MAXScript listener you can also call:
 
 Parsing is done by dmparse.py (the reference parser, copied next to this file); this module only
 builds the 3ds Max scene. Model data stays in game (RenderWare) space and one root Dummy carries the
-axis change: game Y-up -> Max Z-up, plus the rider upright correction (../SPEC.md section 2.5).
+axis change: game Y-up -> Max Z-up, plus the rider upright correction (../../../docs/formats/SPEC.md section 2.5).
 
 Every call into 3ds Max goes through ``rt`` (pymxs.runtime). The test suite drives this module with a
-recording mock of pymxs (tests/test_3dsmax_max_python.py); real-Max behaviour is play-test DM-060-PT1.
+recording mock of pymxs (tests/test_3dsmax_max_python.py); real-Max behaviour is checked by hand in 3ds Max.
 """
 import os
 import sys
@@ -183,7 +183,7 @@ def to_max(xf):
 
 def root_transform(z, lod, upright, animated=False):
     """Root rows: [upright correction] * game->Max. Animated riders get no upright correction (the Hips
-    channel stands the skeleton up by itself, ../SPEC.md section 8.4)."""
+    channel stands the skeleton up by itself, ../../../docs/formats/SPEC.md section 8.4)."""
     corr = dmparse.upright_correction(z, lod) if (upright and not animated) else None
     rows = _mul3(UPRIGHT[corr], GAME_TO_MAX) if corr else GAME_TO_MAX
     return rows, (0.0, 0.0, 0.0)
@@ -506,7 +506,7 @@ def _tag_color(code):
 
 
 def import_level(folder, scale=100.0, texture_dir=None, centre=True, explicit_normals=False, flip_normals=False):
-    """Import a level folder (the one holding the .ZSD), ../SPEC.md section 5:
+    """Import a level folder (the one holding the .ZSD), ../../../docs/formats/SPEC.md section 5:
     World (one mesh, Mat._sd textures with the colour key as opacity), Props (one mesh per PropDef,
     then instances placed and rotated), Tags (one hidden mesh per tag code), ScenePoints (dummies:
     Player, PlayerT, Globals, SpotLights) and the Panorama (sky model at the world origin).

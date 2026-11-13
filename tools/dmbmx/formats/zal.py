@@ -1,4 +1,4 @@
-"""ZAL asset library (".zal"): reader / writer (DM-010). Spec: docs/formats/ZAL.md.
+"""ZAL asset library (".zal"): reader / writer. Spec: docs/formats/ZAL.md.
 
 Layout (all little-endian, [V] over the 6 shipped files and NgBMX.exe zasset.c 0x004804D0):
 
@@ -31,7 +31,7 @@ COUNT_METHOD_BIT = 0x4000
 COUNT_COMPRESSED = 0x8000
 
 METHOD_NONE = 0
-METHOD_1 = 1             # LZRW3-A (exe 0x0049BD10 / 0x0049B8E0, DM-042; dmbmx.core.lzrw3a); unused in corpus
+METHOD_1 = 1             # LZRW3-A (exe 0x0049BD10 / 0x0049B8E0; dmbmx.core.lzrw3a); unused in corpus
 METHOD_LZRW3A = METHOD_1
 METHOD_LZO1X = 2         # exe 0x0049C0AC
 
@@ -103,7 +103,7 @@ class ZalArchive:
         self.count_word = 0
         self.entries = []
         self.tail = b""
-        self.headerless = False   # in-memory form: no magic/reserved; table at 0, offsets from 0 (DM-016)
+        self.headerless = False   # in-memory form: no magic/reserved; table at 0, offsets from 0
 
     @property
     def _base(self):

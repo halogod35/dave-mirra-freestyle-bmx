@@ -1,18 +1,18 @@
 /*
  * zaxis/Bmx/Src/com/menu/gui/guitoggl.c
  * Original: C:\zaxis\Bmx\src\com\menu\gui\guitoggl.c
- * Evidence: [V] path string 0x0055A2AC referenced by 13 functions (their asserts; DM-056 created the
+ * Evidence: [V] path string 0x0055A2AC referenced by 13 functions (their asserts; the front-end pass created the
  *           two handlers 0x0043A840 / 0x0043AED0, reached only through thunks, and the setters
  *           0x0043B660 / 0x0043BD90). [I] 0x00439F80 / 0x00439FA1 (the generic element handler) by
  *           the pipeline's split pass (its one caller vote is guitoggl.c): no literal ties it to a file,
  *           and it could as well be an object of its own between guisfile.c and guitoggl.c.
  * 14 functions, VA 0x00439f80-0x0043be61.
- * DM-056 (draft). Non-matching C (AD-8). Types: gui.h. Notes: docs/re/frontend.md.
+ * Draft. Non-matching C (AD-8). Types: gui.h. Notes: docs/re/frontend.md.
  *
  * guiElementHandler is the type handler of GUI_TYPE_SPRITE (1) and 5 and the "base class" every
  * other handler (button, toggle, the frontend's custom handlers) calls to draw an element.
  * 0x00439FA1 is not a real function: it is the draw case of guiElementHandler (after its jump at
- * 0x00439F99), which Ghidra's analysis had made a function of its own. DM-064's `nofunc` row in
+ * 0x00439F99), which Ghidra's analysis had made a function of its own. The clean-up's `nofunc` row in
  * decomp/symbols/symbols.csv removes it from Ghidra (ApplySymbols gives the code back to 0x00439F80); the C keeps
  * that case as the helper guiElementDraw, which has no VA of its own.
  *
@@ -40,7 +40,7 @@ int guiElementHandler(uint32_t msg, GuiElement *e, uint32_t a, uint32_t b)
 }
 
 /* The draw case of guiElementHandler (code 0x00439FA1-0x0043A66A, inside 0x00439F80; not a function
- * in the exe, DM-064). */
+ * in the exe). */
 int guiElementDraw(uint32_t msg, GuiElement *e, uint32_t selected, uint32_t b)
 {
     /* Draw the sprite part (frame animation, scale, pulse / highlight tint) and then the text

@@ -1,5 +1,5 @@
 /*
- * zpc.h - the PC platform layer of ZGE (DM-061): NgEngine/Zge/Pc/pcinput.c (DirectInput 7 keyboard
+ * zpc.h - the PC platform layer of ZGE: NgEngine/Zge/Pc/pcinput.c (DirectInput 7 keyboard
  * and joystick) and pcmovie.c (AVI playback through AVIFile, DrawDib and waveOut).
  *
  * Offsets [V] (field use in these files); names [I]; the DirectInput / AVIFile structures are the
@@ -145,9 +145,9 @@ int        pcinputUnacquireAll(void);                                       /* 0
 int        pcinputPollDevices(void);                                        /* 0x00493910 once per frame */
 int        pcinputStub(struct ZInputDevice *device);                        /* 0x00493CB0 returns 0 (zinput: no force feedback) */
 int        zinputSetKeyLayout(struct ZInputDevice *device, const void *layout); /* 0x00493CC0 */
-extern const uint8_t g_pcinputKeymap1[];                                    /* 0x00561E68 (DM-051) */
-extern const uint8_t g_pcinputKeymap2[];                                    /* 0x00561E88 (DM-051) */
-extern const uint8_t g_pcinputJoyMapDefault[];                              /* 0x00561EA8 (DM-051): a PcJoyMapHeader + pairs */
+extern const uint8_t g_pcinputKeymap1[];                                    /* 0x00561E68 */
+extern const uint8_t g_pcinputKeymap2[];                                    /* 0x00561E88 */
+extern const uint8_t g_pcinputJoyMapDefault[];                              /* 0x00561EA8: a PcJoyMapHeader + pairs */
 extern const PcJoyMapHeader *const g_pcinputJoyMaps[];                      /* 0x00561F2C, NULL-terminated */
 
 void       pcmovieInit(PcMovie *m);                                         /* 0x0049FB30 */

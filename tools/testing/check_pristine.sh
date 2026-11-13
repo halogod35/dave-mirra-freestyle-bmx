@@ -88,7 +88,7 @@ rc=0
 for t in "${TARGETS[@]}"; do
     case "$t" in
         pristine) check_tree pristine "$GAME/_pristine" || rc=1 ;;
-        install)  check_tree install "$GAME" _pristine _testgame wt dave-mirra-bmx dave-mirra-pro-bmx PRISTINE.sha256 || rc=1 ;;
+        install)  check_tree install "$GAME" _pristine _testgame wt dave-mirra-bmx dave-mirra-freestyle-bmx PRISTINE.sha256 || rc=1 ;;
         testgame) check_tree testgame "$GAME/_testgame" || rc=1 ;;
     esac
 done

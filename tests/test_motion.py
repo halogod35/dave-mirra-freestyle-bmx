@@ -1,4 +1,4 @@
-"""DM-016: motion bank (motion.zal) reader/writer/evaluator, glTF animation export, fuzz."""
+"""Motion bank (motion.zal) reader/writer/evaluator, glTF animation export, fuzz."""
 import json
 import math
 import os
@@ -45,7 +45,7 @@ def test_arm_fix():
     s = math.sqrt(0.5)
     F = M.engine_to_model
     assert M.channel_rotation("Head", (0, 0, 0)) == pytest.approx((0, 0, 0, 1))
-    # DM-019: NgIFzactor's literal table, then the engine -> model conjugation (x, -y, -z, w)
+    # NgIFzactor's literal table, then the engine -> model conjugation (x, -y, -z, w)
     assert M.ARM_FIX_AS_DECOMPILED is M.ARM_FIX
     assert M.channel_rotation("LeftUpArm", (0, 0, 0)) == pytest.approx((0, 0, -s, s))
     assert M.channel_rotation("RightUpArm", (0, 0, 0)) == pytest.approx((0, 0, s, s))
@@ -55,7 +55,7 @@ def test_arm_fix():
         assert M.channel_rotation(n, e) == pytest.approx(F(M.channel_rotation(n, e, frf=False)))
         if n not in M.ARM_FIX:
             assert M.channel_rotation(n, e) == pytest.approx(F(M.euler_to_quat(e)))
-    # legacy DM-017: Rx(180) * q * Cz(+-90) on the upper arms, no conjugation
+    # legacy table: Rx(180) * q * Cz(+-90) on the upper arms, no conjugation
     x180 = M.euler_to_quat((-0x8000, 0, 0))
     assert M.channel_rotation("LeftUpArm", (0, 0, 0), legacy=True) == pytest.approx(M.quat_mul(x180, (0, 0, s, s)))
     assert M.channel_rotation("Head", (100, 200, 300), legacy=True) == pytest.approx(M.euler_to_quat((100, 200, 300)))
@@ -95,7 +95,7 @@ def test_synthetic_roundtrip_and_sample():
     # deltas persist: +10 per frame on channel 0, root x moves 1.0 per frame
     assert P[2].rider[0] == (120, 0, 0) and P[2].rider_trans[0] == pytest.approx(3.0)
     assert P[2].bike[0] == (0, 0, 10) and P[2].rider[1] == (0, 3, 0)
-    # DM-053: once the record stream is used up the game's decoder stops; later frames hold the pose
+    # once the record stream is used up the game's decoder stops; later frames hold the pose
     m2.records = m2.records[:2]
     P = m2.sample()
     assert P[2].rider[0] == P[1].rider[0] == (110, 0, 0) and P[2].rider_trans == P[1].rider_trans
@@ -186,9 +186,9 @@ def _fk(skel, rot_for):
 
 
 def test_hands_on_handlebars(bank, game_dir):
-    """[V] DM-019 (DM-045 finding): rider posed on the bike (feet on pedals) with the engine's F q F and the
+    """[V] (zmath.c decomp finding): rider posed on the bike (feet on pedals) with the engine's F q F and the
     literal arm table - hands on the handlebars, hand gap = bar width. Without F the literal table puts the
-    hands ~0.7 away; the legacy DM-017 Rx(180) table is kept for comparison."""
+    hands ~0.7 away; the legacy Rx(180) table is kept for comparison."""
     import sys
     sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools" / "research"))
     from arm_pose_check import setup, summarize

@@ -1,15 +1,15 @@
 # The ZglRw layer: ZGL on RenderWare 3.1 (zrw*.c)
 
-DM-059. C: `decomp/src/NgEngine/Zge/Com/ZglRw/zrw*.c` (zrwTxr 49, zrwMat 25, zrwModel 47, zrwModelCreate 44,
+C: `decomp/src/NgEngine/Zge/Com/ZglRw/zrw*.c` (zrwTxr 49, zrwMat 25, zrwModel 47, zrwModelCreate 44,
 zrwModelGeom 9, zrwModelRender 19, zrwLight 10, zrwCam 33, zrwCol 21, zrwPrim 12, zrwShadow 5, zrwDbg 32,
-zrwZgl 43 functions; zrwWorld.c is DM-043's, zrwFile.c DM-041's, zrwRamDisk.c DM-061's) and the gap files
+zrwZgl 43 functions; zrwWorld.c is the zScene pass's, zrwFile.c the zfile pass's, zrwRamDisk.c the ZGE object pass's) and the gap files
 around them; types, driver tables and the RenderWare prototypes in `decomp/include/zglrw.h`; checks in
-`tests/test_decomp_dm059.py`. Tags as in CONTRIBUTING.md AD-5: [V] = checked against the exe or the corpus
+`tests/test_decomp_zglrw.py`. Tags as in CONTRIBUTING.md AD-5: [V] = checked against the exe or the corpus
 (mostly by that test), [I] = inferred.
 
-DM-059 drafted 401 functions (395 in these files and the gaps, 4 zfx affectors in zrwWorld.c, 2 wrappers in
+The ZglRw pass drafted 401 functions (395 in these files and the gaps, 4 zfx affectors in zrwWorld.c, 2 wrappers in
 zcompres.c); 172 of them were not functions in the Ghidra project: they are reached only through the
-driver tables, RenderWare callbacks or jump tables. DM-059's rows in `decomp/symbols/symbols.csv` create them
+driver tables, RenderWare callbacks or jump tables. The ZglRw pass's rows in `decomp/symbols/symbols.csv` create them
 (172 game functions + 4 RenderWare ones). 0x0049D895 is a Ghidra artefact: the tail of the MODL handler,
 kept as `zrwModelChunkMODLBody`.
 
@@ -225,7 +225,7 @@ triangle, sphere, box) per frame; an fps / RW metrics line. All drawn by ZGL cal
 - **Render state** (`zrwZglSetRenderState`): bit 1 no z test / write, 2 blending (else src/dest forced
   to 8/1 [I]), 4 flat shading, 8 no vertex alpha, 0x20 clamp, 0x0F00 / 0xF000 source / destination blend;
   only changed bits reach RenderWare; a 4-deep push / pop stack.
-- **The CD check** `app_CheckGameCD` (DM-030 #9): `HKLM\Software\Acclaim Entertainment\Dave Mirra
+- **The CD check** `app_CheckGameCD` (integrity check #9): `HKLM\Software\Acclaim Entertainment\Dave Mirra
   Freestyle BMX\1.00.000\SRCDISK` + `\bin\movie\acclaim.avi` must open, else "Please Insert Game CD".
 - **Movies** (`zrwZglPlayMovie`): a missing file is skipped; any newly pressed button aborts.
 

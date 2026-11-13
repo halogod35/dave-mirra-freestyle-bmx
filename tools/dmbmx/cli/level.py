@@ -1,4 +1,4 @@
-"""dmbmx level {info, dump-obj, export, resign}: level folder tools (DM-013)."""
+"""dmbmx level {info, dump-obj, export, resign}: level folder tools."""
 from collections import Counter
 from pathlib import Path
 

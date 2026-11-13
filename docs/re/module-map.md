@@ -1,6 +1,6 @@
 # Module map of NgBMX.exe (original source file → code)
 
-DM-002. This is the base for the decomp plan (DM-040). Exe = the 2000-11-22 build; VAs `0x00xxxxxx`.
+This is the base for the decomp plan. Exe = the 2000-11-22 build; VAs `0x00xxxxxx`.
 [V] = verified on the exe (Ghidra 12.2 project + `decomp/symbols/functions.csv`), [I] = inferred.
 Library code is in [libraries.md](libraries.md).
 
@@ -13,13 +13,13 @@ Library code is in [libraries.md](libraries.md).
    and the objects appear in the same order in `.text` as their literals in `.data`. Checked: the
    first VAs of the 72 files (lowest [V] function each) are in exactly the same order as their path
    strings in `.data` (0x00551a64 `action.c` ... 0x00563a38 `pcProfile.c`), with no exception.
-3. **Inference passes** [I], repeated until nothing changes (`tools/ghidra/build_symbols.py`):
+3. **Basic inference passes** [I], repeated until nothing changes (`tools/ghidra/build_symbols.py`):
    - *strings*: the function references a literal inside a file's `.data` literal window (the span
      of literals used by that file's [V] functions, clipped by the neighbouring files' path strings),
      and that file is the previous or next attributed file in VA order;
    - *between*: the function lies between two functions of the same file;
    - *callers*: all its callers are in one file and the function right next to it is in that file.
-4. **DM-040 passes** [I] (same script; generated rows from them carry card `DM-040`):
+4. **Extended passes** [I] (same script):
    - *seed* (`STRING_SEEDS`): the function references a message that names its module or itself
      (`bmxphys...`, `bmxprop...`, `bmxreplay...`, `GUIMAIN:`, `ZPRIM:`, `ZCOMPRES:`, `Movie : ` in
      the player's literal slot, `RwMat:`, `RwCam:`, `zrwModelCreate...`, `frontend...`);
@@ -35,8 +35,8 @@ Library code is in [libraries.md](libraries.md).
 5. Everything else stays **unattributed** and is listed as a gap below. A gap is code of one of its
    two neighbours or of a file whose path string is never used (see "Files with no code xref").
 
-Coverage: DM-002 placed 616 of 1366 game/engine functions; DM-040 places **1128 of 1399** (81%;
-the 26 file-device functions it created and 8 created by DM-014/030 are included), in 78 files (72 with path xrefs, 2 orphan
+Coverage: the basic passes placed 616 of 1366 game/engine functions; with the extended passes **1128 of 1399** (81%;
+the 26 file-device functions created by symbols.csv rows and 8 more created earlier are included), in 78 files (72 with path xrefs, 2 orphan
 path strings, 4 new files: `guimain.c`, `zmath.c`, `zcompres.c`, `pcmovie.c`).
 
 Rules a reader can rely on: a [V] row is certain; an [I] row is right in the large majority of
@@ -46,14 +46,14 @@ the pipeline regenerates the tables below.
 ## Conventions
 
 - `source_file` in `decomp/symbols/symbols.csv` = the original path without drive and without the leading
-  `zaxis\`: `Bmx/Src/com/action/memcard.c`, `NgEngine/Zge/zfile.c` (the convention DM-010/DM-012
-  already used on main). The binary mixes `Bmx\Src` and `Bmx\src`; we write `Src` for both.
+  `zaxis\`: `Bmx/Src/com/action/memcard.c`, `NgEngine/Zge/zfile.c` (the convention the ZAL and save readers
+  already used). The binary mixes `Bmx\Src` and `Bmx\src`; we write `Src` for both.
   Library code: `lib:msvcrt`, `lib:renderware`, `lib:libpng`, `lib:zlib`.
 - For the decomp tree (AD-8): `Bmx/...` → `decomp/src/zaxis/Bmx/...`, `NgEngine/...` →
   `decomp/src/NgEngine/...`.
 - Generated names: a function attributed by the pipeline and not named by anyone is called
-  `<file>_<va>` (e.g. `game_0040a850`), card DM-002 or DM-040 depending on the pass. Hand names from
-  any card win (the generator never touches rows of other cards or hand-named rows).
+  `<file>_<va>` (e.g. `game_0040a850`). Hand-written rows always win (the generator only regenerates its own
+  `<file>_<va>` rows and the unnamed `lib:` rows, and never adds one where a hand-written row exists).
 - New files (no path string) get names in the original style (`guimain.c` after its `GUIMAIN:`
   messages, `zcompres.c` after `ZCOMPRES:`, `zmath.c`, `pcmovie.c`); they are marked * below.
 - Types: `struct` rows (`0x00000000,struct,<Type>,<header>,...`) list the recovered structs; the
@@ -67,80 +67,80 @@ the pipeline regenerates the tables below.
 | 0x00401005-0x00402616 | `/INCREMENTAL` thunk table (634 `jmp` stubs), then `0xCC` padding |
 | 0x00403c30-0x0047ebff | **Game**: `Bmx/Src/com/action/*` (action ... rider), `com/menu/*`, `com/zge/bmx/*`, `com/zge/NgIF/*` (NgEngine interface layer), `Pc/zge/sound/*`, `com/zge/*` (zactor, zprim, zsndseq, zsndsrc) |
 | 0x0047ec40-0x004a4a7f | **Engine** `NgEngine/Zge/*` (zdebug, zasset, zfile, zmem, zobj*, ziff, zScene, ...) and the RenderWare glue `Com/ZglRw/zrw*.c`; `WinMain` (RW skeleton style) 0x0048a460 |
-| 0x004a4a20- | libraries (DM-061: from `_fpmath`): CRT, import stubs, RenderWare, libpng+zlib, CRT, RenderWare ([libraries.md](libraries.md)) |
+| 0x004a4a20- | libraries (from `_fpmath`): CRT, import stubs, RenderWare, libpng+zlib, CRT, RenderWare ([libraries.md](libraries.md)) |
 
-## Named entry points (task 5)
+## Named entry points
 
 | VA | Name | Source file | Conf | Evidence |
 |---|---|---|---|---|
 | 0x004a51f9 | `WinMainCRTStartup` | lib:msvcrt | V | PE entry point; calls `WinMain` |
 | 0x0048a460 | `WinMain` | (unattributed, RW skeleton) | V | called by the CRT entry with (hInstance, 0, cmdline, nShow); parses `-r` resolution switch, `RegisterClassA("RwAppClass")`, `CreateWindowExA`, then the **main loop**: `PeekMessageA` loop, frame limiter on `timeGetTime`, calls `App_Frame` each iteration |
-| 0x0048a800 | `MainWndProc` | (unattributed) | I | `lpfnWndProc` of the window class (function created by DM-002) |
+| 0x0048a800 | `MainWndProc` | (unattributed) | I | `lpfnWndProc` of the window class (function created by hand) |
 | 0x0048b1a0 | `App_Open` | `NgEngine/Zge/Com/ZglRw/zrwZgl.c` [I] | I | called by `WinMain` with the HWND; failure → `DestroyWindow` |
 | 0x0048b450 | `App_Start` | `zrwZgl.c` [I] | I | called by `WinMain` with the command line before the loop |
 | 0x0048b570 | `App_Frame` | `zrwZgl.c` [I] | I | called once per main-loop iteration; frame timing (`timeGetTime`, fps counter) |
-| 0x0047ed10 | `zAssertFail` (DM-012) | `NgEngine/Zge/zdebug.c` [I] | I | `(msg, __FILE__, __LINE__, 0)`, 252 callers; calls handler pointer `g_pfnAssertHandler` [0x0056147c] |
+| 0x0047ed10 | `zAssertFail` | `NgEngine/Zge/zdebug.c` [I] | I | `(msg, __FILE__, __LINE__, 0)`, 252 callers; calls handler pointer `g_pfnAssertHandler` [0x0056147c] |
 | 0x00560074 | `g_pfnDebugPrintf` (data) | | I | printf-like pointer used for the save error messages |
-| 0x00483a60 | `zfileRegisterErrorMessage` (DM-012) | `NgEngine/Zge/zfile.c` | V | own name in its format string |
+| 0x00483a60 | `zfileRegisterErrorMessage` | `NgEngine/Zge/zfile.c` | V | own name in its format string |
 | 0x00483aa0 | `zfileInit` | `zfile.c` | I | "File system should not be initialized", creates the file-handle allocator |
-| 0x00484700 | `zfileOpen` (DM-012) | `zfile.c` | V | `(path, mode 1=read/2=write, 0)`; used by the save code |
-| 0x00484a60 | `zfileClose` (DM-012) | `zfile.c` | V | |
-| 0x00484b20 | `zfileRead` (DM-012) | `zfile.c` | V | `(h, buf, n, 0)` → device vtable +0x28 |
-| 0x00484b90 | `zfileWrite` (DM-012) | `zfile.c` | V | |
-| 0x00484c00, 0x00484c70, 0x00484cd0 | `zfileSeek`, `zfileTell`, `zfileGetSize` (DM-040) | `zfile.c` | V/I/V | device slots +0x30/+0x34/+0x38; zasset uses Seek(f, off, 0, 0) and GetSize(f, &size, 0) |
-| 0x0049e1f0-0x0049e950, 0x0049eaa0-0x0049f3d0 | `zrwFile_*`, `zramdisk_*` (DM-040, 26 functions created) | `zrwFile.c`, `zramdisk.c` | V/I | the two `zfileDevice` tables (0x00562ff8, 0x00563240); see `decomp/include/zfile.h` |
+| 0x00484700 | `zfileOpen` | `zfile.c` | V | `(path, mode 1=read/2=write, 0)`; used by the save code |
+| 0x00484a60 | `zfileClose` | `zfile.c` | V | |
+| 0x00484b20 | `zfileRead` | `zfile.c` | V | `(h, buf, n, 0)` → device vtable +0x28 |
+| 0x00484b90 | `zfileWrite` | `zfile.c` | V | |
+| 0x00484c00, 0x00484c70, 0x00484cd0 | `zfileSeek`, `zfileTell`, `zfileGetSize` | `zfile.c` | V/I/V | device slots +0x30/+0x34/+0x38; zasset uses Seek(f, off, 0, 0) and GetSize(f, &size, 0) |
+| 0x0049e1f0-0x0049e950, 0x0049eaa0-0x0049f3d0 | `zrwFile_*`, `zramdisk_*` (the skeleton, 26 functions created) | `zrwFile.c`, `zramdisk.c` | V/I | the two `zfileDevice` tables (0x00562ff8, 0x00563240); see `decomp/include/zfile.h` |
 | 0x00485460 | `zfileBuildPath` | `zfile.c` | I | "Memory corruption when building path name" |
-| 0x004804d0 ... 0x00480930 | `zasset_OpenLibrary`, `zasset_CloseLibrary`, `zasset_FindAsset` ("Failed to find asset Group=%d, AssetNum=%d"), `zasset_OpenRefFile`, `zasset_LoadAsset` (DM-010) | `NgEngine/Zge/zasset.c` | V/I | asset lookup by group/number; ZAL library open/close |
-| 0x00485d80 / 0x00485e10 / 0x00485e40 | `zmemTempAlloc` / `zmemTempRelease` / `zmemTempMark` (DM-012, renamed DM-044) | `NgEngine/Zge/zmem.c` | I | stack-style temporary allocator ("Memory allocation failed - Out of ...") |
-| 0x00412130 | `memcard_CheckSaveExists` (DM-012) | `Bmx/Src/com/action/memcard.c` | V | opens `.\save\SAVE.DAT`; 6 = exists, 5 = not |
-| 0x00412170 | `memcard_Stub0` (DM-012) | `memcard.c` | I | `return 0` |
-| 0x00412190 | `memcard_LoadSave` (DM-012) | `memcard.c` | V | reads 0x235C bytes, checks only `u32 @4 == 0x235C`, copies 3 blocks; **no CRC** |
-| 0x00412340 | `memcard_WriteSave` (DM-012) | `memcard.c` | V | builds header `1C 51 81 2A`, `0x235C`, copies 3 blocks, writes 0x235C bytes |
+| 0x004804d0 ... 0x00480930 | `zasset_OpenLibrary`, `zasset_CloseLibrary`, `zasset_FindAsset` ("Failed to find asset Group=%d, AssetNum=%d"), `zasset_OpenRefFile`, `zasset_LoadAsset` | `NgEngine/Zge/zasset.c` | V/I | asset lookup by group/number; ZAL library open/close |
+| 0x00485d80 / 0x00485e10 / 0x00485e40 | `zmemTempAlloc` / `zmemTempRelease` / `zmemTempMark` (first named by the save reader, renamed by the zmem pass) | `NgEngine/Zge/zmem.c` | I | stack-style temporary allocator ("Memory allocation failed - Out of ...") |
+| 0x00412130 | `memcard_CheckSaveExists` | `Bmx/Src/com/action/memcard.c` | V | opens `.\save\SAVE.DAT`; 6 = exists, 5 = not |
+| 0x00412170 | `memcard_Stub0` | `memcard.c` | I | `return 0` |
+| 0x00412190 | `memcard_LoadSave` | `memcard.c` | V | reads 0x235C bytes, checks only `u32 @4 == 0x235C`, copies 3 blocks; **no CRC** |
+| 0x00412340 | `memcard_WriteSave` | `memcard.c` | V | builds header `1C 51 81 2A`, `0x235C`, copies 3 blocks, writes 0x235C bytes |
 
-The save details are in DM-012's `docs/formats/SAVE.md` and `docs/re/integrity-checks.md`.
+The save details are in `docs/formats/SAVE.md` and `docs/re/integrity-checks.md`.
 
-DM-040 also named, from messages that carry the original function name [V]: `bmxphysUpdatePositionAir`
+The skeleton also named, from messages that carry the original function name [V]: `bmxphysUpdatePositionAir`
 0x0042dad0, `bmxpropInit` 0x0042deb0, `bmxpropGetPropByID` 0x0042ed10, `bmxreplayUpdate` 0x0042fd50,
 `bmxreplayCreate` 0x00430180, `frontendInitApp` 0x0044d990, `zfxCreate` 0x0045fcb0,
 `zrollerGetPlayerStartPos` 0x0046cf30, `zrwMatCreateFromImage` 0x004896d0, `zrwWorldHookRpMaterials`
 0x00496ff0, `zrwModelSetRwInfo` 0x0049c880, `zrwModelCreateInstance` 0x0049ce90; and [I]
 `zdebugPrint` 0x0047f940, `zmathInitTables`/`zmathSin`/`zmathCos` 0x00480d20/0x00480e40/0x00480eb0,
 `zrwZglPlayMovie` 0x0048bed0, `zmemAlloc`/`zmemFree`/`zmemPoolCreate`/`zmemPoolAlloc`/`zmemPoolFree`.
-DM-044 renamed the zmem allocators after the exe's own messages: the fixed-size allocator at
+The zmem pass renamed the zmem allocators after the exe's own messages: the fixed-size allocator at
 0x00485e80-0x00486170 is a *free list* (`zmemFreeListCreate/Destroy/Alloc/Free`, "Free list pool has
 been exhausted."), and `zmemPool*` now means the first-fit *memory pools* (`zmemPoolCreate` 0x00486410,
 `zmemPoolAlloc` 0x004865b0, `zmemPoolFree` 0x00486820: "zmemPoolFree(): Memory has been previously
-freed."). `zMemTemp*` became `zmemTemp*`. Full list: `decomp/symbols/symbols.csv` rows of card DM-044.
+freed."). `zMemTemp*` became `zmemTemp*`. Full list: the zmem*/zList*/zstring* rows of `decomp/symbols/symbols.csv`.
 The original style is `<module><Verb>` without underscore (`bmxprop`, `zroller`, `zrwModel`).
-DM-046 renamed the game-flow layer the same way: `game_*` -> `game<Verb>` (46 functions of game.c,
+The game.c pass renamed the game-flow layer the same way: `game_*` -> `game<Verb>` (46 functions of game.c,
 e.g. `gameApplyReward`, `gameAwardLevelProgress`, `gameSetState`), `comdata_GetGoalInfo` ->
-`comdataGetGoalInfo`, and moved DM-012's `save_InitDefaults` 0x00407BA0 / `save_GetRecordPtr`
+`comdataGetGoalInfo`, and moved the save reader's `save_InitDefaults` 0x00407BA0 / `save_GetRecordPtr`
 0x00407D20 from the camera gap into `comdata.c` as `comdataInitDefaults` / `comdataGetRecordPtr`
 (row anchors: they sit right before `comdataGetGoalInfo` and touch only the saved globals). It also
 named two callees in the gaps without attributing them: `cameraSetMode` 0x00407760 and
 `fxCollectEffect` 0x00408A80 [I].
-DM-051 (action / contrler / camera): `camera.c` is 0x004056C0-0x00407B85. DM-040 had put
+The camera pass (action / contrler / camera): `camera.c` is 0x004056C0-0x00407B85. The skeleton had put
 `action_004056c0` / `action_00405780` / `action_00407470` in action.c ("split" / "callers"); they are
 `cameraInit` / `cameraUpdate` / `cameraApply` and, with the five camera-gap functions and the new
 `cameraDrawNightVision` 0x004074C0 (a draw callback Ghidra had not created; a `decomp/symbols/symbols.csv` row creates
 it), only touch the camera globals 0x0056B408-0x0056B5BB; camera.c's assert at line 1183 also needs
 cameraUpdate's ~1100 lines in front of it. The 27 functions of the three files are named `action*`,
-`camera*`, `contrler*` (`decomp/symbols/symbols.csv` rows of card DM-051, which carry the source file);
+`camera*`, `contrler*` (`decomp/symbols/symbols.csv` rows, which carry the source file);
 `gap_camera__comdata.c` is gone. Details: `docs/re/input-camera.md`.
-DM-054 (overlays): `overlymp.c` is 0x004124C0-0x004147AD (it takes in the gap function 0x00414580,
+The overlay pass (overlays): `overlymp.c` is 0x004124C0-0x004147AD (it takes in the gap function 0x00414580,
 `overlympDrawLetters`, called only from there), `overlay.c` 0x004147E0-0x0041FA0C (it ends right before
 physics.c), `zoverii.c` 0x00457B00-0x0045A130. 90 functions in these ranges were not in the Ghidra
 project (85 in overlay.c, 5 in overlymp.c): they are reached only through the HUD item table 0x00556F00,
-the overlay screen records 0x00557098-0x005571B7 or two ILT thunks; `decomp/symbols/symbols.csv` rows of card DM-054
+the overlay screen records 0x00557098-0x005571B7 or two ILT thunks; `decomp/symbols/symbols.csv` rows
 create them. The 71-function gap between bmxsound.c and zoverii.c (no strings, called through tables)
 is not overlay code: nothing in it is called from the overlay files. Details: `docs/re/hud.md`.
-DM-056 (front end): `guiinput.c` 0x00436C20-0x0043744E, `guimain.c` 0x00437460-0x004399E6 (it takes in the old
+The front-end pass (front end): `guiinput.c` 0x00436C20-0x0043744E, `guimain.c` 0x00437460-0x004399E6 (it takes in the old
 gap function 0x004375A0 and the line element before it), the new `guisfile.c`* (0x00439A00, the screen-file loader:
 its "GUISFILE:" literals lie between guimain.c's and guitoggl.c's), `guitoggl.c` 0x00439F80-0x0043BE61 (the
 generic element handler 0x00439F80 joins it by the split pass; 0x00439FA1 is a bogus function inside it),
 `frontend.c` 0x0043BE90-0x0044DD23. 95 functions in these ranges were not in the Ghidra project: they are
 reached only through /INCREMENTAL thunks (screen handlers, per-frame tasks, element handlers);
-`decomp/symbols/symbols.csv` rows of card DM-056 create them. The gap before guiinput.c (0x00436520-0x00436C05: the button
+`decomp/symbols/symbols.csv` rows create them. The gap before guiinput.c (0x00436520-0x00436C05: the button
 element, text markup, the help-system stubs) stays a gap file. Details: `docs/re/frontend.md`.
 
 ## Files with no code xref [V]
@@ -151,12 +151,12 @@ referenced through data): `NgEngine/Zge/ZgeMods/zprop.c` 0x00560cb0,
 `NgEngine/Zge/zutil.c` 0x005637e4, `NgEngine/Zge/Com/ZglRw/zrwRamDisk.c` 0x005638b8. Their code
 is in the gaps next to their link-order neighbours (by `.data` order: zprop.c after zmem.c, ztaginf.c
 after zrwPrim.c, zscnpts.c after zScene.c, zutil.c after zFont.c, zrwRamDisk.c after zutil.c) [I].
-DM-040 found code for two of them through their literals (`ztaginf.c` 8 functions, `zutil.c` 1).
+The skeleton found code for two of them through their literals (`ztaginf.c` 8 functions, `zutil.c` 1).
 `zprop.c`, `zscnpts.c` and `zrwRamDisk.c` still have none.
 
-## The large gaps: what DM-040 did [I]
+## The large gaps: what the extended passes did [I]
 
-| DM-002 gap | Funcs | DM-040 result |
+| Gap after the basic passes | Funcs | Result of the extended passes |
 |---|---:|---|
 | 0x004375a0-0x0043a66a (after `guiinput`) | 65 | new `guimain.c` (62; "GUIMAIN:" and "GUISFILE:" messages, `intart.zal`); 3 left |
 | 0x0043f730-0x0044da86 (before `frontend`) | 48 | all 49 to `frontend.c` (call-graph split + "FRONTEND:" messages; frontend.c now 73 functions) |
@@ -166,7 +166,7 @@ DM-040 found code for two of them through their literals (`ztaginf.c` 8 function
 | 0x00475300-0x00477ca1 (after `zactor`) | 29 | `zactor.c` 25, `zprim.c` 4 ("ZPRIM:" messages) |
 | 0x0049fb30-0x004a2797 (after `zge`) | 26 | new `pcmovie.c` (13; "Movie : ..." messages, AVIFile/DrawDib), `zFont.c` 1; 12 left |
 | 0x0048ccf0-0x0048f361 (after `zrwPrim`) | 18 | orphan `ztaginf.c` 8; 10 left |
-| 0x00450060-0x00457a88 (after `bmxsound`) | 71 | DM-058: `bmx/dyn.c` (new, [I] name), the crash rag doll + limb IK (74 functions with 4 created); 0x004578F0 = zoverii.c `zoveriiInit` |
+| 0x00450060-0x00457a88 (after `bmxsound`) | 71 | `bmx/dyn.c` (new, [I] name), the crash rag doll + limb IK (74 functions with 4 created); 0x004578F0 = zoverii.c `zoveriiInit` |
 
 ## Rebuilding
 
@@ -174,9 +174,9 @@ DM-040 found code for two of them through their literals (`ztaginf.c` 8 function
 # once: import + auto-analysis into the canonical project (<repo>/.ghidra/project, gitignored; ~2 min)
 mkdir -p .ghidra/project
 tools/ghidra/ghidra.sh headless "<repo>\.ghidra\project" NgBMX -import "F:\Projects\Dave Mirra freestyle BMX\NgBMX.exe"
-# once, on a fresh project: the DM-043 fix-up (idempotent; see below)
+# once, on a fresh project: the zrwWorldPrintInfo fix-up (idempotent; see below)
 tools/ghidra/ghidra.sh headless "<repo>\.ghidra\project" NgBMX -process NgBMX.exe -noanalysis \
-    -scriptPath "<repo>\tools\ghidra" -postScript FixupDM043.java
+    -scriptPath "<repo>\tools\ghidra" -postScript FixupZrwWorldPrintInfo.java
 tools/ghidra/apply_symbols.sh --no-apply                # export decomp/symbols/functions.csv
 tools/testing/py.sh tools/ghidra/build_symbols.py       # module map -> symbols.csv + tables below
 tools/ghidra/apply_symbols.sh                           # types (ImportTypes) + names/tags into Ghidra, re-export functions.csv
@@ -185,10 +185,10 @@ tools/testing/py.sh tools/decomp/make_skeleton.py --signatures out/ghidra_c     
 ```
 
 Only the owner of the Ghidra project runs `apply_symbols.sh` (AD-6). Everyone else adds rows to
-`decomp/symbols/symbols.csv` (header `address,kind,name,type,source_file,confidence,card`, `0x%08x` lowercase,
+`decomp/symbols/symbols.csv` (header `address,kind,name,type,source_file,confidence`, `0x%08x` lowercase,
 sorted by address; duplicate addresses allowed, the last row wins).
 
-`FixupDM043.java` re-disassembles `zrwWorldPrintInfo` 0x00495F60, which auto-analysis decodes from the
+`FixupZrwWorldPrintInfo.java` re-disassembles `zrwWorldPrintInfo` 0x00495F60, which auto-analysis decodes from the
 wrong offset, so that `ApplySymbols` can create it. `SetFtolSignature.java` gives the CRT's `__ftol`
 0x004A4A80 its x87 signature so the decompiler shows float-to-int arguments (optional, for readable
 Ghidra C; run it the same way with `-postScript SetFtolSignature.java`). Both scripts describe themselves
@@ -217,9 +217,9 @@ in their header comments.
 
 Sorted by first VA (= link order). `V` = functions that reference the path string themselves;
 `I` = inferred, by method: `s` string in the file's .data string window, `b` between two functions of the file,
-`c` all callers in the file (DM-002); `e` seed string naming the file/function, `r` manual range, `o` literal
-in an orphan path string's window, `x` call-graph split of a gap, `w` another card's symbols.csv row names the file (DM-040). Files marked * have no path string
-in the exe; their name is invented in the original style (DM-040).
+`c` all callers in the file; `e` seed string naming the file/function, `r` manual range, `o` literal
+in an orphan path string's window, `x` call-graph split of a gap, `w` a hand-written symbols.csv row names the file. Files marked * have no path string
+in the exe; their name is invented in the original style.
 Confidence: **high** = one contiguous run with >= 1 V function and at most 1/4 split/range; **medium** = has V, seed or orphan evidence; **low** = only placed by range/split/adjacency.
 
 | # | Source file | VA range(s) | Funcs | V | I (s/b/c/e/r/o/x/w) | Bytes | Conf |
@@ -315,7 +315,7 @@ Confidence: **high** = one contiguous run with >= 1 V function and at most 1/4 s
 ### Unattributed game/engine code (gaps between modules)
 
 Each gap lies between the last function of the previous file and the first of the next one;
-its functions belong to one of the two neighbours or to a file with no path string (DM-040).
+its functions belong to one of the two neighbours or to a file with no path string.
 
 | Gap VA range | Funcs | Bytes | Previous file | Next file |
 |---|---:|---:|---|---|

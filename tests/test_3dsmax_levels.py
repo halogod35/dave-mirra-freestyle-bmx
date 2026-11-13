@@ -1,4 +1,4 @@
-"""DM-060 phase 2: dmparse's level readers agree with dmbmx (DM-013) on all 12 levels: world sectors,
+"""Phase 2 of dmparse: its level readers agree with dmbmx on all 12 levels: world sectors,
 material slots, props and their RW placement, prop-def and panorama models, scene points, tag faces
 and the colour-keyed textures."""
 import sys

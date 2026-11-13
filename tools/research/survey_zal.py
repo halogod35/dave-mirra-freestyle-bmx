@@ -1,4 +1,4 @@
-"""Corpus survey of the .zal archives (DM-010): header words, group table, payload types, padding, tails.
+"""Corpus survey of the .zal archives: header words, group table, payload types, padding, tails.
 
 usage: tools/testing/py.sh tools/research/survey_zal.py
 Recurses into nested archives (Intwrap.zal group 0). Reads the install read-only.

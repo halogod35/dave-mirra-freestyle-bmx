@@ -1,4 +1,4 @@
-"""STRS string tables (miscdata.zal 0x7919-0x791C, 0x7D01-0x7D0C). Spec: docs/formats/ZAL.md 3.1 (DM-054/DM-066).
+"""STRS string tables (miscdata.zal 0x7919-0x791C, 0x7D01-0x7D0C). Spec: docs/formats/ZAL.md 3.1.
 
     "STRS", u16 base_id, u16 count, u16 offset[count] (from the tag), then NUL-terminated latin-1 strings
 

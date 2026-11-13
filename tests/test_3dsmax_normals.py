@@ -1,4 +1,4 @@
-"""DM-063: "Exact normals" in both 3ds Max importers (Edit_Normals), for models and levels.
+"""The "Exact normals" option in both 3ds Max importers (Edit_Normals), for models and levels.
 
 The every-model / every-level imports with exact normals are in test_3dsmax_max_python.py and
 test_3dsmax_maxscript.py (max_checks.check_normals). This file holds:

@@ -1,4 +1,4 @@
-"""Render a preview of an exported .glb with Blender headless (DM-020 review thumbnails).
+"""Render a preview of an exported .glb with Blender headless (review thumbnails).
 
     "C:/Program Files/Blender Foundation/Blender 5.3/blender.exe" -b --factory-startup \
         --python tools/blender/scripts/render_thumb.py -- <in.glb> <out.png> [--size 960x540]

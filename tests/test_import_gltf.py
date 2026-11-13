@@ -1,4 +1,4 @@
-"""DM-021: glTF (.glb) -> ZMD importer: unedited round-trip over the corpus, scripted edits,
+"""GlTF (.glb) -> ZMD importer: unedited round-trip over the corpus, scripted edits,
 error/limit handling, fuzz, CLI."""
 import collections
 import random

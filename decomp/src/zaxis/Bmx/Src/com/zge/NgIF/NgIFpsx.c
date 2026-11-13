@@ -5,9 +5,9 @@
  *           and the asserts of psxDrawRect (0x63F), psxDrawSpriteList (0x7BD), psxDrawPoly3D
  *           (0x838, 0x853), psx2DDrawGlyph (0xAEA, 0xAEF); [I] the rest by link order (from the
  *           end of NgIFfx.c to NgIFzactor.c's first function) and the shared globals.
- * 39 functions, VA 0x0045fe00-0x004646d6 (DM-057 absorbed the NgIFfx/NgIFpsx and NgIFpsx/NgIFzactor
+ * 39 functions, VA 0x0045fe00-0x004646d6 (the NgIF pass absorbed the NgIFfx/NgIFpsx and NgIFpsx/NgIFzactor
  * gaps and created psxNop, psxSceneDraw, psx2DDraw, psxNop2, psxUnusedTrue1/2).
- * DM-057 (draft). Non-matching C (AD-8). Types / prototypes: ngif.h, zoverii.h. Description:
+ * Draft. Non-matching C (AD-8). Types / prototypes: ngif.h, zoverii.h. Description:
  * docs/re/ngif.md.
  *
  * The game's 2-D graphics were written for the PlayStation GPU: they build libgpu primitives

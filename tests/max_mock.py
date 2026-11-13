@@ -1,4 +1,4 @@
-"""A recording mock of 3ds Max's pymxs for DM-060 (3ds Max is not installed here).
+"""A recording mock of 3ds Max's pymxs for the importer tests (3ds Max is not installed here).
 
 It implements exactly the MAXScript functions the importer calls, with MAXScript's rules checked:
 1-based indices, ranges (face/vertex/map ids), files that must exist for bitmaps, skin bone ids, and

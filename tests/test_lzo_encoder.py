@@ -1,4 +1,4 @@
-"""LZO1X encoder unit tests (synthetic data) and decoder fuzzing with encoder output (DM-023)."""
+"""LZO1X encoder unit tests (synthetic data) and decoder fuzzing with encoder output."""
 import random
 
 import pytest

@@ -10,7 +10,7 @@
  *           - zsndSetUpdateRate / zsndStub (0x0047EBA0 / 0x0047EBC0) follow the last [V] function
  *             and own g_zsndUpdateRate (0x0055FFC0), which sits right after this file's literals and
  *             before zdebug.c's.
- * 26 functions, VA 0x0047DE20-0x0047EBC2. DM-055 (draft). Non-matching C (AD-8).
+ * 26 functions, VA 0x0047DE20-0x0047EBC2. Draft. Non-matching C (AD-8).
  * Types: zsound.h. Description: docs/re/sound.md section 5.
  *
  * 3-D sound sources ("zsndSrc"): 24 positional sounds. Each update (game frame) a source whose
@@ -19,7 +19,7 @@
  * change of d^2 (always 0: g_zsndSrcDopplerScale = 0 / maxDist). zsndSrcSetPosition re-arms the
  * life (lifeMs, 100 ms = 3 frames), so a source the game stops moving goes quiet by itself.
  * bmxsound uses sources for the rolling / freewheel loops of each rider and the level's props.
- * DM-055 created all twelve zsndMusic* wrappers, zsndSrcGetChannel, zsndSetUpdateRate and
+ * The sound pass created all twelve zsndMusic* wrappers, zsndSrcGetChannel, zsndSetUpdateRate and
  * zsndStub (ILT thunks only; the game streams its music through winStrm.c directly).
  */
 #include "decomp.h"

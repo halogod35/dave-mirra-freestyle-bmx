@@ -1,21 +1,21 @@
 /*
  * NgEngine/Zge/zmath.c
- * Original: C:\NgEngine\Zge\zmath.c (name invented in the original style: no path string; DM-040)
+ * Original: C:\NgEngine\Zge\zmath.c (name invented in the original style: no path string)
  * Evidence: [I] link order (between zasset.c and zobjCamera.c, whose vtable 0x00560518 starts with
  * 0x00482090), the shared tables 0x0065E2BC-0x006702D3 and the zmath* call sites.
  * 59 functions, VA 0x00480c40-0x00482081.
- * DM-045 (draft). Non-matching C (AD-8). Types and conventions: decomp/include/zmath.h.
+ * Draft. Non-matching C (AD-8). Types and conventions: decomp/include/zmath.h.
  *
  * Three groups:
  *  - trig: an 8192-entry-per-turn sine table (+ a quarter turn so cos = sin + 2048), and int16
  *    asin / atan tables indexed by trunc(4096 * x) (8193 entries, centred);
  *  - RwV3d helpers (add, scale, dot, cross, rotate by a binary angle, ...);
  *  - RwMatrix helpers (identity, rotate about X/Y/Z, multiply, rigid inverse, matrix -> Euler).
- * DM-045 found 12 functions Ghidra had not created (ApplySymbols creates them from decomp/symbols/symbols.csv):
+ * The zmath pass found 12 functions Ghidra had not created (ApplySymbols creates them from decomp/symbols/symbols.csv):
  * zmathFreeTables and zmathShutdown (each called once) and ten with no callers in the exe: Floor,
  * Ceil, Atan, VecMul, VecMidpoint, TransformPoints, MatrixIdentityRotation, MatrixScaleUniform,
  * MatrixCopyTranslation, SeedRandom.
- * DM-061 created three more in the zasset/zmath hole (0x00480C40-0x00480D1A): the three table
+ * The ZGE object pass created three more in the zasset/zmath hole (0x00480C40-0x00480D1A): the three table
  * builders of zmathInitTables as separate functions, none of them called.
  */
 #include "decomp.h"

@@ -1,4 +1,4 @@
-"""DM-066: `dmbmx gui` CLI smoke tests (output into tmp_path)."""
+"""`dmbmx gui` CLI smoke tests (output into tmp_path)."""
 import subprocess
 import sys
 from pathlib import Path
@@ -86,5 +86,5 @@ def test_hud(tmp_path, capsys):
 def test_refuses_install(tmp_path):
     iw = _zal("intwrap.zal")
     with pytest.raises(SystemExit):
-        main(["gui", "export", str(iw), str(iw.parent / "x_dm066")])
-    assert not (iw.parent / "x_dm066").exists()
+        main(["gui", "export", str(iw), str(iw.parent / "x_gui_out")])
+    assert not (iw.parent / "x_gui_out").exists()

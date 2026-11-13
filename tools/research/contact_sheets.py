@@ -1,4 +1,4 @@
-"""Write texture contact sheets to out/textures/ (DM-014): one PNG grid per source.
+"""Write texture contact sheets to out/textures/: one PNG grid per source.
 
 Usage: tools/testing/py.sh tools/research/contact_sheets.py [--game DIR] [--out DIR] [--tile 64] [--only NAME]
 Sources: every .zmd (one sheet per model family: riders, bikes, other), each level Mat._sd, and

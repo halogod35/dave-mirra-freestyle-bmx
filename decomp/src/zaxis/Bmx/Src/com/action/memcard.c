@@ -4,7 +4,7 @@
  * Evidence: [V] path string 0x00554FDC referenced by memcard_LoadSave; the other three [I]
  *           (link order + the shared ".\save\SAVE.DAT" literal 0x00554F88).
  * 4 functions, 678 bytes, VA 0x00412130-0x0041246e.
- * Decompiled by DM-041 (non-matching C, AD-8). Format: docs/formats/SAVE.md.
+ * Decompiled (non-matching C, AD-8). Format: docs/formats/SAVE.md.
  *
  * On PC the "memory card" is the file .\save\SAVE.DAT (0x235C bytes):
  *   +0x0000 u32 magic 0x2A81511C   (written, never checked)
@@ -12,7 +12,7 @@
  *   +0x0008 SaveBlockA     (0xC3C)  <-> g_saveBlockA
  *   +0x0C44 SaveRecordEntry[12][24] (0x1680) <-> g_saveRecords
  *   +0x22C4 SaveProfile[2] (0x98)   <-> g_saveProfiles
- * There is no CRC or checksum (DM-012, docs/re/integrity-checks.md).
+ * There is no CRC or checksum (the save reader, docs/re/integrity-checks.md).
  */
 #include "decomp.h"
 

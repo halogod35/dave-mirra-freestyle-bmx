@@ -1,5 +1,5 @@
 /*
- * zcompres.h - NgEngine compression (NgEngine/Zge/zcompres.c) (DM-042).
+ * zcompres.h - NgEngine compression (NgEngine/Zge/zcompres.c).
  *
  * Method 1 = LZRW3-A (Ross Williams, 1991) [V]; method 2 = LZO1X (decoder inlined in
  * zcompresDecompress 0x0049C080) [V]. The packer-side compressor only supports method 1

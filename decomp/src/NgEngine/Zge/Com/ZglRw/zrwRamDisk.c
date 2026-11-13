@@ -1,13 +1,13 @@
 /*
  * NgEngine/Zge/Com/ZglRw/zrwRamDisk.c
  * Original: C:\NgEngine\Zge\Com\ZglRw\zrwRamDisk.c
- * Evidence: [V] zrwRamDiskOpen asserts with the path string 0x005638B8 (DM-002 had it as an orphan
+ * Evidence: [V] zrwRamDiskOpen asserts with the path string 0x005638B8 (the first attribution pass had it as an orphan
  * path: the code was not a Ghidra function); the others [I]: they are the ten slots zrwRamDiskBegin
- * installs, and Begin/AddFile/End share the globals 0x006763E8-0x00676438. The card that owns this
- * gap (DM-061) created 0x004A3200, 0x004A3260 and 0x004A33F0-0x004A34E0; the four others were the
- * gap_zutil__zprofile functions. (Not one of DM-059's zrw files: no code had been found for it.)
+ * installs, and Begin/AddFile/End share the globals 0x006763E8-0x00676438. The ZGE object pass
+ * created 0x004A3200, 0x004A3260 and 0x004A33F0-0x004A34E0; the four others were the
+ * gap_zutil__zprofile functions. (Not one of the ZglRw pass's zrw files: no code had been found for it.)
  * 13 functions, VA 0x004a3200-0x004a35e6.
- * DM-061 (draft). Non-matching C (AD-8). Types: ztools.h. Description: docs/re/zge.md 6.
+ * Draft. Non-matching C (AD-8). Types: ztools.h. Description: docs/re/zge.md 6.
  *
  * Lets RenderWare stream files from memory: zrwRamDiskBegin replaces RenderWare's file interface
  * (RwOsGetFileInterface) with the functions below, zrwRamDiskAddFile registers memory blocks, and

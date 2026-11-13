@@ -1,4 +1,4 @@
-"""dmbmx import: glTF (.glb) -> ZMD (DM-021). See docs/tools/import.md.
+"""dmbmx import: glTF (.glb) -> ZMD. See docs/tools/import.md.
 
 (The module is called ``import_`` because ``import`` is a Python keyword; the command is ``import``.)
 """
@@ -11,7 +11,7 @@ from dmbmx.core.errors import FormatError
 from dmbmx.formats import zmd
 
 DEFAULT_GAME_DIR = r"F:\Projects\Dave Mirra freestyle BMX"
-_WRITABLE = {"_testgame", "dave-mirra-bmx", "dave-mirra-pro-bmx", "wt"}
+_WRITABLE = {"_testgame", "dave-mirra-bmx", "dave-mirra-freestyle-bmx", "wt"}
 
 
 def register(sub):
@@ -25,7 +25,7 @@ def register(sub):
     p.add_argument("--binmesh", choices=BINMESH_MODES, default="auto",
                    help="form of regenerated BinMesh chunks (default auto = same as the original geometry)")
     p.add_argument("--palettised", choices=PALETTISED_MODES, default="promote",
-                   help="edited 4/8-bit BMP textures: promote to 24-bit (default; DM-014: any depth loads) "
+                   help="edited 4/8-bit BMP textures: promote to 24-bit (default; any depth loads) "
                         "or quantize to the original palette")
     p.add_argument("--strict", action="store_true", help="treat warnings as errors")
     p.add_argument("--game-dir", default=os.environ.get("DMBMX_GAME_DIR", DEFAULT_GAME_DIR), help=__import__("argparse").SUPPRESS)

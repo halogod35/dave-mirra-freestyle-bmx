@@ -6,9 +6,9 @@
  *           (0x004124C0-0x004147AD, between memcard.c and overlay.c) and the four multiplayer entries
  *           of the overlay screen table (0x00557178-0x005571A8) that point at them.
  * 11 functions, 6914 bytes, VA 0x004124c0-0x004147ad.
- * DM-054 (draft). Non-matching C (AD-8). Types: overlay.h, zoverii.h. Notes: docs/re/hud.md.
+ * Draft. Non-matching C (AD-8). Types: overlay.h, zoverii.h. Notes: docs/re/hud.md.
  *
- * DM-054 created 5 functions Ghidra had missed here (reached only through the screen table) and
+ * The overlay pass created 5 functions Ghidra had missed here (reached only through the screen table) and
  * took in the overlymp/overlay gap function overlympDrawLetters 0x00414580 (called from here only).
  *
  * The multiplayer overlay screens: game select (22), the B-M-X word entry (23), "READY!" before
@@ -30,7 +30,7 @@ uint8_t   gameStart(uint8_t mode);                            /* game.c */
 uint8_t   gameSetSubMode(uint8_t sub);
 uint8_t   gameGetRoundWinner(uint32_t round, uint32_t which);
 char     *gameGetWord(void);
-char     *gameSetWord(const char *word);  /* 0x0040BFD0 game.c, "horse word too long" (DM-058) */
+char     *gameSetWord(const char *word);  /* 0x0040BFD0 game.c, "horse word too long" */
 extern const uint8_t g_gameModeStat[12];  /* 0x00553658 */
 extern BmxTrickRec   g_bmxTarget[3];      /* 0x00695260 the B-M-X set to copy */
 extern uint8_t       g_bmxTargetCount;    /* 0x00695290 */
@@ -481,7 +481,7 @@ void overlympStandingsDraw(void)
     overlayDrawMenu(1, 0);
 }
 
-/* VA 0x00414580, 276 bytes, [I] row (DM-054: was gap_overlymp__overlay.c), status draft */
+/* VA 0x00414580, 276 bytes, [I] row (was gap_overlymp__overlay.c), status draft */
 void overlympDrawLetters(int *y)
 {
     /* B-M-X: per player "player n:" and the letters of the word collected so far (score.wins),

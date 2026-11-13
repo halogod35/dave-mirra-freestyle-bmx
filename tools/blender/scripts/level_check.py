@@ -1,4 +1,4 @@
-"""Headless Blender check + thumbnail of `dmbmx level export` output (DM-013). Not part of pytest.
+"""Headless Blender check + thumbnail of `dmbmx level export` output. Not part of pytest.
 
     "C:/Program Files/Blender Foundation/Blender 5.3/blender.exe" -b --factory-startup \
         --python tools/blender/scripts/level_check.py -- <level.glb> <level_dir> [--png out.png] [--size 1280x720]

@@ -1,6 +1,6 @@
 /*
  * game.h - game flow, challenge goals, rewards and records (Bmx/Src/com/action/game.c, comdata.c).
- * DM-046. Offsets/sizes [V] (exe tables and the code that reads them); meanings [I] unless noted.
+ * Offsets/sizes [V] (exe tables and the code that reads them); meanings [I] unless noted.
  * Save-side layout: save.h / docs/formats/SAVE.md. Python port: tools/dmbmx/formats/progress.py.
  */
 #ifndef GAME_H
@@ -97,7 +97,7 @@ enum {
     GAME_REWARD_NONE = 0, GAME_REWARD_BIKE = 1, GAME_REWARD_STYLE = 2, GAME_REWARD_RIDER = 3,
     GAME_REWARD_LEVEL = 4, GAME_REWARD_SPONSOR = 5, GAME_REWARD_TIP = 6, GAME_REWARD_TRICK_TIP = 7,
     GAME_REWARD_MOVIE = 8, GAME_REWARD_PER_RIDER = 9, GAME_REWARD_CHEAT = 10
-    /* 5, 6, 7: no effect in gameApplyReward, only a text on the RESULTS screen (DM-054,
+    /* 5, 6, 7: no effect in gameApplyReward, only a text on the RESULTS screen (overlay.c,
      * overlay.c overlayAddReward): 5 sponsor / magazine cover (per rider, table 0x00556998),
      * 6 a gameplay TIP!, 7 the rider's signature-trick input ("TRICKTIP!") */
 };

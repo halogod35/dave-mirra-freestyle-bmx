@@ -6,9 +6,9 @@
  *           / "zrwModelSetRwInfo" messages; model driver slots 2-7; [I] the rest by link order and the
  *           globals 0x00675218-0x0067523B. zrwModelRelease .. zrwModelPrintInfo (0x0049DCD0-
  *           0x0049DF8F, before zrwModelGeom.c's first assert) use this file's pool [I].
- * 51 functions, VA 0x0049C440-0x0049DF8F (DM-064 created the 7 link functions 0x0049C440-0x0049C56B) (DM-059 created 28; 0x0049D895 is the tail of
+ * 51 functions, VA 0x0049C440-0x0049DF8F (the clean-up created the 7 link functions 0x0049C440-0x0049C56B) (28 new functions; 0x0049D895 is the tail of
  * zrwModelChunkMODL that Ghidra keeps as its own function).
- * DM-059 (draft). Non-matching C (AD-8). Types: zglrw.h. Description: docs/re/zrw.md 2.
+ * Draft. Non-matching C (AD-8). Types: zglrw.h. Description: docs/re/zrw.md 2.
  *
  * Loading a .ZMD (docs/formats/ZMD.md): IFF handlers 'MODL', 'MLOD', 'MCOL' (registered by
  * zrwModelCreateInit). MODL: read MDEF (kind/flags, name, name id, entry table; the four params are
@@ -66,7 +66,7 @@ static ZmemFreeList *s_zrwLinkItemPool;      /* 0x00675214 8-byte link items, 32
 /* VA 0x0049c440, 35 bytes, [I] row, status draft */
 int zrwModelLinkInit(void)
 {
-    /* (DM-064 created; no caller) The link module: an 8-byte item pool (32 per block) and per-object
+    /* (new function; no caller) The link module: an 8-byte item pool (32 per block) and per-object
      * link sets (obj + 0x38). [I] attribution: the same ZrwLinkSet as zrwModelCreateRunLinks /
      * zrwModelAddLink, and its globals 0x00675210 / 0x00675214 sit right before this file's s_zrwMc. */
     s_zrwLinkInitialised = 1;
@@ -77,7 +77,7 @@ int zrwModelLinkInit(void)
 /* VA 0x0049c470, 39 bytes, [I] row, status draft */
 int zrwModelLinkShutdown(void)
 {
-    /* DM-064 created; no caller */
+    /* new function; no caller */
     if (s_zrwLinkInitialised) {
         zmemFreeListDestroy(s_zrwLinkItemPool);
         s_zrwLinkInitialised = 0;
@@ -88,7 +88,7 @@ int zrwModelLinkShutdown(void)
 /* VA 0x0049c4a0, 27 bytes, [I] row, status draft */
 void *zrwModelLinkAllocItem(void)
 {
-    /* DM-064 created; no caller */
+    /* new function; no caller */
     if (!s_zrwLinkInitialised)
         return NULL;
     return zmemFreeListAlloc(s_zrwLinkItemPool);
@@ -97,7 +97,7 @@ void *zrwModelLinkAllocItem(void)
 /* VA 0x0049c4c0, 33 bytes, [I] row, status draft */
 void zrwModelLinkFreeItem(void *item)
 {
-    /* DM-064 created; no caller */
+    /* new function; no caller */
     if (s_zrwLinkInitialised && item != NULL)
         zmemFreeListFree(s_zrwLinkItemPool, item);
 }
@@ -105,7 +105,7 @@ void zrwModelLinkFreeItem(void *item)
 /* VA 0x0049c4f0, 48 bytes, [I] row, status draft */
 void *zrwModelLinkCreateSet(void)
 {
-    /* DM-064 created; no caller */
+    /* new function; no caller */
     ZrwLinkSet *set;
 
     if (!s_zrwLinkInitialised)
@@ -119,7 +119,7 @@ void *zrwModelLinkCreateSet(void)
 /* VA 0x0049c520, 46 bytes, [I] row, status draft */
 void zrwModelLinkDestroySet(void *p)
 {
-    /* DM-064 created; no caller */
+    /* new function; no caller */
     ZrwLinkSet *set = (ZrwLinkSet *)p;
 
     if (s_zrwLinkInitialised && set != NULL) {
@@ -132,7 +132,7 @@ void zrwModelLinkDestroySet(void *p)
 /* VA 0x0049c550, 28 bytes, [I] row, status draft */
 void zrwModelLinkQueue(void *obj, void *item)
 {
-    /* (DM-064 created; no caller): queue an item for zrwModelCreateRunLinks */
+    /* (new function; no caller): queue an item for zrwModelCreateRunLinks */
     if (LINKSET(obj) != NULL)
         zHeapListAdd(LINKSET(obj)->pending, item);
 }
@@ -160,7 +160,7 @@ void zrwModelCreateRunLinks(void *obj)
     }
 }
 
-/* VA 0x0049c600, 120 bytes, [I] DM-059 created, status draft (no caller found) */
+/* VA 0x0049c600, 120 bytes, [I] new function, status draft (no caller found) */
 void zrwModelAddLink(void *obj, int32_t id, void (__cdecl *fn)(int32_t *item))
 {
     ZrwLink *l;
@@ -179,7 +179,7 @@ void zrwModelAddLink(void *obj, int32_t id, void (__cdecl *fn)(int32_t *item))
     zHeapListAdd(LINKSET(obj)->links, l);
 }
 
-/* VA 0x0049c680, 82 bytes, [I] DM-059 created, status draft (no caller found) */
+/* VA 0x0049c680, 82 bytes, [I] new function, status draft (no caller found) */
 void zrwModelRemoveLink(void *obj, int32_t id)
 {
     ZrwLink *l;
@@ -197,7 +197,7 @@ void zrwModelRemoveLink(void *obj, int32_t id)
  * the (about to be rebuilt) frame matrix: at.x = low 16 bits, at.y = high 16 bits [V]. Harmless:
  * zrwModelUpdate rewrites every bound frame matrix. */
 
-/* VA 0x0049c6e0, 93 bytes, [I] DM-059 created, status draft */
+/* VA 0x0049c6e0, 93 bytes, [I] new function, status draft */
 void *zrwModelStashFrameIdCB(void *frame, void *data)
 {
     RwMatrix *m = RwFrameGetMatrix(frame);
@@ -208,13 +208,13 @@ void *zrwModelStashFrameIdCB(void *frame, void *data)
     return frame;
 }
 
-/* VA 0x0049c740, 90 bytes, [I] DM-059 created, status draft (unreferenced copy for a clump) */
+/* VA 0x0049c740, 90 bytes, [I] new function, status draft (unreferenced copy for a clump) */
 void zrwModelStashFrameIds(void *clump)
 {
     zrwModelStashFrameIdCB(RpClumpGetFrame(clump), NULL);
 }
 
-/* VA 0x0049c7a0, 82 bytes, [I] DM-059 created, status draft */
+/* VA 0x0049c7a0, 82 bytes, [I] new function, status draft */
 void *zrwModelRestoreFrameIdCB(void *frame, void *data)
 {
     RwMatrix *m = RwFrameGetMatrix(frame);
@@ -223,19 +223,19 @@ void *zrwModelRestoreFrameIdCB(void *frame, void *data)
     return frame;
 }
 
-/* VA 0x0049c800, 80 bytes, [I] DM-059 created, status draft */
+/* VA 0x0049c800, 80 bytes, [I] new function, status draft */
 void zrwModelRestoreFrameIds(void *clump)
 {
     zrwModelRestoreFrameIdCB(RpClumpGetFrame(clump), NULL);
 }
 
-/* VA 0x0049c850, 18 bytes, [I] DM-059 created, status draft */
+/* VA 0x0049c850, 18 bytes, [I] new function, status draft */
 void *zrwModelFrameSetIdentity(void *frame)
 {
     return RwFrameSetIdentity(frame);
 }
 
-/* VA 0x0049c870, 15 bytes, [I] DM-059 created, status draft */
+/* VA 0x0049c870, 15 bytes, [I] new function, status draft */
 void zrwModelClumpSetIdentity(void *clump)
 {
     RwFrameSetIdentity(RpClumpGetFrame(clump));
@@ -338,7 +338,7 @@ void zrwModelPrintHierarchy(ZglModel *model)
     g_pfnDebugIndent(-1);
 }
 
-/* VA 0x0049cbf0, 97 bytes, [I] DM-059 created, status draft */
+/* VA 0x0049cbf0, 97 bytes, [I] new function, status draft */
 void zrwModelPrintMaterials(ZglModel *model)
 {
     ZglMaterial *mat;
@@ -350,7 +350,7 @@ void zrwModelPrintMaterials(ZglModel *model)
     g_pfnDebugIndent(-1);
 }
 
-/* VA 0x0049cc60, 13 bytes, [I] DM-059 created, status draft (stops at the first atomic) */
+/* VA 0x0049cc60, 13 bytes, [I] new function, status draft (stops at the first atomic) */
 void *zrwModelFirstAtomicCB(void *atomic, void **out)
 {
     *out = atomic;
@@ -365,14 +365,14 @@ void *zrwModelGetFirstAtomic(void *clump)
     return atomic;
 }
 
-/* VA 0x0049cca0, 14 bytes, [I] DM-059 created, status draft */
+/* VA 0x0049cca0, 14 bytes, [I] new function, status draft */
 void *zrwModelCountAtomicCB(void *atomic, int32_t *count)
 {
     (*count)++;
     return atomic;
 }
 
-/* VA 0x0049ccb0, 37 bytes, [I] DM-059 created, status draft (no caller found) */
+/* VA 0x0049ccb0, 37 bytes, [I] new function, status draft (no caller found) */
 int32_t zrwModelCountAtomics(void *clump)
 {
     int32_t n = 0;
@@ -390,7 +390,7 @@ static void zrwModelInitPart(ZglModelPart *p, void *frame, ZglModelPart *parent)
     p->parent = parent;
 }
 
-/* VA 0x0049cce0, 110 bytes, [I] DM-059 created, status draft
+/* VA 0x0049cce0, 110 bytes, [I] new function, status draft
  * RwFrameForAllChildren callback: the next part of the table for this frame, linked under its parent. */
 void *zrwModelAddPartCB(void *frame, ZglModelPart *parent)
 {
@@ -404,7 +404,7 @@ void *zrwModelAddPartCB(void *frame, ZglModelPart *parent)
     return frame;
 }
 
-/* VA 0x0049cd50, 142 bytes, [I] DM-059 created, status draft (inlined in its callers)
+/* VA 0x0049cd50, 142 bytes, [I] new function, status draft (inlined in its callers)
  * One part per frame of the model's clump, root first (count = the frame hierarchy size). */
 ZglModelPart *zrwModelBuildParts(ZglModel *model, int lod)
 {
@@ -420,7 +420,7 @@ ZglModelPart *zrwModelBuildParts(ZglModel *model, int lod)
     return parts;
 }
 
-/* VA 0x0049cde0, 141 bytes, [I] DM-059 created, status draft (inlined in zrwModelChunkMODL) */
+/* VA 0x0049cde0, 141 bytes, [I] new function, status draft (inlined in zrwModelChunkMODL) */
 ZglModel *zrwModelAlloc(void)
 {
     ZglModel *m = (ZglModel *)zmemFreeListAlloc(s_zrwMc.pool);
@@ -436,7 +436,7 @@ ZglModel *zrwModelAlloc(void)
     return m;
 }
 
-/* VA 0x0049ce70, 21 bytes, [I] DM-059 created, status draft (no caller found) */
+/* VA 0x0049ce70, 21 bytes, [I] new function, status draft (no caller found) */
 void zrwModelFree(ZglModel *model)
 {
     zmemFreeListFree(s_zrwMc.pool, model);
@@ -481,7 +481,7 @@ ZglModel *zrwModelCreateInstance(ZglModel *src)
     return m;
 }
 
-/* VA 0x0049d110, 6 bytes, [I] DM-059 created, status draft (unreferenced; returns 1) */
+/* VA 0x0049d110, 6 bytes, [I] new function, status draft (unreferenced; returns 1) */
 int zrwModelCreateNop(void)
 {
     return 1;
@@ -550,7 +550,7 @@ static int zrwModelReadMdffChunk(ZiffFile *iff, ZglModel *model, int isCol, int 
     return 1;
 }
 
-/* VA 0x0049d350, 303 bytes, [I] DM-059 created, status draft (IFF handler 'MLOD')
+/* VA 0x0049d350, 303 bytes, [I] new function, status draft (IFF handler 'MLOD')
  * MLDF (8 bytes: word 0 flags, ignored; word 1 = LOD switch distance as a float, 0 -> the default
  * 0/50/100/150), then MDFF. A fifth LOD is ignored. */
 int zrwModelChunkMLOD(ZiffFile *iff, ZglModel *model)
@@ -576,7 +576,7 @@ int zrwModelChunkMLOD(ZiffFile *iff, ZglModel *model)
     return 1;
 }
 
-/* VA 0x0049d480, 73 bytes, [I] DM-059 created, status draft (inlined copy: every MLOD) */
+/* VA 0x0049d480, 73 bytes, [I] new function, status draft (inlined copy: every MLOD) */
 int zrwModelReadLods(ZiffFile *iff, void *model)
 {
     int ok = ziffChunkFindFirst(iff, IFF_MLOD);
@@ -588,7 +588,7 @@ int zrwModelReadLods(ZiffFile *iff, void *model)
     return 1;
 }
 
-/* VA 0x0049d4d0, 198 bytes, [I] DM-059 created, status draft (IFF handler 'MCOL')
+/* VA 0x0049d4d0, 198 bytes, [I] new function, status draft (IFF handler 'MCOL')
  * The collision clump: rendered never, collision only, always in the world. */
 int zrwModelChunkMCOL(ZiffFile *iff, ZglModel *model)
 {
@@ -603,7 +603,7 @@ int zrwModelChunkMCOL(ZiffFile *iff, ZglModel *model)
     return 1;
 }
 
-/* VA 0x0049d5a0, 65 bytes, [I] DM-059 created, status draft (inlined copy) */
+/* VA 0x0049d5a0, 65 bytes, [I] new function, status draft (inlined copy) */
 int zrwModelReadMcol(ZiffFile *iff, ZglModel *model)
 {
     if ((model->def->mdefFlags & 0x80) && ziffChunkFindFirst(iff, IFF_MCOL))
@@ -641,7 +641,7 @@ int zrwModelReadMDEF(ZiffFile *iff, ZglModel *model)
     return 1;
 }
 
-/* VA 0x0049d750, 27 bytes, [I] DM-059 created, status draft (material creation callback) */
+/* VA 0x0049d750, 27 bytes, [I] new function, status draft (material creation callback) */
 int zrwModelAddMaterialCB(ZglMaterial *mat, void *model)
 {
     zHeapListAdd(((ZglModel *)model)->materials, mat);
@@ -695,7 +695,7 @@ int zrwModelChunkMODLBody(ZiffFile *iff, ZglModel *model)
     return 1;
 }
 
-/* VA 0x0049d7e0, 181 bytes, [I] DM-059 created, status draft (IFF handler 'MODL') */
+/* VA 0x0049d7e0, 181 bytes, [I] new function, status draft (IFF handler 'MODL') */
 int zrwModelChunkMODL(ZiffFile *iff)
 {
     ZglModel *model;
@@ -733,7 +733,7 @@ int zrwModelCreateShutdown(void)
     return 1;
 }
 
-/* VA 0x0049da90, 21 bytes, [I] DM-059 created, status draft (slot 5: the MODL chunk of an open IFF) */
+/* VA 0x0049da90, 21 bytes, [I] new function, status draft (slot 5: the MODL chunk of an open IFF) */
 ZglModel *zrwModelLoadIff(ZiffFile *iff, int flags)
 {
     (void)flags;
@@ -771,7 +771,7 @@ static ZglModel *zrwModelParseModl(uint32_t *buf)
     return model;
 }
 
-/* VA 0x0049dab0, 209 bytes, [I] DM-059 created, status draft (slot 2: a whole ZMD in memory) */
+/* VA 0x0049dab0, 209 bytes, [I] new function, status draft (slot 2: a whole ZMD in memory) */
 ZglModel *zrwModelLoadMemory(uint32_t *buf)
 {
     return zrwModelParseModl(buf);
@@ -794,7 +794,7 @@ ZglModel *zrwModelLoadFile(const char *path, int flags)
     return model;
 }
 
-/* VA 0x0049dcb0, 28 bytes, [I] DM-059 created, status draft (slot 4: not implemented on the PC) */
+/* VA 0x0049dcb0, 28 bytes, [I] new function, status draft (slot 4: not implemented on the PC) */
 int zrwModelSave(void)
 {
     zAssertFail("Not coded", ZRWMC_SRC, 0x5BA, 0);
@@ -840,13 +840,13 @@ int zrwModelRelease(ZglModel *model)
     return 1;
 }
 
-/* VA 0x0049de40, 27 bytes, [I] DM-059 created, status draft (model table +0xA0) */
+/* VA 0x0049de40, 27 bytes, [I] new function, status draft (model table +0xA0) */
 void zrwModelPrintStats(void)
 {
     g_pfnDebugPrintf("ZGLMODEL: Objects in use:%d\n", zmemFreeListGetUsedCount(s_zrwMc.pool));
 }
 
-/* VA 0x0049de60, 296 bytes, [I] DM-059 created, status draft (model table +0x9C) */
+/* VA 0x0049de60, 296 bytes, [I] new function, status draft (model table +0x9C) */
 void zrwModelPrintInfo(ZglModel *model)
 {
     g_pfnDebugPrintf("-------------------------------------------------\n");

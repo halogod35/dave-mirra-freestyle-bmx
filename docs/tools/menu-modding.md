@@ -1,11 +1,11 @@
 # Menu modding: `dmbmx gui` (menu art, screens, fonts, texts, HUD fonts)
 
-Owner: DM-066. Code: `tools/dmbmx/formats/zprim.py` (pictures, sprites, fonts), `tools/dmbmx/formats/scrn.py`
-(GUI groups, SCRN screens; DM-056), `tools/dmbmx/formats/strs.py` (text tables), `tools/dmbmx/formats/hudfont.py`
+Code: `tools/dmbmx/formats/zprim.py` (pictures, sprites, fonts), `tools/dmbmx/formats/scrn.py`
+(GUI groups, SCRN screens; the front-end pass), `tools/dmbmx/formats/strs.py` (text tables), `tools/dmbmx/formats/hudfont.py`
 (HUD fonts), `tools/dmbmx/formats/gui_dir.py` (export / import directories), CLI `tools/dmbmx/cli/gui.py`.
 Specs: `docs/formats/ZAL.md` 3.1 (STRS, HUD fonts), 3.2 (screens), 3.3 (art and fonts).
 Tests: `tests/test_zprim_corpus.py`, `tests/test_zprim_unit.py`, `tests/test_cli_gui.py`.
-Play-test: `tools/testing/playtest/make_playtest_dm066.py`. Tags: **[V]** verified by code or tests, **[I]** inferred.
+Play-test: `tools/testing/playtest/make_playtest_menu_edit.py`. Tags: **[V]** verified by code or tests, **[I]** inferred.
 
 All commands read the game files and write new ones; they refuse to write inside the game install
 (AD-1). Write to `out/` and copy the results into `_testgame` (or use a play-test script).
@@ -116,10 +116,10 @@ to the BMP palette. The sheet size is fixed. Magenta (255,0,255) is the transpar
 ## 5. Installing and testing
 
 Copy the new files over `_testgame/assets/` (file names are not case-sensitive) and run
-`_testgame/NgBMX.exe`; restore with `tools/testing/restore_testgame.sh`. `tools/testing/playtest/make_playtest_dm066.py` builds a
-ready-made example (MOD QUEST label + a recoloured rider portrait) under `out/playtest/dm-066/`, including
+`_testgame/NgBMX.exe`; restore with `tools/testing/restore_testgame.sh`. `tools/testing/playtest/make_playtest_menu_edit.py` builds a
+ready-made example (MOD QUEST label + a recoloured rider portrait) under `out/playtest/menu-edit/`, including
 the edited export directory `gui-edit/`.
 
-[I] Until DM-066-PT1 passes, that the game accepts edited art is inferred from the loaders (no checksums,
+[I] Until the manual in-game check `menu-edit` passes, that the game accepts edited art is inferred from the loaders (no checksums,
 buffers sized from the archive: ZAL.md 2.4). The menu heap is 3 MB (`zmemDMMInit(NULL, 0x300000)`), so
 very large new art could run out of memory [I].

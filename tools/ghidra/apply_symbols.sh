@@ -3,7 +3,7 @@
 # Idempotent: running it twice gives the same project state and the same functions.csv.
 #
 # The Ghidra project is <main checkout>/.ghidra/project/NgBMX (gitignored, shared by worktrees);
-# symbols.csv / functions.csv / scripts come from THIS checkout. Only the RE agent that owns the
+# symbols.csv / functions.csv / scripts come from THIS checkout. Only the person who owns the
 # project should run this (it writes the project); everyone else just edits symbols.csv.
 set -u
 

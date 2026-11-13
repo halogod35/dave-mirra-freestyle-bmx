@@ -1,9 +1,9 @@
 /*
- * gui.h - the front-end GUI (DM-056): Bmx/Src/com/menu/gui/*.c and the SCRN / EDEF screen files
+ * gui.h - the front-end GUI: Bmx/Src/com/menu/gui/*.c and the SCRN / EDEF screen files
  * of the art library (intart.zal; on PC the nested archive in Intwrap.zal group 0).
  *
  * Offsets [V] (the screen loader guiLoadScreenFile 0x00439A00 and the element code read them;
- * tests/test_decomp_dm056.py checks them against the exe and the data), names [I].
+ * tests/test_decomp_frontend.py checks them against the exe and the data), names [I].
  * Notes: docs/re/frontend.md; file format: docs/formats/ZAL.md section 3.2.
  *
  * Model. A screen is a SCRN asset (id 0xA000 | n) inside zprim group 0xE000 | n. Loading it
@@ -107,7 +107,7 @@ enum {
     GUI_MSG_RIGHT_HELD = 0x3F
 };
 
-struct GuiElement;   /* file scope; without it the next line declares a prototype-scoped struct (DM-064) */
+struct GuiElement;   /* file scope; without it the next line declares a prototype-scoped struct */
 typedef int (*GuiHandler)(uint32_t msg, struct GuiElement *elem, uint32_t a, uint32_t b);
 typedef void (*GuiTask)(void);    /* frontend.c's per-frame task (g_feTask) */
 
@@ -282,7 +282,7 @@ extern GuiElement *g_guiList[GUI_MAX_ELEMENTS];       /* 0x005730A4 sorted by pr
 extern int32_t     g_guiCount;                        /* 0x0057323C */
 extern GuiStyle    g_guiStyle;                        /* 0x00573088 */
 extern uint32_t    g_guiPulse;                        /* 0x00573254 16..240, the "selected" glow */
-extern uint32_t    g_guiGroupLoaded;                  /* 0x00573250 zprim group slot 1 holds a screen (DM-064) */
+extern uint32_t    g_guiGroupLoaded;                  /* 0x00573250 zprim group slot 1 holds a screen */
 extern uint32_t    g_guiAutoBack;                     /* 0x005AB474 */
 extern const char  g_overlayEmpty[];                  /* 0x0056BD44 "" (overlay.c) */
 

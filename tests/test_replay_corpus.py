@@ -1,4 +1,4 @@
-"""replay.zal: every record round-trips byte for byte, layouts as documented (DM-052, REPLAY.md)."""
+"""replay.zal: every record round-trips byte for byte, layouts as documented (REPLAY.md)."""
 import pytest
 
 from conftest import corpus_files

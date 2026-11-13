@@ -1,7 +1,7 @@
 # Textures and materials: MATI / MADF / TBMP / TPNG (ZMD, level `Mat._sd`, material.zal)
 
-Owner: DM-014. Code: `tools/dmbmx/formats/mati.py` (`Mati`, `MatSd`; ZMD uses the same class),
-`tools/dmbmx/formats/texture.py` (RGBA decode, 24-bit BMP encode, colour key, constraints; built on DM-020's `tools/dmbmx/convert/imaging.py` for BMP/PNG parsing, PNG (un)filtering and PNG writing),
+Code: `tools/dmbmx/formats/mati.py` (`Mati`, `MatSd`; ZMD uses the same class),
+`tools/dmbmx/formats/texture.py` (RGBA decode, 24-bit BMP encode, colour key, constraints; built on the glTF exporter's `tools/dmbmx/convert/imaging.py` for BMP/PNG parsing, PNG (un)filtering and PNG writing),
 CLI `dmbmx tex list|export|replace`, contact sheets `tools/research/contact_sheets.py` → `out/textures/`.
 Survey: `tools/research/survey_textures.py`. Tags per CONTRIBUTING.md AD-5; VAs are for the 2000-11-22 exe.
 
@@ -11,17 +11,17 @@ Survey: `tools/research/survey_textures.py`. Tags per CONTRIBUTING.md AD-5; VAs 
 |---|---|---|---|
 | `*.zmd` (115 non-empty) | `MODL{ …, MATI* }` | 324 MATI | 212 BMP24, 1 BMP8 (64²), 1 BMP8 (32², 160 colours), 1 BMP4; 109 PNG (8-bit RGBA, colour type 6, non-interlaced; 91 with `gAMA cHRM`, 18 also `iCCP`) |
 | `<Level>/Mat._sd` (12) | flat sequence of `MATI` chunks, nothing else, no padding | 872 MATI | 640 BMP8 (palettes of 15-256 colours), 229 BMP4, 1 BMP24, 2 PNG RGBA |
-| `material.zal` | ZAL groups 0-1261 (DM-010) | 1262 BMP | 4-bit (1,099) and 8-bit (163) palettised; 8x16 … 256x256, some non-square |
+| `material.zal` | ZAL groups 0-1261 | 1262 BMP | 4-bit (1,099) and 8-bit (163) palettised; 8x16 … 256x256, some non-square |
 
 - [V] `Mat._sd` round-trips byte-for-byte for all 12 levels through `MatSd.read/write`.
 - [V] Sizes: ZMD 16²-256²; Mat._sd 2²-512² (22 at 512², two non-power-of-two: 80², 96²); every ZMD/Mat._sd texture is square.
 - [V] (viewed, `out/textures/material_zal.png`) material.zal holds HUD/effect art (sparks, logos, digits, splash),
   then low-colour (4/8-bit) copies of the **bike** textures and of the **rider body-part / sponsor** textures.
   [I] It is the source of the rider/bike customisation art or a leftover of the console build; the ZMD files carry
-  their own textures (DM-011: every RW texture name resolves inside its own ZMD). DM-023-PT1 part B will show
+  their own textures (every RW texture name resolves inside its own ZMD). the manual in-game check `zal-repack` part B will show
   where the game uses it.
-- `miscdata.zal` has **no** MATI chunks (the "MATI" byte matches are inside localised strings; DM-010).
-- [V] (DM-066) material.zal assets 9-0x13 are the overlay pictures 0x30-0x3A of `g_zresImages` (0x0055D978);
+- `miscdata.zal` has **no** MATI chunks (the "MATI" byte matches are inside localised strings; the ZAL reader).
+- [V] material.zal assets 9-0x13 are the overlay pictures 0x30-0x3A of `g_zresImages` (0x0055D978);
   assets 9, 11, 12 and 13 are the glyph sheets of the four HUD fonts (ZAL.md 3.1). `dmbmx gui hud-export /
   hud-import` edits them together with the glyph metrics (docs/tools/menu-modding.md).
 - **Menu art is not here.** The front end's pictures, sprites and fonts are zprim assets in Intwrap.zal
@@ -98,7 +98,7 @@ TDDS := "TDDS" u32 size { .dds file }          registered by the engine (0x00498
   truecolour images every pixel, that equals RGB **(255, 0, 255)** is set to RGBA 0,0,0,0 (transparent).
   The key is initialised to FF 00 FF in 0x00498660. Magenta in a BMP therefore means "transparent".
   `dmbmx tex export --png --colorkey` reproduces this.
-- [V] (DM-059, corrected) The main path is `RwTextureRead(name, NULL)` on the in-memory file (extension
+- [V] (the ZglRw pass, corrected) The main path is `RwTextureRead(name, NULL)` on the in-memory file (extension
   "BMP" / "PNG"): a texture of the same **name already in the current texture dictionary is reused**,
   otherwise the registered reader decodes the image (with the colour key) and **RenderWare chooses the
   raster format** for it (paletted images stay paletted when the driver supports PAL4/PAL8 [I]). Only if
@@ -108,7 +108,7 @@ TDDS := "TDDS" u32 size { .dds file }          registered by the engine (0x00498
 - [V] Filtering is linear (linear-mip-linear only with mipmapping on: ZGL value 0xE, off by default);
   addressing is **clamp** after zrwZglInit (ZGL value 0xC; wrap when cleared). The MADF name is the texture
   name; materials are looked up by `zHashName(name)` of their first texture (docs/re/zrw.md 3, 4).
-- [V] The colour key port in `tests/test_decomp_dm059.py` (palette-level for 4/8-bit BMPs, pixel-level for
+- [V] The colour key port in `tests/test_decomp_zglrw.py` (palette-level for 4/8-bit BMPs, pixel-level for
   24-bit) agrees with `texture.apply_color_key(texture.decode_bmp(...))` on every TBMP of the corpus.
 - [V] Optional preallocated load buffer: if set, a TBMP larger than it asserts "Load buffer is too small."
   (0x00498210). Its setter (0x00498CF0) is not called directly; we found no caller.
@@ -139,11 +139,11 @@ written back unchanged. `texture.encode_png` writes valid CRCs (checked by `deco
 
 1. The surface-type names are inferred from texture names; the enum (and the physics/sound tables that use it) is not yet found in the exe.
 2. The animated-material bit layout (+0x38 high bits, +0x3C, +0x40).
-3. MADF +0x04/+0x08/+0x0C: always 0. Bit 0 of +0x04 is tested (0x00489BA0), but its meaning is unknown: DM-059 found that its
+3. MADF +0x04/+0x08/+0x0C: always 0. Bit 0 of +0x04 is tested (0x00489BA0), but its meaning is unknown: the ZglRw pass found that its
    only caller (zrwTxr_ChunkTBMP) ignores the result, so it has no effect on the PC build [V].
-4. Does the 16-bit raster format (0x204) drop alpha on some cards? DM-059: that format is only the fallback when
+4. Does the 16-bit raster format (0x204) drop alpha on some video cards? The ZglRw pass: that format is only the fallback when
    RwTextureRead fails (section 3); normally RenderWare picks the format. Does a 24-bit BMP in a level slot look right?
-   Covered by play-test DM-014-PT1 for ZMD.
-6. (DM-059) Two MATI chunks with the same name share one texture (the dictionary lookup), so a replacement must
+   Covered by the manual in-game check `texture-swap` for ZMD.
+6. Two MATI chunks with the same name share one texture (the dictionary lookup), so a replacement must
    rename or replace every copy [I: consequence of the code, not play-tested].
 5. What material.zal is used for (see §1).

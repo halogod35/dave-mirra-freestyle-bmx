@@ -10,7 +10,7 @@
 //   callers/callees         ';'-separated entry VAs, resolved through ILT/jmp thunks (thunk callers
 //                           are included; a callee that is a thunk is replaced by its target)
 //   strings_referenced      ' | '-separated 0xVA=text (text escaped: \n \r \t, '|' -> '/', max 100 chars)
-//   signature               Ghidra prototype incl. calling convention (DM-040 stubs use it)
+//   signature               Ghidra prototype incl. calling convention (the decomp stubs use it)
 // Rows are sorted by VA. Output is deterministic (re-running on an unchanged program gives the same file).
 //
 // Usage (headless): -postScript ExportFunctions.java <out.csv>

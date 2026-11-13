@@ -1,4 +1,4 @@
-"""Truncation / bit-flip fuzz helper for dmbmx parsers (DM-050, see docs/testing.md).
+"""Truncation / bit-flip fuzz helper for dmbmx parsers (see docs/testing.md).
 
 Usage in a format test::
 
@@ -46,7 +46,7 @@ def mutations(data, n=200, seed=0):
     Mix: ~1/3 truncations, ~1/3 bit flips (1-8 bits), ~1/3 u32 field
     overwrites with interesting values. The first cases are always: empty
     input, truncation to len-1, truncation to half, and a single bit flip in
-    byte 0 (so a tiny ``n`` still covers SK-QA's "one truncated and one
+    byte 0 (so a tiny ``n`` still covers the checklist's "one truncated and one
     bit-flipped" minimum).
     """
     data = bytes(data)

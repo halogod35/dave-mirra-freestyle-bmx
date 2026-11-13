@@ -1,6 +1,6 @@
 /*
  * zscene.h - NgEngine/Zge/zScene.c: the scene database (Scene.Txt) and the scene object registry
- * (DM-043; replaces DM-040's ZsceneObj placeholder).
+ * (replaces the earlier ZsceneObj placeholder).
  *
  * Scene.Txt is parsed by zsceneLoadDatabase 0x004904E0 into a tree of ZsceneDef blocks:
  *   SCENE_COMMON { MODEL { NAME .. FILE .. } ANIM { .. } }   -> g_zscene.common

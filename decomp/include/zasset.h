@@ -1,10 +1,10 @@
 /*
- * zasset.h - ZAL asset library handle (NgEngine/Zge/zasset.c) (DM-040).
+ * zasset.h - ZAL asset library handle (NgEngine/Zge/zasset.c).
  *
  * Recovered from zassetOpenLibrary 0x004804D0 (pool element size 0x128, zmem pool of 0x20),
  * zassetFindAsset 0x00480780, zassetGetAssetSize 0x00480850, zassetLoadAsset 0x00480930.
- * Completed by DM-042: every field is accounted for by the 8 zasset.c functions.
- * File format: docs/formats/ZAL.md (DM-010). Offsets [V] (field use in the code), names [I].
+ * Complete: every field is accounted for by the 8 zasset.c functions.
+ * File format: docs/formats/ZAL.md. Offsets [V] (field use in the code), names [I].
  */
 #ifndef ZASSET_H
 #define ZASSET_H

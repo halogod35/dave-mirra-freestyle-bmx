@@ -2,8 +2,8 @@
  * NgEngine/Zge/ZgeMods/zramdisk.c
  * Original: C:\NgEngine\Zge\ZgeMods\zramdisk.c
  * Evidence: [V] path string 0x00563280 referenced by every function here.
- * 17 functions, VA 0x0049eaa0-0x0049f4cf (DM-064 created zramdiskShutdown 0x0049F490) (+ the device table zfileDevice2 0x00563240).
- * Decompiled by DM-041 (non-matching C, AD-8).
+ * 17 functions, VA 0x0049eaa0-0x0049f4cf (the clean-up created zramdiskShutdown 0x0049F490) (+ the device table zfileDevice2 0x00563240).
+ * Decompiled (non-matching C, AD-8).
  *
  * The "rd00" device: a block of memory read and written like a file. File names are
  * "rd00:<address hex>:<size hex>" (zfileOpenMemory builds them with MakeFileName).
@@ -272,7 +272,7 @@ zfileDevice zfileDevice2 = {
 /* VA 0x0049f490, 64 bytes, [V] direct, status draft */
 int zramdiskShutdown(void)
 {
-    /* DM-064 created; zrwZgl.c's shutdown calls it */
+    /* new function; zrwZgl.c's shutdown calls it */
     ZASSERT(g_zramdiskPool != NULL, "File system has already been shut down.", ZRAMDISK_SRC, 0x2f4);
     zmemFreeListDestroy(g_zramdiskPool);
     g_zramdiskPool = NULL;

@@ -1,4 +1,4 @@
-# dave-mirra-pro-bmx
+# dave-mirra-freestyle-bmx
 
 Reverse engineering of **Dave Mirra Freestyle BMX** for PC (Z-Axis / Acclaim, 2000; the
 2000-11-22 build of `NgBMX.exe`): file format specs, lossless file tools, Blender and 3ds Max
@@ -22,6 +22,8 @@ export DMBMX_GAME_DIR="C:/Games/Dave Mirra Freestyle BMX"     # your install (re
 .venv/Scripts/dmbmx save info "$DMBMX_GAME_DIR/save/SAVE.DAT"
 ```
 
+Every command, with examples: [tools/dmbmx/README.md](tools/dmbmx/README.md).
+
 The tools never write into the game folder; write to `out/` and test changes in a copy of the game
 (`docs/tooling.md`, Game trees). `tools/testing/py.sh` runs any script with the repo's venv.
 
@@ -42,15 +44,15 @@ The tools never write into the game folder; write to `out/` and test changes in 
 | `STRS` | text tables | [ZAL.md](docs/formats/ZAL.md) §3.1 |
 | `SAVE.DAT` | save file: options, career, records, profiles | [SAVE.md](docs/formats/SAVE.md) |
 
-All of the above in one document: [tools/3dsmax/SPEC.md](tools/3dsmax/SPEC.md).
+All of the above in one document: [docs/formats/SPEC.md](docs/formats/SPEC.md).
 
 ## Tools
 
 | Tool | What | Docs |
 |---|---|---|
-| [`dmbmx`](tools/dmbmx/) CLI | export/import models (glTF, OBJ), save editor, exe patcher, menu modding (`gui`), audio, levels, replays, textures, ZAL | [export](docs/tools/export.md), [import](docs/tools/import.md), [menu modding](docs/tools/menu-modding.md), `dmbmx <command> --help` |
+| [`dmbmx`](tools/dmbmx/) CLI | export/import models (glTF, OBJ), save editor, exe patcher, menu modding (`gui`), audio, levels, replays, textures, ZAL | **[CLI and library reference](tools/dmbmx/README.md)** (every command and option), [export](docs/tools/export.md), [import](docs/tools/import.md), [menu modding](docs/tools/menu-modding.md) |
 | [Blender add-on](tools/blender/) | import and export ZMD models in Blender 5.3 | [blender-addon.md](docs/tools/blender-addon.md) |
-| [3ds Max importers](tools/3dsmax/) | MAXScript (3ds Max 2017+) and Python (2022+) importers, plus a one-file reference parser | [README](tools/3dsmax/README.md) |
+| [3ds Max importers](tools/3dsmax/) | MAXScript (3ds Max 2017+) and Python (2022+) importers, plus a one-file reference parser | [README](tools/3dsmax/README.md), [SPEC.md](docs/formats/SPEC.md) (the format spec they implement) |
 | [Ghidra pipeline](tools/ghidra/) | Ghidra 12.2 wrapper, Java scripts, symbol import/export | [tooling.md](docs/tooling.md), [module-map.md](docs/re/module-map.md) |
 | [Testing scripts](tools/testing/) | `py.sh`, install verification, test-copy restore, play-test generators | [tooling.md](docs/tooling.md), [testing.md](docs/testing.md) |
 

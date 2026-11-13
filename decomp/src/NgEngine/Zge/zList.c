@@ -3,10 +3,10 @@
  * Original: C:\NgEngine\Zge\zList.c
  * Evidence: [V] path string 0x00561704 (zHeapListAdd, zHeapListRemoveAt); [I] the rest by link
  *           order: the code from 0x0048C110 (after zrwZgl.c's last function, which ends in exit())
- *           up to 0x0048C5B4 is list code only. DM-040 had put the first four functions in zrwZgl.c
+ *           up to 0x0048C5B4 is list code only. The skeleton had put the first four functions in zrwZgl.c
  *           and the others in a gap file.
  * 20 functions, VA 0x0048c110-0x0048c5b4.
- * Decompiled by DM-044 (non-matching C, AD-8). Types: decomp/include/zlist.h.
+ * Decompiled (non-matching C, AD-8). Types: decomp/include/zlist.h.
  */
 #include "decomp.h"
 

@@ -39,10 +39,10 @@ def test_roundtrip_and_fields():
 def test_edit_name_and_score():
     s = save.read(synthetic())
     s.scores[0][0].score = 999999
-    s.profiles[0].name = "Dm012"
+    s.profiles[0].name = "Test1"
     out = save.write(s)
     s2 = save.read(out)
-    assert s2.scores[0][0].score == 999999 and s2.profiles[0].name == "Dm012"
+    assert s2.scores[0][0].score == 999999 and s2.profiles[0].name == "Test1"
     with pytest.raises(ValueError):
         s.profiles[0].name = "x" * 40
     with pytest.raises(ValueError):

@@ -1,5 +1,5 @@
 /*
- * zlist.h - NgEngine list containers (NgEngine/Zge/zList.c) (DM-044).
+ * zlist.h - NgEngine list containers (NgEngine/Zge/zList.c).
  *
  * Two kinds [V offsets, I names]:
  *  - zList: an intrusive doubly linked list. Nodes start with a zListNode header (next, prev);

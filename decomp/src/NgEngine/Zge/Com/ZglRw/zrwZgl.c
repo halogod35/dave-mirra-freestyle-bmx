@@ -5,10 +5,10 @@
  *           zrwZglShutdown 0x243, App_Start 0x38C, zrwZglRender 0x45F, the callback lists
  *           0x4ED-0x506, NotTested 0x633); the system driver table 0x00561468 (13 slots); [I] the
  *           rest by link order and the globals 0x006724D0-0x0067290F, 0x006976C0-0x006977CF.
- * 49 functions, VA 0x00489CC0-0x0048C10E (DM-044 wrote the first three; DM-059 the rest and
+ * 49 functions, VA 0x00489CC0-0x0048C10E (the zmem pass wrote the first three; the ZglRw pass the rest and
  * created 13: the dialog procedure, the memory hooks, App_CloseEngine / App_Reopen / App_Stop and
  * the small table slots).
- * DM-059 (draft). Non-matching C (AD-8). Types: zglrw.h. Description: docs/re/zrw.md 1, 10.
+ * Draft. Non-matching C (AD-8). Types: zglrw.h. Description: docs/re/zrw.md 1, 10.
  *
  * The RenderWare "skeleton" of the game: WinMain and the window, the device / video-mode dialog,
  * App_Open (RenderWare + plugins), App_Start (zge + the game), App_Frame (the game frame),
@@ -75,7 +75,7 @@ void zAssertMessageBox(const char *why, const char *file, int line, const char *
 }
 
 
-/* ------------------------------------------------------------------ DM-059 */
+/* ------------------------------------------------------------------ ZGL driver over RenderWare */
 
 #define ZRWZGL_SRC "C:\\NgEngine\\Zge\\Com\\ZglRw\\zrwZgl.c"
 
@@ -147,7 +147,7 @@ ZInputDevice *zinputGetDevice(int index);              /* zinput.c: device by in
 int   pcinputPollDevices(void);                        /* pcinput.c gap 0x00493910 */
 int   pcinputAcquireAll(void);                         /* 0x00493830 */
 int   pcinputUnacquireAll(void);                       /* 0x00493890 */
-void  pcmovieInit(void *player);                  /* pcmovie.c (DM-061): init */
+void  pcmovieInit(void *player);                  /* pcmovie.c: init */
 int   pcmovieOpen(void *player, const char *path, HWND w);   /* open */
 void  pcmoviePlay(void *player, HWND w, int fullscreen, int a, int b);   /* play */
 void  pcmovieUpdate(void *player, int a, int b);    /* update */
@@ -363,7 +363,7 @@ void zrwZglDeviceDlgChangeSubSystem(HWND dlg)
     }
 }
 
-/* VA 0x0048a330, 304 bytes, [I] DM-059 created, status draft (the device dialog procedure) */
+/* VA 0x0048a330, 304 bytes, [I] new function, status draft (the device dialog procedure) */
 int __stdcall zrwZglDeviceDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
 {
     (void)lp;
@@ -593,7 +593,7 @@ int zrwZglConfirmQuit(void)
     return MessageBoxA(g_zrwHwnd, "Do you want to quit the game?", "Dave Mirra Freestyle BMX", 0x10124) == 6;
 }
 
-/* VA 0x0048aa10, 255 bytes, [I] row, status draft (DM-030 integrity check #9)
+/* VA 0x0048aa10, 255 bytes, [I] row, status draft (integrity check #9)
  * The CD check: HKLM\Software\Acclaim Entertainment\Dave Mirra Freestyle BMX\1.00.000\SRCDISK +
  * "\bin\movie\acclaim.avi" must open; otherwise "Please Insert Game CD" (Retry / Cancel = exit). */
 int app_CheckGameCD(void)
@@ -686,19 +686,19 @@ static void zrwZglHookMemoryFns(void)
     g_zrwPlatformMemCheck = (void *)zrwZglNop;
 }
 
-/* VA 0x0048af40, 64 bytes, [I] DM-059 created, status draft (no caller found)
+/* VA 0x0048af40, 64 bytes, [I] new function, status draft (no caller found)
  * zmem's platform heap = RenderWare's allocator (malloc / free / realloc / calloc). */
 void zrwZglHookMemory(void)
 {
     zrwZglHookMemoryFns();
 }
 
-/* VA 0x0048af80, 1 bytes, [I] DM-059 created, status draft (an empty memory-check hook) */
+/* VA 0x0048af80, 1 bytes, [I] new function, status draft (an empty memory-check hook) */
 void zrwZglNop(void)
 {
 }
 
-/* VA 0x0048af90, 69 bytes, [I] DM-059 created, status draft (no caller found) */
+/* VA 0x0048af90, 69 bytes, [I] new function, status draft (no caller found) */
 int zrwZglHookMemoryRet(void)
 {
     zrwZglHookMemoryFns();
@@ -740,7 +740,7 @@ int zrwZglInit(void)
     return 1;
 }
 
-/* VA 0x0048b110, 140 bytes, [I] DM-059 created, status draft (system slot 1) */
+/* VA 0x0048b110, 140 bytes, [I] new function, status draft (system slot 1) */
 int zrwZglShutdown(void)
 {
     if (!s_zgl.initialized)
@@ -781,7 +781,7 @@ int App_Open(HWND hWnd)
     return zrwZglOpenEngine(hWnd);
 }
 
-/* VA 0x0048b2c0, 21 bytes, [I] DM-059 created, status draft (no caller found) */
+/* VA 0x0048b2c0, 21 bytes, [I] new function, status draft (no caller found) */
 int App_CloseEngine(void)
 {
     RwEngineStop();
@@ -790,7 +790,7 @@ int App_CloseEngine(void)
     return 1;
 }
 
-/* VA 0x0048b2e0, 357 bytes, [I] DM-059 created, status draft (no caller found)
+/* VA 0x0048b2e0, 357 bytes, [I] new function, status draft (no caller found)
  * Device switch: everything RenderWare-owned is released, the engine reopened on the selected
  * device and the resources rebuilt (frame buffers, texture dictionary, debug charset, model scratch). */
 int App_Reopen(void)
@@ -845,7 +845,7 @@ int App_Start(char *cmdLine)
     return 1;
 }
 
-/* VA 0x0048b560, 16 bytes, [I] DM-059 created, status draft (no caller found) */
+/* VA 0x0048b560, 16 bytes, [I] new function, status draft (no caller found) */
 int App_Stop(void)
 {
     ngappShutdown();
@@ -935,7 +935,7 @@ void zrwZglShowFrame(int vsync)
     RwRasterShowRaster(g_zrwFrameBuffer, g_zrwHwnd, vsync != 0);
 }
 
-/* VA 0x0048b980, 11 bytes, [I] DM-059 created, status draft (no caller found) */
+/* VA 0x0048b980, 11 bytes, [I] new function, status draft (no caller found) */
 void zrwZglRequestQuit(void)
 {
     g_zrwQuit = 1;
@@ -1100,7 +1100,7 @@ void zrwZglMatrixFromRw(float *out, const RwMatrix *m)
     out[14] = -((m->pos.z - g_zrwWorldOrigin[2]) * g_zrwInvScale);
 }
 
-/* VA 0x0048beb0, 28 bytes, [I] DM-059 created, status draft (no caller found) */
+/* VA 0x0048beb0, 28 bytes, [I] new function, status draft (no caller found) */
 int zrwZglNotTested(void)
 {
     zAssertFail("Not tested", ZRWZGL_SRC, 0x633, 0);

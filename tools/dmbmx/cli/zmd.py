@@ -1,4 +1,4 @@
-"""dmbmx zmd {info, dump-obj, extract-textures}: ZMD model tools (DM-011)."""
+"""dmbmx zmd {info, dump-obj, extract-textures}: ZMD model tools."""
 import os
 from pathlib import Path
 

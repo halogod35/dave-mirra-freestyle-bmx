@@ -1,4 +1,4 @@
-"""Pure-Python LZO1X codec (the format of compressed ZAL entries; DM-010 decoder, DM-023 encoder).
+"""Pure-Python LZO1X codec (the format of compressed ZAL entries: decoder and encoder).
 
 ``decompress`` implements the LZO1X decoding rules (as in lzo1x_d.ch / the Linux kernel's
 lzo1x_decompress_safe), with bounds checks on every read and write. Raises LzoError on malformed input.
@@ -134,7 +134,7 @@ def decompress(src, out_len=None):
     return bytes(out)
 
 
-# --------------------------------------------------------------------------- encoder (DM-023)
+# --------------------------------------------------------------------------- encoder
 M2_MAX_LEN, M2_MAX_OFFSET = 8, 0x0800
 M3_MAX_LEN, M3_MAX_OFFSET = 33, 0x4000
 M4_MAX_LEN, M4_MAX_OFFSET = 9, 0xBFFF

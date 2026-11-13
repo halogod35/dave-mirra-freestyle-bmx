@@ -2,9 +2,9 @@
  * NgEngine/Zge/ZgeMods/zobjCamera.c
  * Original: C:\NgEngine\Zge\ZgeMods\zobjCamera.c
  * Evidence: [V] path string referenced by 2 function(s); the others [I] (the vtable 0x00560518, the
- * globals 0x006702F8-0x006702FC). DM-061 created the two hole functions 0x00482180 and 0x00482280.
+ * globals 0x006702F8-0x006702FC). The ZGE object pass created the two hole functions 0x00482180 and 0x00482280.
  * 11 functions, VA 0x00482090-0x00482405.
- * DM-061 (draft). Non-matching C (AD-8). Types: zobj.h. Description: docs/re/zge.md 2.3.
+ * Draft. Non-matching C (AD-8). Types: zobj.h. Description: docs/re/zge.md 2.3.
  *
  * A camera zobj wraps a zrwCam. Its data block holds four matrices derived from the object's
  * position and rotation, rebuilt lazily by zobjCameraGetMatrix; setting the position or rotation

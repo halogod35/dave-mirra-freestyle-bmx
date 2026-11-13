@@ -3,7 +3,7 @@
  * Original: C:\NgEngine\Zge\zcompres.c (no path string in the exe: the module has no asserts;
  * name from the "ZCOMPRES:" message prefix and link order between ziff.c and zrwModelCreate.c)
  * 5 functions, 3017 bytes, VA 0x0049b8e0-0x0049c5f3.
- * DM-042 (draft). Non-matching C (AD-8).
+ * Draft. Non-matching C (AD-8).
  *
  * Method 1 is LZRW3-A by Ross N. Williams (1991), [V] identified from the decoder: the
  * "123456789012345678" table initialisation, 16-item control words with a 0x10000 sentinel,
@@ -14,7 +14,7 @@
  */
 #include "decomp.h"
 
-/* other modules: zfile.h/zengine.h via decomp.h (DM-041); the rest until their cards land */
+/* other modules: zfile.h/zengine.h via decomp.h; the rest until they are decompiled */
 void *memcpy(void *dst, const void *src, size_t n);
 
 static const uint8_t s_lzrw3aStart[] = "123456789012345678";   /* 0x00562C04 */
@@ -334,14 +334,14 @@ int zcompresDecompress(int method, const uint8_t *src, uint32_t srcLen, uint8_t 
      * inlined decoder for a first byte of 1..17 [I]; not modelled above. */
 }
 
-/* VA 0x0049b880, 34 bytes, [I] DM-059 created, status draft (unreferenced wrapper; it sits just
+/* VA 0x0049b880, 34 bytes, [I] new function, status draft (unreferenced wrapper; it sits just
  * before 0x0049B8E0, between zrwShadow.c and this file's first function) */
 void zcompresLzrwCompress(void *work, const uint8_t *src, uint32_t srcLen, uint8_t *dst, uint32_t *dstLen)
 {
     zcompresCompressLZRW3A(work, src, srcLen, dst, dstLen);
 }
 
-/* VA 0x0049b8b0, 34 bytes, [I] DM-059 created, status draft (unreferenced wrapper) */
+/* VA 0x0049b8b0, 34 bytes, [I] new function, status draft (unreferenced wrapper) */
 void zcompresLzrwDecompress(void *work, const uint8_t *src, uint32_t srcLen, uint8_t *dst, uint32_t *dstLen)
 {
     zcompresDecompressLZRW3A(work, src, srcLen, dst, dstLen);

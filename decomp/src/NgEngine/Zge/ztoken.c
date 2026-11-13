@@ -2,12 +2,12 @@
  * NgEngine/Zge/ztoken.c
  * Original: unknown (no path string; name invented in the original style from the "ZTOKEN assert
  * failed" message)
- * Evidence: [I] new file (DM-061). The functions share the globals 0x00675380-0x006763CC (between
+ * Evidence: [I] new file. The functions share the globals 0x00675380-0x006763CC (between
  * zpanorama.c's 0x0067537C and zFont.c's 0x006763D0) and their literals 0x00563560-0x00563704 sit
- * between the "Panorama" literal and zFont.c's path string. DM-043 named seven of them (ztokenOpen ..
- * ztokenPrintLocation, the zScene.c / zscnpts.c readers); DM-061 created the eleven in the holes.
+ * between the "Panorama" literal and zFont.c's path string. The zScene pass named seven of them (ztokenOpen ..
+ * ztokenPrintLocation, the zScene.c / zscnpts.c readers); the ZGE object pass created the eleven in the holes.
  * 18 functions, VA 0x004a1120-0x004a2615.
- * DM-061 (draft). Non-matching C (AD-8). Types: ztools.h. Description: docs/re/zge.md 3.
+ * Draft. Non-matching C (AD-8). Types: ztools.h. Description: docs/re/zge.md 3.
  *
  * A whitespace / comma separated tokenizer for the engine's text scripts (Scene.Txt) with a small
  * preprocessor:

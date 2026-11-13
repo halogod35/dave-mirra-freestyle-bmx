@@ -1,7 +1,7 @@
-"""Texture images (DM-014): BMP/PNG inspection, pure-Python decode to RGBA, PNG/BMP encode,
+"""Texture images: BMP/PNG inspection, pure-Python decode to RGBA, PNG/BMP encode,
 and the constraints the game's loader puts on replacement images. Spec: docs/formats/TEXTURE.md.
 
-Pure stdlib (via dmbmx.convert.imaging, DM-020) so the Blender add-on can vendor it.
+Pure stdlib (via dmbmx.convert.imaging) so the Blender add-on can vendor it.
 """
 from __future__ import annotations
 
@@ -54,7 +54,7 @@ def sniff(data):
 
 
 # ----------------------------------------------------------------------------------- info
-# Parsing, PNG (un)filtering and PNG writing are DM-020's dmbmx.convert.imaging; this module only
+# Parsing, PNG (un)filtering and PNG writing are dmbmx.convert.imaging's; this module only
 # adds RGBA expansion, BMP writing, the colour key and the game's constraints.
 
 def _check_dims(w, h):

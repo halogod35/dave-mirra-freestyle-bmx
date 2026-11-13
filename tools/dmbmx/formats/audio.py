@@ -1,6 +1,6 @@
 """Sound banks ``bin/audio/*.zsd`` (magic ``ZSND`` ``WIN ``). Not the level ``.ZSD`` scenes (``SCEN``).
 
-Spec: docs/formats/AUDIO.md (DM-015, DM-055). Loader: ``zsndRegisterAsset`` 0x0046FD00 (winLoad.c);
+Spec: docs/formats/AUDIO.md. Loader: ``zsndRegisterAsset`` 0x0046FD00 (winLoad.c);
 the game side (mixer, sequencer, event map): docs/re/sound.md and decomp/src/.../sound/*.c, zsnd*.c.
 
 Layout (all LE; table pointers are file offsets, relocated at load):
@@ -27,7 +27,7 @@ Sample encodings (the bank does not store them; the exe decides):
 ``write(read(b)) == b`` for every bank in the install. ``write`` always lays the sample files out
 canonically, so replacing a sample with one of a different size just works.
 
-DM-055 (from the exe's sound code): ``Voice`` / ``TrackDef`` decode tables A / E, ``ztrk_decode`` /
+From the exe's sound code: ``Voice`` / ``TrackDef`` decode tables A / E, ``ztrk_decode`` /
 ``ztrk_encode`` the ZTRK sequencer byte code (round-trips every track), and ``voice_events`` names a
 bank's voices by the bmxsoundEvent codes that play them.
 """

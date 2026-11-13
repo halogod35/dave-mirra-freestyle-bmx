@@ -1,4 +1,4 @@
-"""dmbmx export: ZMD -> glTF binary (.glb) [+ OBJ] (DM-020). See docs/tools/export.md."""
+"""dmbmx export: ZMD -> glTF binary (.glb) [+ OBJ]. See docs/tools/export.md."""
 import os
 from pathlib import Path
 
@@ -7,7 +7,7 @@ from dmbmx.core.errors import FormatError
 from dmbmx.formats import zmd
 
 DEFAULT_GAME_DIR = r"F:\Projects\Dave Mirra freestyle BMX"
-_SKIP_DIRS = {"_pristine", "_testgame", "wt", "dave-mirra-bmx", "dave-mirra-pro-bmx"}
+_SKIP_DIRS = {"_pristine", "_testgame", "wt", "dave-mirra-bmx", "dave-mirra-freestyle-bmx"}
 
 
 def register(sub):

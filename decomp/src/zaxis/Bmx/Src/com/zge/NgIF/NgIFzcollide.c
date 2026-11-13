@@ -4,8 +4,8 @@
  * Evidence: [V] path string 0x0055D550: zcolSegmentTest's asserts (0x16F, 0x17C), the "Not coded"
  *           asserts of zcolCreatePropRails (0x4DA) / zcolBuildPropRails (0x5EE) and the 8
  *           "not implemented" stubs (lines 900 .. 1592); [I] the rest by link order.
- * 17 functions, VA 0x00469530-0x0046ac85 (DM-057 created the 8 stubs).
- * DM-057 (draft). Non-matching C (AD-8). Types: ngif.h, physics.h, bmxprop.h. Description:
+ * 17 functions, VA 0x00469530-0x0046ac85 (the NgIF pass created the 8 stubs).
+ * Draft. Non-matching C (AD-8). Types: ngif.h, physics.h, bmxprop.h. Description:
  * docs/re/ngif.md, docs/re/physics.md 2-3.
  *
  * The collision queries the game uses on the PC: the segment test (RenderWare line test both
