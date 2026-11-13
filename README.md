@@ -6,6 +6,8 @@ importers, and a draft C decompilation of the game and engine code.
 
 No game files are included. You need your own copy of the game.
 
+<img width="1199" height="879" alt="dmbmx" src="https://github.com/user-attachments/assets/e3584eab-9c6a-4788-9d4e-917d5ba81185" />
+
 ## Quick start
 
 Git Bash on Windows; Python 3.15 was used.
