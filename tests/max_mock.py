@@ -147,8 +147,69 @@ class _BoneSys:
         return n
 
 
+class MxsName:
+    """A MAXScript name value (#centimeters) as pymxs returns it: not a Python str (no str methods), equal
+    only to another name (case-insensitive, like MAXScript); str() gives the bare name, repr() '#name'."""
+
+    def __init__(self, s):
+        assert isinstance(s, str) and s and not s.startswith("#"), f"rt.Name({s!r})"
+        self._s = s
+
+    def __str__(self):
+        return self._s
+
+    def __repr__(self):
+        return "#" + self._s
+
+    def __eq__(self, o):
+        return isinstance(o, MxsName) and self._s.lower() == o._s.lower()
+
+    def __hash__(self):
+        return hash(self._s.lower())
+
+
+SYSTEM_TYPES = ("inches", "feet", "miles", "millimeters", "centimeters", "meters", "kilometers")
+
+
+class _Units:
+    """The ``units`` struct's System Unit Setup: 1 system unit = SystemScale SystemType. SystemType is a name
+    value, one of SYSTEM_TYPES (3ds Max returns them lower case); SystemScale a positive float. 3ds Max's
+    default (US install) is 1 inch. Any other property raises (unverified API)."""
+
+    _FIELDS = {"systemtype": "SystemType", "systemscale": "SystemScale"}
+
+    def __init__(self):
+        object.__setattr__(self, "_type", "inches")
+        object.__setattr__(self, "_scale", 1.0)
+
+    def __getattr__(self, k):
+        f = _Units._FIELDS.get(k.lower()) if not k.startswith("_") else None
+        if f == "SystemType":
+            return MxsName(self._type)
+        if f == "SystemScale":
+            return self._scale
+        raise AttributeError(f"mock pymxs: units.{k} is not implemented (unverified API)")
+
+    def __setattr__(self, k, v):
+        f = _Units._FIELDS.get(k.lower())
+        if f == "SystemType":
+            assert isinstance(v, MxsName) and str(v).lower() in SYSTEM_TYPES, f"units.SystemType = {v!r}"
+            object.__setattr__(self, "_type", str(v).lower())
+        elif f == "SystemScale":
+            assert isinstance(v, (int, float)) and not isinstance(v, bool) and v > 0, f"units.SystemScale = {v!r}"
+            object.__setattr__(self, "_scale", float(v))
+        else:
+            raise AttributeError(f"mock pymxs: units.{k} is not implemented (unverified API)")
+
+    def set(self, system_type, system_scale):
+        """Test helper (not MAXScript): the System Unit Setup dialog."""
+        self.SystemType = MxsName(system_type)
+        self.SystemScale = system_scale
+
+
 class Runtime:
     def __init__(self):
+        self.units = _Units()
         self.meshop = _Meshop(self)
         self.skinOps = _Skinops()
         self.modPanel = _ModPanel(self)
@@ -163,6 +224,9 @@ class Runtime:
         return self._animate and self.time is not None
 
     # -- values
+    def Name(self, s):
+        return MxsName(s)
+
     def Point3(self, x, y, z):
         return P3(x, y, z)
 

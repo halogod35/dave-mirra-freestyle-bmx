@@ -36,7 +36,12 @@ python parser/dmparse.py textures "C:\Games\Dave Mirra\assets\DMbike01.zmd" out\
 1. Drag `maxscript/DaveMirraImport.ms` onto a 3ds Max viewport (or **Scripting → Run Script…**).
    A **Dave Mirra Importer** dialog opens.
 2. Set the options:
-   - **Scale**: default 100, so a rider is about 195 units tall.
+   - **Real-world size (use scene units)**: on by default. The scale follows your System Unit Setup, so the
+     model comes in at its real size: a rider is about 1.95 m tall in any unit setup (see "Units" below).
+     The label under the scale shows the scene's unit setup and the scale it gives;
+     **Refresh scene units** reads it again after you change it.
+   - **Scale**: the raw multiplier, used when Real-world size is off. Game units are metres, so 100 means
+     1 game metre = 100 system units.
    - **LOD**: 0. Only `DaveMirra_shadow.zmd` has a LOD 1.
    - **Stand riders upright**.
    - **Textures**: the folder to extract textures to. Empty means `%TEMP%\DaveMirraTextures\<model>`.
@@ -58,15 +63,21 @@ Keep `dave_mirra_import.py` and `dmparse.py` together in one folder. Then either
 - **Scripting → Run Script…** and pick `dave_mirra_import.py`, or
 - from the MAXScript Listener: `python.ExecuteFile @"C:\path\to\tools\3dsmax\python\dave_mirra_import.py"`.
 
-A Qt dialog opens with the same options as the MAXScript importer (Scale, LOD, upright, texture folder,
-Motion ids, Exact normals, Flip normals to faces, Bones).
+A Qt dialog opens with the same options as the MAXScript importer (Real-world size, Scale, LOD, upright,
+texture folder, Motion ids, Exact normals, Flip normals to faces, Bones). Its units label also refreshes
+when the dialog gets the focus.
 
 Scripted use:
 
 ```
 python.Execute "import dave_mirra_import as d; d.import_zmd(r'C:\\Games\\Dave Mirra\\assets\\DaveMirra1.ZMD', scale=100)"
 python.Execute "import dave_mirra_import as d; d.import_level(r'C:\\Games\\Dave Mirra\\assets\\AcclaimDirt', explicit_normals=True)"
+python.Execute "import dave_mirra_import as d; d.import_zmd(r'C:\\Games\\Dave Mirra\\assets\\DaveMirra1.ZMD', scale=d.real_world_scale())"
 ```
+
+In scripts, `scale` is always the raw multiplier (default 100, as before). For real-world size pass
+`d.real_world_scale()` (Python) or `DM_realWorldScale()` (MAXScript), e.g.
+`DM_ImportZmd @"C:\Games\Dave Mirra\assets\DaveMirra1.ZMD" (DM_realWorldScale()) 0 true ""`.
 
 `import_zmd` also takes `bone_aim_children=False` (game frame orientation) and `flip_normals=True`;
 `import_level` takes `flip_normals=True`.
@@ -74,6 +85,28 @@ python.Execute "import dave_mirra_import as d; d.import_level(r'C:\\Games\\Dave 
 MAXScript entry points (after running the .ms once): `DM_ImportZmd path scale lod upright texDir`,
 `DM_ImportZmdMotion path scale lod upright texDir motionPath motionIds` and `DM_ImportLevel folder scale texDir`,
 each with an optional `exactNormals:true` and `flipNormals:true`; the two ZMD ones also take `boneAim:false`.
+
+## Units
+
+- Game units are **metres**: for example the `Ebox` box in GreenvilleDirt is 1.50 × 2.02 × 1.50, a BMX
+  wheel is 0.50 and a rider is about 1.8–1.95 tall.
+- **Real-world size** is on by default. It reads the scene's System Unit Setup
+  (`units.SystemScale` × `units.SystemType`, i.e. "1 unit = 5 cm") and uses
+  scale = 1 / (metres per system unit), so 1 game metre is 1 real metre in your scene.
+- With Real-world size off, **Scale** is the raw multiplier: 1 game metre = Scale system units.
+- Everything that has a size scales together: meshes, bones (and their 2 cm minimum length), dummies,
+  prop and scene-point positions, motion keys.
+
+| System Unit Setup | Real-world scale | Label |
+|---|---|---|
+| 1 unit = 1 cm | 100 | Scene: 1 unit = 1 cm -> scale 100 (game 1 m = 100 units) |
+| 1 unit = 5 cm | 20 | Scene: 1 unit = 5 cm -> scale 20 (game 1 m = 20 units) |
+| 1 unit = 1 m | 1 | Scene: 1 unit = 1 m -> scale 1 (game 1 m = 1 units) |
+| 1 unit = 1 in (3ds Max's US default) | 39.3701 | Scene: 1 unit = 1 in -> scale 39.37 (game 1 m = 39.37 units) |
+| 1 unit = 1 mm | 1000 | Scene: 1 unit = 1 mm -> scale 1000 (game 1 m = 1000 units) |
+
+With Real-world size off the label says what the chosen scale means, e.g. Scale 40 in a 5 cm scene:
+"Scene: 1 unit = 5 cm -> manual scale 40: 1 game metre = 2 m in this scene".
 
 ## What you get in the scene
 
@@ -85,7 +118,7 @@ each with an optional `exactNormals:true` and `flipNormals:true`; the two ZMD on
       length is the distance to it. The main child is the child that best continues the bone's incoming
       direction (parent joint → joint), e.g. `Chestx` → `Head`, not a shoulder. A bone whose parent is the
       root (`Hips`) takes the child with the most descendants (the spine, not a leg). A leaf (`Head`, hands,
-      feet) continues its parent's direction at half its length. Bones are at least 2 cm (× scale).
+      feet) continues its parent's direction at half its length. Bones are at least 0.02 game units (2 cm).
       Each bone's transform is a constant rotation O times the game frame (`O * frame`); the motion keys go
       through the same O, so the skin and the animation are exactly the same as with the game frames.
     - **Bones: game frame orientation**: each bone has its game frame's orientation (the game's bind
@@ -190,7 +223,7 @@ each with an optional `exactNormals:true` and `flipNormals:true`; the two ZMD on
   - Without "Exact normals" the world is shaded from its smoothing group. The game lights levels with the
     baked vertex colours, not with these normals.
   - The RW collision blocks and the tag kd-tree are not imported (they're not needed for viewing).
-  - Levels are large: with Scale 100 a level spans about 12,000 Max units.
+  - Levels are large: a level spans about 120 m (12,000 units at Scale 100).
 - **Exact normals** cost one Edit_Normals call per face corner plus two per normal: about 2,600 calls for
   a bike, 5,400 for a rider and 32,000-47,000 for a level (World ~95% of them). Both importers set them in
   one pass per mesh, with the modifier current in the Modify panel once, and undo and redraw off. Expected:
@@ -217,3 +250,4 @@ each with an optional `exactNormals:true` and `flipNormals:true`; the two ZMD on
 | `tests/test_3dsmax_normals.py` | exact normals: the Edit_Normals mock's rules, both importers on a synthetic mesh (missing / zero / non-unit normals) and on real models and a level (same normals), the level-normal facts. The every-model and every-level imports above run with exact normals on (`max_checks.check_normals`: right vertices, unit length, = dmparse in Max world space, winding kept face by face) |
 | `tests/test_3dsmax_props_bones.py` | The prop rotation pinned to the exe (the mirrored quaternion converter) and to the game's prop collision boxes on all 12 levels; glTF prop matrices; bones aimed at children (rule, both importers, joints/skin/keys identical to game-frame bones at every key); the createBone/Skin mock rules; "flip normals to faces" (rule, every level, MAXScript = Python) |
 | `tests/test_3dsmax_maxscript_motion.py` | the MAXScript motion path: LZO1X/ZAL/clip decoder = dmparse on all 238 clips frame by frame, and keyed rider/bike imports = the Python importer's keys |
+| `tests/test_3dsmax_units.py` | real-world size: the System Unit Setup in the pymxs mock and the MAXScript interpreter (never more permissive than 3ds Max), the real-world scale and the label for every unit type at scales 1, 5 and 0.1 (both importers, same text), real-world = manual scale in both importers, everything (meshes, bones, dummies, props, scene points, motion keys) scaling together, the GreenvilleDirt `Ebox` at 2.02 m |

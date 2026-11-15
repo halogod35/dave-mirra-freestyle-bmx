@@ -15,7 +15,8 @@ Supported subset (what the importer uses above its "UI" marker):
   calls by juxtaposition with keyword arguments (f a b key:v), zero-argument calls f(),
   property access a.b, indexing a[i] (1-based), 'x' adjacency rules: a[i] / a.b without spaces,
   the context expressions 'animate on <expr>' and 'at time <operand> <expr>',
-  'with undo on|off <expr>' and 'with redraw on|off <expr>'.
+  'with undo on|off <expr>' and 'with redraw on|off <expr>',
+  units.SystemType / units.SystemScale (the mock scene's System Unit Setup) and formattedPrint.
 MAXScript semantics kept: case-insensitive names, 1-based arrays and strings, integer / integer
 division truncates, strings compare case-sensitively, integers are 32-bit (bit.* wraps like the
 C int it is; + - * that would overflow raise here, because 3ds Max would silently wrap), sin/cos
@@ -27,7 +28,7 @@ import os
 import re
 import struct
 
-from max_mock import M3, P3
+from max_mock import M3, MxsName, P3
 
 
 class MXSError(Exception):
@@ -800,6 +801,45 @@ def arith(op, a, b):
     raise MXSError(f"bad operator {op}")
 
 
+class _Units:
+    """MAXScript's ``units`` struct over the mock scene's System Unit Setup (max_mock._Units): SystemType is a
+    #name value, SystemScale a float. Only these two properties exist here; a #name is required to set the type."""
+
+    def __init__(self, units):
+        object.__setattr__(self, "_u", units)
+
+    @property
+    def SystemType(self):
+        return Name(str(self._u.SystemType))
+
+    @property
+    def SystemScale(self):
+        return self._u.SystemScale
+
+    def __setattr__(self, k, v):
+        if k.lower() == "systemtype":
+            if not isinstance(v, Name):
+                raise MXSError(f"units.SystemType: a #name is needed, got {v!r}")
+            self._u.SystemType = MxsName(str(v))
+        elif k.lower() == "systemscale":
+            self._u.SystemScale = v
+        else:
+            raise MXSError(f"unknown property {k!r} of units")
+
+
+def formatted_print(v, format):
+    """formattedPrint <number> format:<printf spec without the %> (userLocale off: '.' decimal point). Only
+    plain specs are modelled; a float conversion (e f g) needs a float and an integer one (d i x) an integer."""
+    m = re.fullmatch(r"([-+ #0]*)([0-9]*)(\.[0-9]+)?([diouxXeEfFgG])", format)
+    if m is None:
+        raise MXSError(f"formattedPrint: format {format!r} not modelled")
+    if isinstance(v, bool) or not isinstance(v, (int, float)):
+        raise MXSError(f"formattedPrint: number expected, got {v!r}")
+    if (m.group(4) in "diouxX") != isinstance(v, int):
+        raise MXSError(f"formattedPrint: format {format!r} does not match {type(v).__name__} {v!r}")
+    return ("%" + format) % v
+
+
 # ============================================================================ interpreter
 
 class Interp:
@@ -980,6 +1020,7 @@ class Interp:
             "getFiles": getFiles, "bit": _bit(), "matrix3": lambda a, b_, c, d: M3(a, b_, c, d),
             "dotNetClass": _dotnet_class, "dotNetObject": _dotnet_object, "findItem": findItem, "ftell": ftell,
             "sin": sin, "cos": cos, "filterString": filterString, "trimLeft": trimLeft, "length": length,
+            "formattedPrint": formatted_print,
         }.items()})
         if scene is not None:
             rt = scene
@@ -988,7 +1029,7 @@ class Interp:
                 b[name.lower()] = getattr(rt, name)
             b.update({"dummy": rt.Dummy, "skin": rt.Skin, "multimaterial": rt.MultiMaterial,
                       "standardmaterial": rt.StandardMaterial, "color": rt.Color, "bitmaptexture": rt.Bitmaptexture,
-                      "edit_normals": rt.Edit_Normals})
+                      "edit_normals": rt.Edit_Normals, "units": _Units(rt.units)})
             self.scene = rt
         self.temp_dir = os.environ.get("TEMP", "/tmp")
         return b

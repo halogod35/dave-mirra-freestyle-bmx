@@ -29,7 +29,7 @@ try:
 except ImportError:            # outside 3ds Max (tests install a mock with set_runtime)
     pymxs = rt = None
 
-VERSION = "1.2"
+VERSION = "1.3"
 
 # Row-vector 3x3 matrices (3ds Max and RenderWare both use p' = p * M).
 GAME_TO_MAX = ((1, 0, 0), (0, 0, 1), (0, -1, 0))     # (x, y, z) -> (x, -z, y): Y-up -> Z-up
@@ -87,7 +87,7 @@ def _vunit(a):
 
 
 BONE_MODES = ("aim at children", "game frame orientation")   # dialog "Bones" choices (index 0 = default)
-BONE_MIN = 0.02          # shortest bone, game units (2 cm)
+BONE_MIN = 0.02          # shortest bone, game units (metres): 2 cm
 BONE_DEFAULT = 0.05      # a lone bone (no parent, no child) and the game-frame orientation mode
 IDENTITY3 = ((1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0))
 
@@ -360,7 +360,7 @@ def import_zmd(path, scale=100.0, lod=0, upright=True, texture_dir=None, explici
     lo = z["lods"][lod]
     sk = dmparse.skeleton(z, lod)
     root_xf = root_transform(z, lod, upright, animated=bool(clips))
-    root = rt.Dummy(name=model, boxsize=rt.Point3(10, 10, 10))
+    root = rt.Dummy(name=model, boxsize=rt.Point3(*(0.1 * scale,) * 3))     # 10 cm helper icon
     root.transform = to_max(root_xf)
 
     world = []                                                # game-space world transform per frame
@@ -527,12 +527,12 @@ def import_level(folder, scale=100.0, texture_dir=None, centre=True, explicit_no
         return compose((tuple(tuple(r) for r in rows), tuple((rw_pos[i] - o[i]) * scale for i in range(3))), root_xf)
 
     def group(gname):
-        d = rt.Dummy(name=gname, boxsize=rt.Point3(5, 5, 5))
+        d = rt.Dummy(name=gname, boxsize=rt.Point3(*(0.05 * scale,) * 3))
         d.transform = to_max(root_xf)
         d.parent = root
         return d
 
-    root = rt.Dummy(name=name, boxsize=rt.Point3(10, 10, 10))
+    root = rt.Dummy(name=name, boxsize=rt.Point3(*(0.1 * scale,) * 3))
     root.transform = to_max(root_xf)
     rt.setUserProp(root, "dmbmx_components", ";".join(f"{f['kind']}={f['name']}:{f['size']}" for f in lv["files"]))
     rt.setUserProp(root, "dmbmx_world_origin", " ".join(repr(c) for c in o_full))
@@ -621,13 +621,62 @@ def import_level(folder, scale=100.0, texture_dir=None, centre=True, explicit_no
             "files": lv["files"], "origin": o_full, "centre": o, "level": lv}
 
 
+# ---------------------------------------------------------------------------- scene units (real-world size)
+# Game units are metres. 3ds Max's System Unit Setup says 1 system unit = units.SystemScale units.SystemType
+# (for example 5 #centimeters), so the import scale that keeps 1 game metre = 1 real metre is
+# 1 / (metres per system unit). The MAXScript importer has the same functions (DM_unitInfo, DM_realWorldScale,
+# DM_scaleLabel).
+
+UNIT_METRES = {"inches": (0.0254, "in"), "feet": (0.3048, "ft"), "miles": (1609.344, "mi"),
+               "millimeters": (0.001, "mm"), "centimeters": (0.01, "cm"), "meters": (1.0, "m"),
+               "kilometers": (1000.0, "km")}     # units.SystemType -> (metres, abbreviation)
+
+
+def scene_units():
+    """The scene's System Unit Setup: (unit type name, e.g. "centimeters", units.SystemScale)."""
+    t = str(rt.units.SystemType).lstrip("#").lower()    # a MAXScript name value (#centimeters)
+    s = float(rt.units.SystemScale)
+    if t not in UNIT_METRES:
+        raise ValueError(f"unknown system unit type: {t}")
+    if not s > 0.0:
+        raise ValueError("the System Unit Setup scale must be positive")
+    return t, s
+
+
+def metres_per_system_unit():
+    """Metres in one 3ds Max system unit (units.SystemScale x units.SystemType)."""
+    t, s = scene_units()
+    return s * UNIT_METRES[t][0]
+
+
+def real_world_scale():
+    """The import ``scale`` that gives real-world size in this scene (1 game metre = 1 m)."""
+    return 1.0 / metres_per_system_unit()
+
+
+def fmt_scale(v):
+    """A scale for the label: 4 significant digits, whole numbers from 1000 up."""
+    return "%.0f" % v if v >= 1000.0 else "%.4g" % v
+
+
+def scale_label(manual_scale=None):
+    """The dialog's units label. ``manual_scale``: None in real-world mode, else the manual multiplier."""
+    t, s = scene_units()
+    mpu = metres_per_system_unit()
+    text = "Scene: 1 unit = %g %s" % (s, UNIT_METRES[t][1])
+    if manual_scale is None:
+        r = fmt_scale(1.0 / mpu)
+        return f"{text} -> scale {r} (game 1 m = {r} units)"
+    return f"{text} -> manual scale {fmt_scale(manual_scale)}: 1 game metre = {fmt_scale(manual_scale * mpu)} m in this scene"
+
+
 # ---------------------------------------------------------------------------- UI (Qt)
 
 def show_dialog():
     try:
-        from PySide6 import QtWidgets
+        from PySide6 import QtCore, QtWidgets
     except ImportError:
-        from PySide2 import QtWidgets
+        from PySide2 import QtCore, QtWidgets
     parent = None
     try:
         from qtmax import GetQMaxMainWindow
@@ -640,9 +689,18 @@ def show_dialog():
             super().__init__(parent)
             self.setWindowTitle(f"Dave Mirra Importer {VERSION}")
             lay = QtWidgets.QFormLayout(self)
+            self.real = QtWidgets.QCheckBox("Real-world size (use scene units)")
+            self.real.setChecked(True)
             self.scale = QtWidgets.QDoubleSpinBox()
-            self.scale.setRange(0.01, 10000)
+            self.scale.setDecimals(6)
+            self.scale.setRange(0.000001, 1e9)
             self.scale.setValue(100.0)
+            self.units = QtWidgets.QLabel()
+            self.units.setWordWrap(True)
+            refresh = QtWidgets.QPushButton("Refresh scene units")
+            refresh.clicked.connect(self.refresh_units)
+            self.real.toggled.connect(self.refresh_units)
+            self.scale.valueChanged.connect(self.refresh_units)
             self.lod = QtWidgets.QSpinBox()
             self.upright = QtWidgets.QCheckBox("Stand riders upright")
             self.upright.setChecked(True)
@@ -654,8 +712,8 @@ def show_dialog():
             self.texdir.setPlaceholderText("(temp folder)")
             self.motions = QtWidgets.QLineEdit()
             self.motions.setPlaceholderText("e.g. 1,8,15 (needs motion.zal)")
-            for label, w in (("Scale", self.scale), ("LOD", self.lod), ("", self.upright), ("", self.normals),
-                             ("", self.flip), ("Bones", self.bones), ("Texture folder", self.texdir),
+            for label, w in (("", self.real), ("Scale", self.scale), ("", self.units), ("", refresh),
+                             ("LOD", self.lod), ("", self.upright), ("", self.normals), ("", self.flip), ("Bones", self.bones), ("Texture folder", self.texdir),
                              ("Motion ids", self.motions)):
                 lay.addRow(label, w)
             b1 = QtWidgets.QPushButton("Import ZMD...")
@@ -664,6 +722,29 @@ def show_dialog():
             b2.clicked.connect(self.do_level)
             lay.addRow(b1)
             lay.addRow(b2)
+            self.refresh_units()
+
+        def refresh_units(self, *_):
+            """Real-world mode: the spinner shows the scene's scale (read-only); manual: the raw multiplier."""
+            real = self.real.isChecked()
+            try:
+                if real:
+                    self.scale.blockSignals(True)
+                    self.scale.setValue(real_world_scale())
+                    self.scale.blockSignals(False)
+                self.units.setText(scale_label(None if real else self.scale.value()))
+            except Exception as e:  # an unexpected unit setup: show it, keep the dialog usable
+                self.units.setText(str(e))
+            self.scale.setEnabled(not real)
+
+        def import_scale(self):
+            return real_world_scale() if self.real.isChecked() else self.scale.value()
+
+        def changeEvent(self, event):
+            # the user may change the System Unit Setup while the dialog is open
+            if event.type() == QtCore.QEvent.ActivationChange and self.isActiveWindow():
+                self.refresh_units()
+            super().changeEvent(event)
 
         def _run(self, fn, *a, **kw):
             try:
@@ -682,7 +763,8 @@ def show_dialog():
                 mpath = os.path.join(os.path.dirname(path), "motion.zal")
                 if not os.path.isfile(mpath):
                     mpath, _ = QtWidgets.QFileDialog.getOpenFileName(self, "motion.zal", "", "ZAL (*.zal *.ZAL)")
-            self._run(import_zmd, path, scale=self.scale.value(), lod=self.lod.value(), upright=self.upright.isChecked(),
+            self.refresh_units()
+            self._run(import_zmd, path, scale=self.import_scale(), lod=self.lod.value(), upright=self.upright.isChecked(),
                       texture_dir=self.texdir.text() or None, explicit_normals=self.normals.isChecked(),
                       motion_path=mpath, motion_ids=ids, bone_aim_children=self.bones.currentIndex() == 0,
                       flip_normals=self.flip.isChecked())
@@ -690,7 +772,8 @@ def show_dialog():
         def do_level(self):
             d = QtWidgets.QFileDialog.getExistingDirectory(self, "Level folder (contains the .ZSD)")
             if d:
-                self._run(import_level, d, scale=self.scale.value(), texture_dir=self.texdir.text() or None,
+                self.refresh_units()
+                self._run(import_level, d, scale=self.import_scale(), texture_dir=self.texdir.text() or None,
                           explicit_normals=self.normals.isChecked(), flip_normals=self.flip.isChecked())
 
     dlg = Dialog()

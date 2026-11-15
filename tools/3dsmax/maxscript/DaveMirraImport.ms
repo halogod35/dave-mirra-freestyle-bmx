@@ -3,6 +3,7 @@
 --   Import ZMD...            riders, bikes, shadows, sfx (.zmd); "Motion ids" keys clips from motion.zal
 --   Import Level (.ZSD)...   a level folder: world, props, tags (hidden), scene points, panorama
 --   "Exact normals" puts the game's vertex normals on the meshes (Edit_Normals modifier; slower)
+--   "Real-world size" (default) sets the scale from the scene's System Unit Setup (game units are metres)
 -- Spec: ../../../docs/formats/SPEC.md. The parsing functions below mirror ../parser/dmparse.py line by line; each
 -- one names its Python counterpart in a "mirrors dmparse.<function>" comment. Model data stays in game space; one root
 -- Dummy carries the axis change (game Y-up -> Max Z-up) and the rider upright correction (SPEC 2.5).
@@ -12,7 +13,7 @@
 -- continuations, every call argument on one line, negative numbers in parentheses) so that the test
 -- suite can execute it with a MAXScript-subset interpreter (tests/maxscript_interp.py).
 
-global DM_VERSION = "1.3"
+global DM_VERSION = "1.4"
 
 -- ============================================================================ binary reading (dmparse.Buf)
 
@@ -522,7 +523,7 @@ fn DM_rootMatrix z lod upright =
 
 -- ============================================================================ bones aimed at their children
 
-global DM_BONE_MIN = 0.02        -- shortest bone, game units (2 cm)
+global DM_BONE_MIN = 0.02        -- shortest bone, game units (metres): 2 cm
 global DM_BONE_DEFAULT = 0.05    -- a lone bone, and the "game frame orientation" mode
 
 -- per frame #(O, length): O = a constant rotation (matrix3, no translation) in the frame's own space such that
@@ -1574,7 +1575,7 @@ fn DM_ImportZmdMotion path scale lod upright texDir motionPath motionIds exactNo
     local names = DM_frameNames z lod
     -- animated riders get no upright correction: the Hips channel stands them up (SPEC 8.4)
     local rootM = DM_rootMatrix z lod (upright and clips.count == 0)
-    local root = dummy name:model boxsize:[10, 10, 10]
+    local root = dummy name:model boxsize:[0.1 * scale, 0.1 * scale, 0.1 * scale]    -- 10 cm helper icon
     root.transform = rootM
     local world = #()
     for i = 1 to lo.frames.count do
@@ -2072,9 +2073,9 @@ fn DM_hex4 v =
     s
 )
 
-fn DM_group name root rootM =
+fn DM_group name root rootM scale =
 (
-    local d = dummy name:name boxsize:[5, 5, 5]
+    local d = dummy name:name boxsize:[0.05 * scale, 0.05 * scale, 0.05 * scale]
     d.transform = rootM
     d.parent = root
     d
@@ -2092,7 +2093,7 @@ fn DM_ImportLevel folder scale texDir exactNormals:false flipNormals:false =
     if lv.matPath != undefined then texfiles = DM_writeLevelTextures lv.matPath lv.textures tfolder
     local o = lv.world.origin
     local rootM = matrix3 [1,0,0] [0,0,1] [0,(-1),0] [0,0,0]
-    local root = dummy name:name boxsize:[10, 10, 10]
+    local root = dummy name:name boxsize:[0.1 * scale, 0.1 * scale, 0.1 * scale]
     root.transform = rootM
     local info = ""
     for e in lv.files do info += (e[1] as string) + "=" + e[3] + ":" + (e[2] as string) + ";"
@@ -2115,7 +2116,7 @@ fn DM_ImportLevel folder scale texDir exactNormals:false flipNormals:false =
     world.transform = rootM
     world.parent = root
     -- props: one mesh per definition, instances for the rest
-    local propsGrp = DM_group "Props" root rootM
+    local propsGrp = DM_group "Props" root rootM scale
     local masterIds = #()
     local masters = #()
     local propNodes = #()
@@ -2149,7 +2150,7 @@ fn DM_ImportLevel folder scale texDir exactNormals:false flipNormals:false =
         )
     )
     -- tags: collision faces grouped by face-tag code, hidden
-    local tagsGrp = DM_group "Tags" root rootM
+    local tagsGrp = DM_group "Tags" root rootM scale
     local codes = #()
     local groups = #()
     for fc in lv.tags do
@@ -2192,7 +2193,7 @@ fn DM_ImportLevel folder scale texDir exactNormals:false flipNormals:false =
         append tagNodes node
     )
     -- scene points
-    local ptsGrp = DM_group "ScenePoints" root rootM
+    local ptsGrp = DM_group "ScenePoints" root rootM scale
     local pointNodes = #()
     for sp in lv.points do
     (
@@ -2218,14 +2219,70 @@ fn DM_ImportLevel folder scale texDir exactNormals:false flipNormals:false =
     #(root, world, propNodes, tagNodes, pointNodes, pano, tfolder)
 )
 
+-- ============================================================================ scene units (real-world size)
+-- Game units are metres. 3ds Max's System Unit Setup says 1 system unit = units.SystemScale units.SystemType
+-- (for example 5 #centimeters), so the import scale that keeps 1 game metre = 1 real metre is
+-- 1 / (metres per system unit). Mirrors dave_mirra_import.scene_units / real_world_scale / scale_label.
+
+-- #(metres, abbreviation) of a units.SystemType name value
+fn DM_unitInfo t =
+(
+    if t == #inches then return #(0.0254, "in")
+    if t == #feet then return #(0.3048, "ft")
+    if t == #miles then return #(1609.344, "mi")
+    if t == #millimeters then return #(0.001, "mm")
+    if t == #centimeters then return #(0.01, "cm")
+    if t == #meters then return #(1.0, "m")
+    if t == #kilometers then return #(1000.0, "km")
+    DM_fail ("unknown system unit type: " + (t as string))
+)
+
+-- metres in one 3ds Max system unit (units.SystemScale x units.SystemType)
+fn DM_metresPerSystemUnit =
+(
+    local s = units.SystemScale as float
+    if s <= 0.0 then DM_fail "the System Unit Setup scale must be positive"
+    local info = DM_unitInfo units.SystemType
+    s * info[1]
+)
+
+-- the import scale that gives real-world size in this scene (1 game metre = 1 m)
+fn DM_realWorldScale = (1.0 / DM_metresPerSystemUnit())
+
+-- a scale for the label: 4 significant digits, whole numbers from 1000 up (mirrors dave_mirra_import.fmt_scale)
+fn DM_fmtNum v =
+(
+    local f = v as float
+    if f >= 1000.0 then return (formattedPrint f format:".0f")
+    formattedPrint f format:".4g"
+)
+
+-- the dialog's units label. manualScale: undefined in real-world mode, else the manual multiplier
+fn DM_scaleLabel manualScale =
+(
+    local info = DM_unitInfo units.SystemType
+    local mpu = DM_metresPerSystemUnit()
+    local s = "Scene: 1 unit = " + (formattedPrint (units.SystemScale as float) format:"g") + " " + info[2]
+    if manualScale == undefined then
+    (
+        local r = 1.0 / mpu
+        s + " -> scale " + (DM_fmtNum r) + " (game 1 m = " + (DM_fmtNum r) + " units)"
+    ) else (
+        s + " -> manual scale " + (DM_fmtNum manualScale) + ": 1 game metre = " + (DM_fmtNum (manualScale * mpu)) + " m in this scene"
+    )
+)
+
 -- ============================================================================ UI
 -- (everything below is the dialog; not executed by the test interpreter)
 
 try (destroyDialog DaveMirraRollout) catch ()
 
-rollout DaveMirraRollout "Dave Mirra Importer" width:270
+rollout DaveMirraRollout "Dave Mirra Importer" width:340
 (
-    spinner spnScale "Scale" range:[0.01, 10000, 100] type:#float
+    checkbox chkReal "Real-world size (use scene units)" checked:true
+    spinner spnScale "Scale" range:[0.000001, 1000000000, 100] type:#float enabled:false
+    label lblUnits "" align:#left width:320 height:30
+    button btnUnits "Refresh scene units" width:240
     spinner spnLod "LOD" range:[0, 9, 0] type:#integer
     checkbox chkUpright "Stand riders upright" checked:true
     checkbox chkNormals "Exact normals (Edit_Normals, slower)" checked:false
@@ -2238,6 +2295,23 @@ rollout DaveMirraRollout "Dave Mirra Importer" width:270
     button btnLevel "Import Level (.ZSD)..." width:240 height:28
     label lblInfo "Textures go to %TEMP% if empty." align:#left
 
+    -- real-world mode: the spinner shows the scene's scale (read-only); manual mode: the spinner is the raw multiplier
+    fn refreshUnits =
+    (
+        try
+        (
+            if chkReal.checked then spnScale.value = DM_realWorldScale()
+            spnScale.enabled = not chkReal.checked
+            lblUnits.text = substituteString (DM_scaleLabel (if chkReal.checked then undefined else spnScale.value)) " -> " "\n-> "
+        )
+        catch (lblUnits.text = getCurrentException())
+    )
+    fn importScale = (if chkReal.checked then DM_realWorldScale() else spnScale.value)
+
+    on DaveMirraRollout open do refreshUnits()
+    on chkReal changed state do refreshUnits()
+    on spnScale changed val do refreshUnits()
+    on btnUnits pressed do refreshUnits()
     on btnTex pressed do
     (
         local d = getSavePath caption:"Folder for the extracted textures"
@@ -2248,6 +2322,7 @@ rollout DaveMirraRollout "Dave Mirra Importer" width:270
         local p = getOpenFileName caption:"Dave Mirra model" types:"Dave Mirra model (*.zmd)|*.zmd|All files (*.*)|*.*|"
         if p != undefined do
         (
+            refreshUnits()
             try
             (
                 local ids = DM_parseMotionIds edtMotion.text
@@ -2257,7 +2332,7 @@ rollout DaveMirraRollout "Dave Mirra Importer" width:270
                     mpath = DM_findMotionZal p
                     if mpath == undefined then mpath = getOpenFileName caption:"motion.zal" types:"Dave Mirra motions (*.zal)|*.zal|All files (*.*)|*.*|"
                 )
-                local r = DM_ImportZmdMotion p spnScale.value (spnLod.value as integer) chkUpright.checked edtTex.text mpath ids exactNormals:chkNormals.checked boneAim:(ddlBones.selection == 1) flipNormals:chkFlip.checked
+                local r = DM_ImportZmdMotion p (importScale()) (spnLod.value as integer) chkUpright.checked edtTex.text mpath ids exactNormals:chkNormals.checked boneAim:(ddlBones.selection == 1) flipNormals:chkFlip.checked
                 lblInfo.text = "Imported (" + (r[5] as string) + " keys). Textures: " + r[4]
             )
             catch (messageBox (getCurrentException()) title:"Dave Mirra")
@@ -2268,9 +2343,10 @@ rollout DaveMirraRollout "Dave Mirra Importer" width:270
         local d = getSavePath caption:"Level folder (contains the .ZSD)"
         if d != undefined do
         (
+            refreshUnits()
             try
             (
-                local r = DM_ImportLevel d spnScale.value edtTex.text exactNormals:chkNormals.checked flipNormals:chkFlip.checked
+                local r = DM_ImportLevel d (importScale()) edtTex.text exactNormals:chkNormals.checked flipNormals:chkFlip.checked
                 lblInfo.text = "Level imported. Textures: " + r[7]
             )
             catch (messageBox (getCurrentException()) title:"Dave Mirra")
