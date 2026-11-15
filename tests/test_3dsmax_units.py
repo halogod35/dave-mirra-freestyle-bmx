@@ -211,9 +211,9 @@ def _check_scaled(nodes_a, nodes_b, k):
 
 
 def _all_nodes(r, frames):
-    """The scene's meshes and dummies, plus the bones (BoneSys.createBone nodes are not in the mock's list)."""
-    bones = [n for n in frames if n.kind == "bone"]
-    return r.nodes + bones
+    """The scene's meshes, dummies and bones (BoneSys.createBone nodes are in the mock's list too)."""
+    assert all(n in r.nodes for n in frames)
+    return r.nodes
 
 
 def _py_zmd(p, units, scale, tmp_path, **kw):
@@ -297,14 +297,16 @@ def test_level_props_and_points_scale_together(tmp_path):
 # ----------------------------------------------------------------------------- the dialogs (source)
 
 def test_ms_dialog_real_world_by_default():
+    """Source checks; the dialog itself runs in tests/test_3dsmax_ui.py."""
     ui = MS.read_text(encoding="utf-8")
-    ui = ui[ui.index("rollout DaveMirraRollout"):]
+    ui = ui[ui.index("============ UI"):]
     assert 'checkbox chkReal "Real-world size (use scene units)" checked:true' in ui
     assert 'spinner spnScale "Scale" range:[0.000001, 1000000000, 100] type:#float enabled:false' in ui
     assert "label lblUnits" in ui and "DM_scaleLabel" in ui
-    assert "on DaveMirraRollout open do refreshUnits()" in ui and "on btnUnits pressed do refreshUnits()" in ui
+    assert "refreshUnits()\n" in ui[ui.index("on DaveMirraRollout open do"):]
+    assert "on btnUnits pressed do refreshUnits()" in ui
     assert "fn importScale = (if chkReal.checked then DM_realWorldScale() else spnScale.value)" in ui
-    assert ui.count("(importScale())") == 2 and "spnScale.value (" not in ui
+    assert ui.count("(DaveMirraRollout.importScale())") == 2 and "spnScale.value (" not in ui
 
 
 def test_py_dialog_real_world_by_default():

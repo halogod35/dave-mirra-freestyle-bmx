@@ -1,8 +1,10 @@
 """Dave Mirra Freestyle BMX importer for 3ds Max 2022+ (Python / pymxs). See ../README.md.
 
 Run inside 3ds Max:   Scripting > Run Script... (pick this file)   or   python.ExecuteFile @"...\\dave_mirra_import.py"
-It opens a small dialog (Qt). From the MAXScript listener you can also call:
+It opens a small dialog (Qt): the options every import uses, then a Models tab (ZMD import, and a motion from
+motion.zal onto a model already in the scene) and a Levels tab. From the MAXScript listener you can also call:
     python.Execute "import dave_mirra_import as d; d.import_zmd(r'C:\\...\\DaveMirra1.ZMD')"
+    python.Execute "import dave_mirra_import as d; d.import_motion(r'C:\\...\\motion.zal', 25)"
 
 Parsing is done by dmparse.py (the reference parser, copied next to this file); this module only
 builds the 3ds Max scene. Model data stays in game (RenderWare) space and one root Dummy carries the
@@ -11,6 +13,7 @@ axis change: game Y-up -> Max Z-up, plus the rider upright correction (../../../
 Every call into 3ds Max goes through ``rt`` (pymxs.runtime). The test suite drives this module with a
 recording mock of pymxs (tests/test_3dsmax_max_python.py); real-Max behaviour is checked by hand in 3ds Max.
 """
+import math
 import os
 import sys
 import tempfile
@@ -29,7 +32,7 @@ try:
 except ImportError:            # outside 3ds Max (tests install a mock with set_runtime)
     pymxs = rt = None
 
-VERSION = "1.3"
+VERSION = "1.4"
 
 # Row-vector 3x3 matrices (3ds Max and RenderWare both use p' = p * M).
 GAME_TO_MAX = ((1, 0, 0), (0, 0, 1), (0, -1, 0))     # (x, y, z) -> (x, -z, y): Y-up -> Z-up
@@ -58,6 +61,18 @@ def compose(local, parent):
     """world = local * parent (row-vector order)."""
     (lr, lp), (pr, pp) = local, parent
     return _mul3(lr, pr), tuple(a + b for a, b in zip(_xf(pr, lp), pp))
+
+
+def inverse(xf):
+    """The inverse of a (rows, pos) transform (general 3x3)."""
+    (a, b, c), (d, e, f), (g, h, i) = xf[0]
+    det = a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g)
+    if det == 0:
+        raise ValueError("singular transform")
+    inv = (((e * i - f * h) / det, -(b * i - c * h) / det, (b * f - c * e) / det),
+           (-(d * i - f * g) / det, (a * i - c * g) / det, -(a * f - c * d) / det),
+           ((d * h - e * g) / det, -(a * h - b * g) / det, (a * e - b * d) / det))
+    return inv, tuple(-v for v in _xf(inv, xf[1]))
 
 
 def frame_local(f, scale):
@@ -338,31 +353,23 @@ def set_explicit_normals(node, normals, triangles):
 
 # ---------------------------------------------------------------------------- import
 
-def import_zmd(path, scale=100.0, lod=0, upright=True, texture_dir=None, explicit_normals=False,
-               motion_path=None, motion_ids=(), bone_aim_children=True, flip_normals=False):
-    """Import a .zmd. Returns a summary dict (also used by the tests).
-    ``bone_aim_children``: rider bones point at their main child (bone_aim; default) instead of along
-    their game frame's X axis. The joints, the skin and the motion keys are the same either way.
-    ``flip_normals`` (with ``explicit_normals``): flip_normals_to_faces."""
-    data = open(path, "rb").read()
-    z = dmparse.read_zmd(data)
+def read_model(path, lod):
+    """dmparse.read_zmd of a model file; refuses an empty model or a missing LOD."""
+    z = dmparse.read_zmd(open(path, "rb").read())
     if z["empty"]:
         raise ValueError(f"{os.path.basename(path)} is an empty (0-byte) model; nothing to import")
     if not 0 <= lod < len(z["lods"]):
         raise ValueError(f"LOD {lod} does not exist (the model has {len(z['lods'])})")
-    folder = texture_folder(path, texture_dir)
-    texfiles = write_textures(z["textures"], folder)
-    clips = []
-    if motion_ids:
-        bank = dmparse.read_motion_bank(open(motion_path, "rb").read())
-        clips = [(m, bank[m]) for m in motion_ids]
-    model = (z["mdef"] or {}).get("name") or os.path.splitext(os.path.basename(path))[0]
+    return z
+
+
+def model_rig(z, lod, scale, bone_aim_children):
+    """The frames of a model as the import builds them, shared by import_zmd and import_motion so that both
+    key exactly the same matrices: (lod dict, skeleton, world, skinned, aim, offsets). ``world``: each frame's
+    game-space world transform (scaled); ``aim``: bone_aim per frame for a rider with ``bone_aim_children``,
+    else None; ``offsets``: per frame the rotation O put in front of every bone transform (identity if none)."""
     lo = z["lods"][lod]
     sk = dmparse.skeleton(z, lod)
-    root_xf = root_transform(z, lod, upright, animated=bool(clips))
-    root = rt.Dummy(name=model, boxsize=rt.Point3(*(0.1 * scale,) * 3))     # 10 cm helper icon
-    root.transform = to_max(root_xf)
-
     world = []                                                # game-space world transform per frame
     for f in lo["frames"]:
         local = frame_local(f, scale)
@@ -370,6 +377,44 @@ def import_zmd(path, scale=100.0, lod=0, upright=True, texture_dir=None, explici
     skinned = any(a["geometry"]["bones"] for a in lo["atomics"])
     aim = bone_aim(lo["frames"], world) if (skinned and bone_aim_children) else None
     offsets = [a[0] for a in aim] if aim else [IDENTITY3] * len(sk)
+    return lo, sk, world, skinned, aim, offsets
+
+
+def tag_model_root(root, path, lod, scale, aimed, upright_root):
+    """User properties on the model's root dummy, read back by import_motion: the model file, LOD, scale (repr:
+    the whole float), the bone kind ("aim": bones aimed at their children, the keys carry the offsets O;
+    "frame": game frame orientation, or a bike's dummies) and whether the root carries the rider upright
+    correction ("1") or not ("0"). Each frame node gets "dmbmx_frame" = its frame index (from 0)."""
+    rt.setUserProp(root, "dmbmx_zmd", str(path))
+    rt.setUserProp(root, "dmbmx_lod", str(lod))
+    rt.setUserProp(root, "dmbmx_scale", repr(float(scale)))
+    rt.setUserProp(root, "dmbmx_bones", "aim" if aimed else "frame")
+    rt.setUserProp(root, "dmbmx_upright", "1" if upright_root else "0")
+
+
+def import_zmd(path, scale=100.0, lod=0, upright=True, texture_dir=None, explicit_normals=False,
+               motion_path=None, motion_ids=(), bone_aim_children=True, flip_normals=False):
+    """Import a .zmd. Returns a summary dict (also used by the tests).
+    ``bone_aim_children``: rider bones point at their main child (bone_aim; default) instead of along
+    their game frame's X axis. The joints, the skin and the motion keys are the same either way.
+    ``flip_normals`` (with ``explicit_normals``): flip_normals_to_faces.
+    ``motion_ids``: clips of ``motion_path`` (motion.zal) keyed from frame 0 (import_motion keys one onto a
+    model already in the scene, from any frame)."""
+    z = read_model(path, lod)
+    folder = texture_folder(path, texture_dir)
+    texfiles = write_textures(z["textures"], folder)
+    clips = []
+    if motion_ids:
+        bank = dmparse.read_motion_bank(open(motion_path, "rb").read())
+        clips = [(m, bank[m]) for m in motion_ids]
+    model = (z["mdef"] or {}).get("name") or os.path.splitext(os.path.basename(path))[0]
+    lo, sk, world, skinned, aim, offsets = model_rig(z, lod, scale, bone_aim_children)
+    upright_root = upright and not clips                      # animated riders: no upright correction
+    root_xf = root_transform(z, lod, upright, animated=bool(clips))
+    root = rt.Dummy(name=model, boxsize=rt.Point3(*(0.1 * scale,) * 3))     # 10 cm helper icon
+    root.transform = to_max(root_xf)
+    tag_model_root(root, path, lod, scale, bool(aim), upright_root)
+
     frame_nodes = []
     for i, s in enumerate(sk):
         wmax = compose(world[i], root_xf)
@@ -392,6 +437,7 @@ def import_zmd(path, scale=100.0, lod=0, upright=True, texture_dir=None, explici
         node.name = s["name"]
         node.transform = to_max(wmax)
         node.parent = frame_nodes[s["parent"]] if 0 <= s["parent"] < i else root
+        rt.setUserProp(node, "dmbmx_frame", str(i))
         frame_nodes.append(node)
 
     summary = {"model": model, "root": root, "frames": frame_nodes, "meshes": [], "textures": texfiles,
@@ -430,10 +476,10 @@ def skin_mesh(node, bones, vframes):
     return sk
 
 
-def key_motion(clip, frames, sk, frame_nodes, root_xf, scale, offsets=None):
-    """Key one motion clip (ids from motion.zal) on the bones/dummies, one key per game frame.
-    Channel frames get the game's quaternion with their bind translation; others keep their bind.
-    ``offsets``: per node, the constant bone rotation O (bone_aim) put in front of every key."""
+def key_motion(clip, frames, sk, frame_nodes, root_xf, scale, offsets=None, start=0):
+    """Key one motion clip (ids from motion.zal) on the bones/dummies, one key per game frame, game frame k at
+    Max frame ``start`` + k. Channel frames get the game's quaternion with their bind translation; others keep
+    their bind. ``offsets``: per node, the constant bone rotation O (bone_aim) put in front of every key."""
     names = {s["name"]: s["index"] for s in sk}
     chan = {}
     for si, (cnt, _f, kind) in enumerate(clip["sections"]):
@@ -453,7 +499,7 @@ def key_motion(clip, frames, sk, frame_nodes, root_xf, scale, offsets=None):
         for i, f in enumerate(frames):
             world.append(compose(local[i], world[f["parent"]]) if 0 <= f["parent"] < i else local[i])
         with pymxs.animate(True):
-            with pymxs.attime(k):
+            with pymxs.attime(start + k):
                 for i, node in enumerate(frame_nodes):
                     xf = compose(world[i], root_xf)
                     if offsets is not None and offsets[i] != IDENTITY3:
@@ -461,6 +507,251 @@ def key_motion(clip, frames, sk, frame_nodes, root_xf, scale, offsets=None):
                     node.transform = to_max(xf)
                     n += 1
     return n
+
+
+# ---------------------------------------------------------------------------- a motion onto a model in the scene
+# The model import tags its root and frame nodes (tag_model_root); import_motion reads the model file again
+# from there and keys the clip exactly like import_zmd, from a start frame on, so clips can be chained back to
+# back on one timeline. The MAXScript importer has the same functions (DM_ListMotions, DM_ImportMotion).
+
+# what plays each motion id in the game (motion.zal stores no names; see docs ANIM.md sections 7 and 8)
+MOTION_STATES = ("not used by the game", "coast (standing still)", "not used by the game",
+                 "second motion slot (physics only)", "coast / landing", "not used by the game", "not used by the game",
+                 "pedal", "not used by the game", "skid (start)", "skid (hold)", "not used by the game",
+                 "crouch (start)", "crouch (hold)", "take-off (hop)", "not used by the game", "turnaround",
+                 "turnaround (button held)", "manual (enter)", "manual (hold)", "manual (exit)", "landing variant",
+                 "air", "air idle")                                                         # ids 1..24
+AIR_TRICKS = ("turndown", "can-can", "tabletop", "backflip", "superman", "candy bar", "tailwhip", "front flip",
+              "decade", "no footed can can", "un-turndown", "double tailwhip", "can-can lookdown",
+              "candy bar lookdown", "tobaggan", "superman indian")                          # 25..72, 3 each
+MODIFIERS = ("barspin", "one footer", "one hander", "x-up", "x-down", "suicide no hander", "seat grab", "no footer",
+             "no hander", "nothing", "one hand one footer", "one hand x-up", "rocket air", "double peg grab",
+             "one handed seat grab", "no footed seat grab", "one footed seat grab", "double seat grab",
+             "switch hander", "no footed x-up", "one footed x-up", "no footed one hander", "no handed one footer",
+             "no handed barspin", "barspin to barspin back", "no footed barspin", "one footed barspin", "rocket x-up",
+             "crotch rocket", "rocket one hander", "rocket no hander", "rocket barspin", "rocket one footer", "indian",
+             "switch footer", "x-up seat grab", "barspin seat grab", "busdriver")         # 73..186, 3 each
+GRINDS = ("double peg grind", "smith grind", "feeble grind", "toothpick grind", "icepick grind", "lip slide",
+          "luc-e grind", "crooked grind", "sprocket grind", "double peg stall", "toothpick stall", "icepick stall",
+          "nosepick", "tail tap", "disaster", "fast plant", "wall tap")                   # 187..237, 3 each
+
+
+def motion_name(m):
+    """A motion id's description, "" when the id is not one of the game's 238."""
+    if 1 <= m <= 24:
+        return MOTION_STATES[m - 1]
+    if 25 <= m <= 72:
+        return f"{AIR_TRICKS[(m - 25) // 3]} ({('start', 'hold', 'release')[(m - 25) % 3]})"
+    if 73 <= m <= 186:
+        return f"{MODIFIERS[(m - 73) // 3]} modifier ({('start', 'hold', 'release')[(m - 73) % 3]})"
+    if 187 <= m <= 237:
+        return f"{GRINDS[(m - 187) // 3]} ({('enter', 'hold', 'exit')[(m - 187) % 3]})"
+    return "not used by the game" if m == 238 else ""
+
+
+_BANKS = {}                                  # motion archives read this session: path -> (size, bank)
+
+
+def motion_bank(zal_path):
+    """dmparse.read_motion_bank of a motion archive, read once per file (and again when its size changes)."""
+    if not zal_path or not os.path.isfile(zal_path):
+        raise ValueError("motion.zal not found")
+    key, size = os.path.abspath(zal_path), os.path.getsize(zal_path)
+    if key not in _BANKS or _BANKS[key][0] != size:
+        _BANKS[key] = (size, dmparse.read_motion_bank(open(zal_path, "rb").read()))
+    return _BANKS[key][1]
+
+
+def list_motions(zal_path):
+    """Every motion of a motion archive, in archive order: [{"id", "frames", "name"}, ...]."""
+    return [{"id": m, "frames": clip["frames"], "name": motion_name(m)} for m, clip in motion_bank(zal_path).items()]
+
+
+def motion_label(e):
+    """One list_motions entry as the dialog lists it: "25: turndown (start), 13 frames"."""
+    return f"{e['id']}: " + (f"{e['name']}, " if e["name"] else "") + f"{e['frames']} frames"
+
+
+def user_props(node):
+    """A node's user properties as text, {key (lower case): value}. Read from the user property buffer: getUserProp
+    would turn "39.37007874015748" into a 32-bit MAXScript Float."""
+    out = {}
+    for line in str(rt.getUserPropBuffer(node)).splitlines():
+        k, eq, v = line.partition("=")
+        if eq and k.strip():
+            out[k.strip().lower()] = v.strip()
+    return out
+
+
+def model_root(node):
+    """The root dummy of the imported model a node belongs to (it carries "dmbmx_zmd"), else None."""
+    n = node
+    while n is not None and "dmbmx_zmd" not in user_props(n):
+        n = n.parent
+    return n
+
+
+def find_target(target=None):
+    """The model to animate: the one ``target`` belongs to (any of its nodes), else the one the selection
+    belongs to, else the only one in the scene. Refuses none or several."""
+    if target is not None:
+        r = model_root(target)
+        if r is None:
+            raise ValueError(f"{target.name} is not part of a model imported by this importer (version 1.4 or later)")
+        return r
+    roots = []
+    for n in rt.selection:
+        r = model_root(n)
+        if r is not None and not any(r == x for x in roots):
+            roots.append(r)
+    if len(roots) > 1:
+        raise ValueError("the selection belongs to several imported models: select one bone (or the root) of the "
+                         "model to animate")
+    if roots:
+        return roots[0]
+    roots = [n for n in rt.objects if "dmbmx_zmd" in user_props(n)]
+    if not roots:
+        raise ValueError("no imported rider or bike in the scene: import a model first (Import ZMD, version 1.4 or later)")
+    if len(roots) > 1:
+        raise ValueError(f"there are {len(roots)} imported models in the scene: select one bone (or the root) of the "
+                         "model to animate")
+    return roots[0]
+
+
+def _frame_nodes_of(root):
+    """[(frame index text, node)] of the frame nodes under root."""
+    out = []
+    for n in rt.objects:
+        v = user_props(n).get("dmbmx_frame")
+        if v is not None and model_root(n) == root:
+            out.append((v, n))
+    return out
+
+
+def rig_nodes(root, count):
+    """The frame nodes of the model under ``root``, by their "dmbmx_frame" index: ``count`` nodes, every index once."""
+    out = [None] * count
+    for v, n in _frame_nodes_of(root):
+        i = int(v)
+        if not 0 <= i < count:
+            raise ValueError(f"{root.name}: {n.name} is frame {v}, but the model file has {count} frames "
+                             "(a different model file?)")
+        if out[i] is not None:
+            raise ValueError(f"{root.name}: {out[i].name} and {n.name} are both frame {v}")
+        out[i] = n
+    for i, n in enumerate(out):
+        if n is None:
+            raise ValueError(f"{root.name}: frame {i} of the model is not in the scene (a deleted bone?)")
+    return out
+
+
+# Key times and the animation range are read and set in MAXScript, where Time values are plain (.frame): the
+# same code as the MAXScript importer's DM_lastKeyTime / DM_growRange, defined once per session with rt.execute.
+MXS_LAST_KEY_TIME = """fn dmbmx_lastKeyTime c =
+(
+    if c == undefined then return undefined
+    local r = undefined
+    local n = numKeys c
+    if n > 0 then r = (getKeyTime c n).frame
+    for i = 1 to c.numSubs do
+    (
+        local t = dmbmx_lastKeyTime c[i].controller
+        if t != undefined and (r == undefined or t > r) then r = t
+    )
+    r
+)"""
+MXS_GROW_RANGE = """fn dmbmx_growRange a b =
+(
+    local s = animationRange.start.frame
+    local e = animationRange.end.frame
+    local grow = false
+    if a < s then (s = a; grow = true)
+    if b > e then (e = b; grow = true)
+    if grow then animationRange = interval s e
+    grow
+)"""
+_MXS_FNS = {}
+
+
+def _mxs_fn(src):
+    """The MAXScript function ``src`` defines (defined once per runtime)."""
+    f = _MXS_FNS.get(src)
+    if f is None or f[0] is not rt:
+        f = _MXS_FNS[src] = (rt, rt.execute(src))
+    return f[1]
+
+
+def next_free_frame(root):
+    """The frame after the last key of the model under ``root`` (any of its frame nodes), 0 when it has no keys."""
+    last_key = _mxs_fn(MXS_LAST_KEY_TIME)
+    last = None
+    for _v, n in _frame_nodes_of(root):
+        t = last_key(n.controller)
+        if t is not None and (last is None or t > last):
+            last = t
+    return 0 if last is None else int(math.floor(last)) + 1
+
+
+def grow_range(a, b):
+    """Grow the scene's animation range to cover frames a..b (it never shrinks); True when it changed."""
+    return bool(_mxs_fn(MXS_GROW_RANGE)(a, b))
+
+
+def same_transform(a, b, scale):
+    """Two (rows, pos) transforms equal to float precision (3ds Max stores a node's transform as 32-bit
+    position / rotation / scale, so reading it back can differ in the last bits): rows within 1e-5, positions
+    within 1e-5 game metres."""
+    return (all(abs(a[0][i][j] - b[0][i][j]) <= 1e-5 for i in range(3) for j in range(3))
+            and all(abs(a[1][j] - b[1][j]) <= 1e-5 * scale for j in range(3)))
+
+
+def _max_xf(m):
+    """A pymxs Matrix3 as (rows, pos)."""
+    return tuple((r.x, r.y, r.z) for r in (m.row1, m.row2, m.row3)), (m.row4.x, m.row4.y, m.row4.z)
+
+
+def import_motion(zal_path, motion_id, start_frame=None, target=None, zmd_path=None):
+    """Key motion ``motion_id`` of the motion archive ``zal_path`` (motion.zal) onto a model in the scene.
+
+    ``target``: any node of the model (a bone or its root); None: the selection's model, else the only one.
+    ``start_frame``: the Max frame of the clip's first frame; None: the frame after the model's last key (0 when it
+    has none), so calls chain clips back to back. ``zmd_path``: the model file, when it has moved since the import.
+    The keys are import_zmd's for the same model, LOD, scale, bones and clip, shifted by the start frame. They are
+    world transforms: the root keeps its own transform (with a rider's upright correction) and the keys follow it
+    when it has been moved since the import. The animation range grows to cover them.
+    Returns {"root", "frames" (nodes), "start", "end", "keys"}."""
+    root = find_target(target)
+    props = user_props(root)
+    path = zmd_path or props["dmbmx_zmd"]
+    if not os.path.isfile(path):
+        raise ValueError(f"the model file of {root.name} is not at {path} (pass zmd_path=)")
+    lod, scale = int(props["dmbmx_lod"]), float(props["dmbmx_scale"])
+    aimed, upright_root = props.get("dmbmx_bones") == "aim", props.get("dmbmx_upright") == "1"
+    z = read_model(path, lod)
+    lo, sk, _world, _skinned, aim, offsets = model_rig(z, lod, scale, aimed)
+    if aimed and not aim:
+        raise ValueError(f"{root.name}: {os.path.basename(path)} has no skinned rider (a different model file?)")
+    frame_nodes = rig_nodes(root, len(lo["frames"]))
+    bank = motion_bank(zal_path)
+    if motion_id not in bank:
+        raise ValueError(f"motion id {motion_id} is not in motion.zal")
+    clip = bank[motion_id]
+    names = {s["name"] for s in sk}
+    used = sum(1 for cnt, _f, kind in clip["sections"]
+               for ch in (dmparse.RIDER_CHANNELS if kind == 0 else dmparse.BIKE_CHANNELS)[:cnt] if ch in names)
+    if not used:
+        raise ValueError(f"motion {motion_id} animates riders and bikes, and {root.name} has none of their bones")
+    # import_zmd's root (no upright correction), moved the way this root has moved since the import
+    root_xf = root_transform(z, lod, False)
+    imported = root_transform(z, lod, upright_root)
+    cur = _max_xf(root.transform)
+    if not same_transform(cur, imported, scale):
+        root_xf = compose(root_xf, compose(inverse(imported), cur))
+    start = next_free_frame(root) if start_frame is None else int(start_frame)
+    keys = key_motion(clip, lo["frames"], sk, frame_nodes, root_xf, scale, offsets, start=start)
+    end = start + keys // len(frame_nodes) - 1
+    grow_range(start, end)
+    return {"root": root, "frames": frame_nodes, "start": start, "end": end, "keys": keys}
 
 
 def write_level_textures(textures, folder):
@@ -672,6 +963,11 @@ def scale_label(manual_scale=None):
 
 # ---------------------------------------------------------------------------- UI (Qt)
 
+# what the dialog remembers for the 3ds Max session (the module stays loaded): the last tab, the textures
+# folder and the motion archive
+SESSION = {"tab": 0, "texdir": "", "zal": ""}
+
+
 def show_dialog():
     try:
         from PySide6 import QtCore, QtWidgets
@@ -685,10 +981,15 @@ def show_dialog():
         pass
 
     class Dialog(QtWidgets.QDialog):
+        """A header with the options every import uses, then a Models tab and a Levels tab (QTabWidget)."""
+
         def __init__(self):
             super().__init__(parent)
             self.setWindowTitle(f"Dave Mirra Importer {VERSION}")
-            lay = QtWidgets.QFormLayout(self)
+            main = QtWidgets.QVBoxLayout(self)
+            # -- header
+            head = QtWidgets.QFormLayout()
+            main.addLayout(head)
             self.real = QtWidgets.QCheckBox("Real-world size (use scene units)")
             self.real.setChecked(True)
             self.scale = QtWidgets.QDoubleSpinBox()
@@ -702,27 +1003,78 @@ def show_dialog():
             self.real.toggled.connect(self.refresh_units)
             self.scale.valueChanged.connect(self.refresh_units)
             self.lod = QtWidgets.QSpinBox()
-            self.upright = QtWidgets.QCheckBox("Stand riders upright")
-            self.upright.setChecked(True)
             self.normals = QtWidgets.QCheckBox("Exact normals (Edit_Normals, slower)")
-            self.flip = QtWidgets.QCheckBox("Flip normals to faces (with Exact normals)")
-            self.bones = QtWidgets.QComboBox()
-            self.bones.addItems(BONE_MODES)
             self.texdir = QtWidgets.QLineEdit()
             self.texdir.setPlaceholderText("(temp folder)")
-            self.motions = QtWidgets.QLineEdit()
-            self.motions.setPlaceholderText("e.g. 1,8,15 (needs motion.zal)")
+            self.texdir.setText(SESSION["texdir"])
+            self.texdir.textChanged.connect(self.remember_texdir)
+            self.btn_tex = QtWidgets.QPushButton("Choose texture folder...")
+            self.btn_tex.clicked.connect(self.choose_texdir)
             for label, w in (("", self.real), ("Scale", self.scale), ("", self.units), ("", refresh),
-                             ("LOD", self.lod), ("", self.upright), ("", self.normals), ("", self.flip), ("Bones", self.bones), ("Texture folder", self.texdir),
-                             ("Motion ids", self.motions)):
-                lay.addRow(label, w)
-            b1 = QtWidgets.QPushButton("Import ZMD...")
-            b2 = QtWidgets.QPushButton("Import Level (.ZSD)...")
-            b1.clicked.connect(self.do_zmd)
-            b2.clicked.connect(self.do_level)
-            lay.addRow(b1)
-            lay.addRow(b2)
+                             ("LOD", self.lod), ("", self.normals), ("Texture folder", self.texdir), ("", self.btn_tex)):
+                head.addRow(label, w)
+            # -- Models tab: Geometry, Animation
+            models = QtWidgets.QWidget()
+            mlay = QtWidgets.QVBoxLayout(models)
+            geo = QtWidgets.QGroupBox("Geometry")
+            glay = QtWidgets.QFormLayout(geo)
+            self.upright = QtWidgets.QCheckBox("Stand riders upright")
+            self.upright.setChecked(True)
+            self.bones = QtWidgets.QComboBox()
+            self.bones.addItems(BONE_MODES)
+            self.btn_zmd = QtWidgets.QPushButton("Import ZMD...")
+            self.btn_zmd.clicked.connect(self.do_zmd)
+            glay.addRow("", self.upright)
+            glay.addRow("Bones", self.bones)
+            glay.addRow(self.btn_zmd)
+            anim = QtWidgets.QGroupBox("Animation")
+            alay = QtWidgets.QFormLayout(anim)
+            self.btn_zal = QtWidgets.QPushButton("Motion archive (motion.zal)...")
+            self.btn_zal.clicked.connect(self.choose_zal)
+            self.zal = QtWidgets.QLabel("(no motion archive)")
+            self.zal.setWordWrap(True)
+            self.motion = QtWidgets.QComboBox()
+            self.chain = QtWidgets.QCheckBox("Start after the last key (chain)")
+            self.chain.setChecked(True)
+            self.chain.toggled.connect(self.refresh_start)
+            self.start = QtWidgets.QSpinBox()
+            self.start.setRange(-100000, 100000)
+            self.start.setEnabled(False)
+            self.btn_motion = QtWidgets.QPushButton("Load motion onto the rider")
+            self.btn_motion.clicked.connect(self.do_motion)
+            target = QtWidgets.QLabel("Onto the selected model (a bone or its root), or the only one in the scene.")
+            target.setWordWrap(True)
+            for label, w in (("", self.btn_zal), ("", self.zal), ("Motion", self.motion), ("", self.chain),
+                             ("Start frame", self.start), ("", self.btn_motion), ("", target)):
+                alay.addRow(label, w)
+            mlay.addWidget(geo)
+            mlay.addWidget(anim)
+            # -- Levels tab
+            levels = QtWidgets.QWidget()
+            llay = QtWidgets.QVBoxLayout(levels)
+            self.flip = QtWidgets.QCheckBox("Flip normals to faces (with Exact normals)")
+            self.btn_level = QtWidgets.QPushButton("Import Level (.ZSD)...")
+            self.btn_level.clicked.connect(self.do_level)
+            llay.addWidget(self.flip)
+            llay.addWidget(self.btn_level)
+            llay.addStretch(1)
+            self.tabs = QtWidgets.QTabWidget()
+            self.tabs.addTab(models, "Models")
+            self.tabs.addTab(levels, "Levels")
+            self.tabs.setCurrentIndex(SESSION["tab"])
+            self.tabs.currentChanged.connect(self.remember_tab)
+            main.addWidget(self.tabs)
+            self.info = QtWidgets.QLabel("")
+            self.info.setWordWrap(True)
+            main.addWidget(self.info)
+            self.motion_ids = []
             self.refresh_units()
+            if SESSION["zal"]:
+                try:
+                    self.show_motions(SESSION["zal"])
+                except Exception:  # the archive is gone: forget it
+                    SESSION["zal"] = ""
+            self.refresh_start()
 
         def refresh_units(self, *_):
             """Real-world mode: the spinner shows the scene's scale (read-only); manual: the raw multiplier."""
@@ -746,28 +1098,37 @@ def show_dialog():
                 self.refresh_units()
             super().changeEvent(event)
 
+        def remember_tab(self, i):
+            SESSION["tab"] = i
+
+        def remember_texdir(self, text):
+            SESSION["texdir"] = text
+
+        def choose_texdir(self):
+            d = QtWidgets.QFileDialog.getExistingDirectory(self, "Folder for the extracted textures")
+            if d:
+                self.texdir.setText(d)
+
+        def _fail(self, e):
+            QtWidgets.QMessageBox.critical(self, "Dave Mirra", str(e))
+
         def _run(self, fn, *a, **kw):
             try:
                 s = fn(*a, **kw)
+                self.info.setText(f"Imported. Textures: {s['texture_dir']}")
                 QtWidgets.QMessageBox.information(self, "Dave Mirra", f"Imported. Textures: {s['texture_dir']}")
             except Exception as e:  # show any failure to the user
-                QtWidgets.QMessageBox.critical(self, "Dave Mirra", str(e))
+                self._fail(e)
 
         def do_zmd(self):
             path, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Dave Mirra model", "", "ZMD (*.zmd *.ZMD)")
             if not path:
                 return
-            ids = [int(x) for x in self.motions.text().replace(" ", "").split(",") if x]
-            mpath = None
-            if ids:
-                mpath = os.path.join(os.path.dirname(path), "motion.zal")
-                if not os.path.isfile(mpath):
-                    mpath, _ = QtWidgets.QFileDialog.getOpenFileName(self, "motion.zal", "", "ZAL (*.zal *.ZAL)")
             self.refresh_units()
             self._run(import_zmd, path, scale=self.import_scale(), lod=self.lod.value(), upright=self.upright.isChecked(),
                       texture_dir=self.texdir.text() or None, explicit_normals=self.normals.isChecked(),
-                      motion_path=mpath, motion_ids=ids, bone_aim_children=self.bones.currentIndex() == 0,
-                      flip_normals=self.flip.isChecked())
+                      bone_aim_children=self.bones.currentIndex() == 0)
+            self.refresh_start()
 
         def do_level(self):
             d = QtWidgets.QFileDialog.getExistingDirectory(self, "Level folder (contains the .ZSD)")
@@ -775,6 +1136,50 @@ def show_dialog():
                 self.refresh_units()
                 self._run(import_level, d, scale=self.import_scale(), texture_dir=self.texdir.text() or None,
                           explicit_normals=self.normals.isChecked(), flip_normals=self.flip.isChecked())
+
+        def show_motions(self, path):
+            """Fill the motion list from the archive (list_motions); remember it for the session."""
+            entries = list_motions(path)
+            self.motion.clear()
+            self.motion.addItems([motion_label(e) for e in entries])
+            self.motion_ids = [e["id"] for e in entries]
+            self.zal.setText(path)
+            SESSION["zal"] = path
+
+        def choose_zal(self):
+            path, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Dave Mirra motions (motion.zal)", "",
+                                                            "ZAL (*.zal *.ZAL)")
+            if path:
+                try:
+                    self.show_motions(path)
+                    self.refresh_start()
+                except Exception as e:
+                    self._fail(e)
+
+        def refresh_start(self, *_):
+            """Chain: the spinner shows the frame after the target's last key (when there is one target)."""
+            chain = self.chain.isChecked()
+            self.start.setEnabled(not chain)
+            if chain:
+                try:
+                    self.start.setValue(next_free_frame(find_target()))
+                except Exception:  # no single model in the scene yet
+                    pass
+
+        def do_motion(self):
+            i = self.motion.currentIndex()
+            if not self.motion_ids or i < 0:
+                QtWidgets.QMessageBox.warning(self, "Dave Mirra", "Choose the motion archive (motion.zal) first.")
+                return
+            try:
+                r = import_motion(SESSION["zal"], self.motion_ids[i],
+                                  start_frame=None if self.chain.isChecked() else self.start.value())
+            except Exception as e:  # show any failure to the user
+                self._fail(e)
+                return
+            if self.chain.isChecked():
+                self.start.setValue(r["end"] + 1)
+            self.info.setText(f"Motion {self.motion_ids[i]} on {r['root'].name}: frames {r['start']} to {r['end']}")
 
     dlg = Dialog()
     dlg.show()

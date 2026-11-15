@@ -7,11 +7,18 @@ the mock does not know (a typo, or an API we never verified) fails the test.
 """
 import contextlib
 import os
+import re
+import struct
 
 
 class P3(tuple):
     def __new__(cls, x, y, z):
         return super().__new__(cls, (float(x), float(y), float(z)))
+
+    # pymxs Point3 components
+    x = property(lambda self: self[0])
+    y = property(lambda self: self[1])
+    z = property(lambda self: self[2])
 
 
 class M3:
@@ -21,6 +28,12 @@ class M3:
 
     def xf(self, p):
         return tuple(sum(p[k] * self.rows[k][j] for k in range(3)) + self.pos[j] for j in range(3))
+
+    # pymxs Matrix3 rows (Point3 values)
+    row1 = property(lambda self: P3(*self.rows[0]))
+    row2 = property(lambda self: P3(*self.rows[1]))
+    row3 = property(lambda self: P3(*self.rows[2]))
+    row4 = property(lambda self: P3(*self.pos))
 
     def inverse(self):
         """The inverse transform (test helper; general 3x3, not only rotations)."""
@@ -35,12 +48,17 @@ class M3:
 
 
 class Obj:
-    """Scene node / material / modifier: free attributes, plus a kind and a log."""
+    """Scene node / material / modifier: free attributes, plus a kind and a log.
+
+    Keys: setting ``transform`` under ``animate on`` + ``at time t`` records the key (t, matrix). As in 3ds Max,
+    the first key set on a node at a time other than 0 also creates a key at frame 0 holding the transform it
+    had before (Auto Key keeps the original value at frame 0)."""
     _rt = None
 
     def __init__(self, kind, **kw):
         object.__setattr__(self, "kind", kind)
         object.__setattr__(self, "keys", [])
+        object.__setattr__(self, "_scene", Obj._rt)     # the runtime (scene) the node was made in
         self.name = kw.pop("name", kind)
         self.transform = None
         self.parent = None
@@ -48,12 +66,121 @@ class Obj:
             setattr(self, k, v)
 
     def __setattr__(self, k, v):
-        if k == "transform" and v is not None and Obj._rt is not None and Obj._rt.animating():
-            self.keys.append((Obj._rt.time, v))
+        rt = self.__dict__.get("_scene")
+        if k == "transform" and v is not None and rt is not None and rt.animating():
+            t = rt.time
+            if not self.keys and t != 0 and self.__dict__.get("transform") is not None:
+                self.keys.append((0, self.__dict__["transform"]))
+            self.keys.append((t, v))
         object.__setattr__(self, k, v)
+
+    @property
+    def controller(self):
+        """The node's transform controller (PRS), see _Controller. Scene nodes only."""
+        assert self.kind in ("mesh", "dummy", "bone"), f"{self.kind} has no transform controller"
+        return _Controller.prs(self)
 
     def __repr__(self):
         return f"<{self.kind} {self.name}>"
+
+
+class MxsTime:
+    """A MAXScript Time value: ``.frame`` (float frames), ``.ticks``; ``as integer`` gives ticks (160 per frame at
+    30 fps), so code must use ``.frame``. Compares with Time values only."""
+    TICKS_PER_FRAME = 160
+
+    def __init__(self, frame):
+        assert isinstance(frame, (int, float)) and not isinstance(frame, bool), f"time {frame!r}"
+        self._ticks = int(round(frame * self.TICKS_PER_FRAME))
+
+    @property
+    def frame(self):
+        return self._ticks / self.TICKS_PER_FRAME
+
+    @property
+    def ticks(self):
+        return self._ticks
+
+    def __int__(self):
+        return self._ticks
+
+    def __eq__(self, o):
+        return isinstance(o, MxsTime) and o._ticks == self._ticks
+
+    def __hash__(self):
+        return hash(self._ticks)
+
+    def __repr__(self):
+        return f"{self.frame:g}f"
+
+
+class Interval:
+    """MAXScript ``interval start end`` (frames). ``animationRange`` must have start < end (3ds Max refuses an
+    empty or reversed range)."""
+
+    def __init__(self, a, b):
+        self.start, self.end = MxsTime(a), MxsTime(b)
+
+    def __repr__(self):
+        return f"(interval {self.start!r} {self.end!r})"
+
+
+class _SubAnim:
+    def __init__(self, name, controller):
+        self.name, self.controller = name, controller
+
+
+class _Controller:
+    """A node's transform controllers as 3ds Max builds them by default: PRS > Position_XYZ (X/Y/Z
+    Bezier_Float), Euler_XYZ (X/Y/Z Bezier_Float), Bezier_Scale. Setting ``node.transform`` under animate keys
+    every leaf at that time (the mock's node.keys). Keys live on the leaves: ``numKeys`` of a compound
+    controller (PRS, Position_XYZ, Euler_XYZ) is -1 here, so code must walk the sub-anims (``c[i].controller``,
+    ``c.numSubs``) to find them. ``getKeyTime c i`` is 1-based, keys sorted by time."""
+
+    def __init__(self, node, cls, subs):
+        self.node, self.cls, self._subs = node, cls, subs
+
+    @staticmethod
+    def prs(node):
+        def xyz(cls):
+            return _Controller(node, cls, [(a, _Controller(node, "Bezier_Float", None)) for a in "XYZ"])
+        return _Controller(node, "prs", [("Position", xyz("Position_XYZ")), ("Rotation", xyz("Euler_XYZ")),
+                                         ("Scale", _Controller(node, "Bezier_Scale", None))])
+
+    @property
+    def numSubs(self):
+        return len(self._subs or [])
+
+    def subanim(self, i):
+        assert isinstance(i, int) and not isinstance(i, bool) and 1 <= i <= self.numSubs, \
+            f"{self.cls}[{i!r}]: sub-anim index out of range"
+        name, c = self._subs[i - 1]
+        return _SubAnim(name, c)
+
+    def _times(self):
+        return sorted({t for t, _ in self.node.keys})
+
+    def numKeys(self):
+        return -1 if self._subs is not None else len(self._times())
+
+    def getKeyTime(self, i):
+        assert self._subs is None, f"getKeyTime on {self.cls}: a compound controller has no keys of its own"
+        times = self._times()
+        assert isinstance(i, int) and 1 <= i <= len(times), f"getKeyTime: key {i!r} out of range 1..{len(times)}"
+        return MxsTime(times[i - 1])
+
+    def __repr__(self):
+        return f"<{self.cls} of {self.node.name}>"
+
+
+def _user_prop_value(s):
+    """getUserProp's value: the stored text read as a MAXScript number when it is one (a Float is 32-bit, so
+    "39.37007874015748" comes back rounded), else the string. (Booleans, point3s etc. are not modelled.)"""
+    if re.fullmatch(r"-?[0-9]+", s):
+        return int(s)
+    if re.fullmatch(r"-?([0-9]+\.[0-9]*|\.[0-9]+)([eE][-+]?[0-9]+)?|-?[0-9]+[eE][-+]?[0-9]+", s):
+        return struct.unpack("<f", struct.pack("<f", float(s)))[0]
+    return s
 
 
 class _Meshop:
@@ -128,6 +255,9 @@ class _Bone(Obj):
 
 
 class _BoneSys:
+    def __init__(self, rt=None):
+        self.rt = rt
+
     def createBone(self, a, b, z):
         """BoneSys.createBone <startPos> <endPos> <zAxis>: a bone at startPos whose X axis points at endPos,
         its Z axis the given zAxis made perpendicular to X (Y = Z x X), and length = distance(start, end).
@@ -144,6 +274,8 @@ class _BoneSys:
         zz = _cross(x, y)
         n = _Bone("bone", start=a, end=b, width=4.0, height=4.0, length=ln)
         n.transform = M3(x, y, zz, a)
+        if self.rt is not None:
+            self.rt._own(n)
         return n
 
 
@@ -213,12 +345,20 @@ class Runtime:
         self.meshop = _Meshop(self)
         self.skinOps = _Skinops()
         self.modPanel = _ModPanel(self)
-        self.BoneSys = _BoneSys()
+        self.BoneSys = _BoneSys(self)
+        self.animationRange = Interval(0, 100)          # 3ds Max's default
+        self._mxs = None
         self.nodes, self.materials, self.calls = [], [], []
         self.mode, self.selection, self.current_mod = "create", [], None
         self.time, self._animate = None, False
         self.undo_on, self.redraw_on = True, True       # MAXScript 'with undo off' / 'with redraw off' (pymxs.undo/redraw)
         Obj._rt = self
+
+    def _own(self, n):
+        """A new scene node: in this scene's node list, keyed by this scene's animate / at time."""
+        object.__setattr__(n, "_scene", self)
+        self.nodes.append(n)
+        return n
 
     def animating(self):
         return self._animate and self.time is not None
@@ -243,7 +383,7 @@ class Runtime:
         assert all(1 <= int(i) <= len(vertices) for f in faces for i in f), "face index out of range"
         n = Obj("mesh", verts=list(vertices), faces=list(faces), matids=list(materialIDs), maps={},
                 smooth={}, modifiers=[], material=None)
-        self.nodes.append(n)
+        self._own(n)
         return n
 
     def instance(self, node):
@@ -256,12 +396,12 @@ class Runtime:
         for m in node.modifiers:
             if isinstance(m, _EditNormals):
                 m.nodes.append(n)
-        self.nodes.append(n)
+        self._own(n)
         return n
 
     def Dummy(self, name, boxsize):
         n = Obj("dummy", name=name, boxsize=boxsize)
-        self.nodes.append(n)
+        self._own(n)
         return n
 
     def setFaceSmoothGroup(self, node, f, g):
@@ -272,7 +412,28 @@ class Runtime:
         self.calls.append(("update", node))
 
     def setUserProp(self, node, key, val):
+        """The value is stored as text (MAXScript writes ``key = value`` lines into the node's user property
+        buffer). Strings and integers are modelled; a float's text is not (pass a formatted string)."""
+        assert isinstance(key, str) and key and "=" not in key and "\n" not in key
+        assert isinstance(val, (str, int)) and not isinstance(val, bool), f"setUserProp {key}: {val!r} not modelled"
+        assert "\n" not in str(val) and "\r" not in str(val)
         object.__setattr__(node, "userprops", {**getattr(node, "userprops", {}), key: val})
+
+    def getUserProp(self, node, key):
+        """The value for key (case-insensitive), as _user_prop_value reads it, or None (undefined)."""
+        for k, v in getattr(node, "userprops", {}).items():
+            if k.lower() == key.lower():
+                return _user_prop_value(str(v))
+        return None
+
+    def getUserPropBuffer(self, node):
+        """The node's whole user property text: one ``key = value`` line per property, CR LF separated."""
+        return "".join(f"{k} = {v}\r\n" for k, v in getattr(node, "userprops", {}).items())
+
+    @property
+    def objects(self):
+        """Every node in the scene (the MAXScript ``objects`` set), in creation order."""
+        return list(self.nodes)
 
     # -- materials
     def MultiMaterial(self, numsubs):
@@ -315,8 +476,19 @@ class Runtime:
         self.selection = [node]
 
     def execute(self, s):
-        assert s == "max modify mode", s
-        self.mode = "modify"
+        """``max modify mode``, or MAXScript source run by the MAXScript-subset interpreter on this scene (so its
+        rules apply); returns the value of the last expression (e.g. a function the source defines)."""
+        if s == "max modify mode":
+            self.mode = "modify"
+            return True
+        assert not s.strip().lower().startswith("max "), f"{s!r} is not modelled"
+        from maxscript_interp import Interp, Parser, tokenize
+        if self._mxs is None:
+            self._mxs = Interp(scene=self, stop_marker=None)
+        v = None
+        for e in Parser(tokenize(s)).program():
+            v = self._mxs.eval(e)
+        return v
 
     def classOf(self, node):
         return node.kind
@@ -498,3 +670,409 @@ def skin_world(sk, t=None):
         local = sk.bind[b - 1].inverse().xf(w)
         out[v] = transform_at(sk.bones[b - 1], t).xf(local)
     return out
+
+
+# ----------------------------------------------------------------------------- Qt (PySide) for the Python dialog
+
+class QtMock:
+    """A strict stand-in for the parts of PySide6's QtCore / QtWidgets the Python importer's dialog uses.
+
+    ``install(monkeypatch)`` puts it in ``sys.modules`` as PySide6 (and makes ``qtmax`` unavailable, as outside
+    3ds Max). Only the methods listed exist (anything else raises AttributeError) and Qt's rules are kept:
+    * signals call their slots with the signal's arguments, dropping the ones a Python slot does not take (as
+      PySide does); ``blockSignals(True)`` silences a widget; a value set by code emits the change signal only
+      when the value changes (``toggled``, ``valueChanged``, ``textChanged``, ``currentIndexChanged``,
+      ``currentChanged``), user actions (``click``, ``type_text``, ``choose``, ``click_tab``) need an enabled
+      widget;
+    * a widget goes into one layout, a widget has one layout;
+    * QSpinBox is 0..99 by default and takes integers only; QDoubleSpinBox is 0..99.99 with 2 decimals by default
+      and rounds its value to its decimals; both clamp to their range;
+    * QComboBox / QTabWidget: the first item / tab becomes current (and emits); ``setCurrentIndex`` with an
+      index out of range is ignored (QTabWidget) or sets no item (-1, QComboBox);
+    * QFileDialog's static functions return the test's next answer (``answers``; None = Cancel, which Qt
+      returns as an empty path); QMessageBox's static functions record (kind, title, text) in ``messages``."""
+
+    def __init__(self):
+        import types
+        mock = self
+        self.answers, self.messages = [], []
+
+        class Signal:
+            def __init__(self, owner, n):
+                self.owner, self.n, self.slots = owner, n, []
+
+            def connect(self, slot):
+                assert callable(slot)
+                self.slots.append(slot)
+
+            def emit(self, *args):
+                assert len(args) == self.n
+                if self.owner._blocked:
+                    return
+                import inspect
+                for slot in self.slots:
+                    try:
+                        ps = [p for p in inspect.signature(slot).parameters.values()
+                              if p.kind in (p.POSITIONAL_ONLY, p.POSITIONAL_OR_KEYWORD, p.VAR_POSITIONAL)]
+                    except (TypeError, ValueError):
+                        ps = []
+                    k = len(args) if any(p.kind == p.VAR_POSITIONAL for p in ps) else min(len(args), len(ps))
+                    slot(*args[:k])
+
+        class QEvent:
+            ActivationChange = 99
+
+            def __init__(self, t):
+                self._t = t
+
+            def type(self):
+                return self._t
+
+        class QObject:
+            def __init__(self):
+                self._blocked = False
+
+            def blockSignals(self, b):
+                old, self._blocked = self._blocked, bool(b)
+                return old
+
+        class QWidget(QObject):
+            def __init__(self, parent=None):
+                super().__init__()
+                assert parent is None or isinstance(parent, QWidget)
+                self._parent, self._layout, self._in_layout, self._enabled, self._shown = parent, None, None, True, False
+
+            def setEnabled(self, b):
+                assert isinstance(b, bool)
+                self._enabled = b
+
+            def isEnabled(self):
+                return self._enabled
+
+            def show(self):
+                self._shown = True
+
+            def _user(self):
+                assert self._enabled, f"{self!r} is disabled: the user cannot use it"
+
+        class _Layout:
+            def __init__(self, parent=None):
+                self._items = []
+                self._in_layout = None
+                if parent is not None:
+                    assert isinstance(parent, QWidget) and parent._layout is None, "the widget already has a layout"
+                    parent._layout = self
+
+            def _take(self, w):
+                assert isinstance(w, (QWidget, _Layout))
+                assert w._in_layout is None, f"{w!r} is already in a layout"
+                w._in_layout = self
+                self._items.append(w)
+
+            def addWidget(self, w):
+                assert isinstance(w, QWidget)
+                self._take(w)
+
+            def addLayout(self, lay):
+                assert isinstance(lay, _Layout)
+                self._take(lay)
+
+            def addStretch(self, n=0):
+                self._items.append(("stretch", n))
+
+        class QVBoxLayout(_Layout):
+            pass
+
+        class QFormLayout(_Layout):
+            def addRow(self, *a):
+                if len(a) == 1:
+                    self._take(a[0])
+                else:
+                    label, w = a
+                    assert isinstance(label, str)
+                    self._take(w)
+
+        class QDialog(QWidget):
+            def __init__(self, parent=None):
+                super().__init__(parent)
+                self._title, self._active = "", False
+
+            def setWindowTitle(self, t):
+                assert isinstance(t, str)
+                self._title = t
+
+            def windowTitle(self):
+                return self._title
+
+            def isActiveWindow(self):
+                return self._active
+
+            def changeEvent(self, event):
+                assert isinstance(event, QEvent)
+
+        class QLabel(QWidget):
+            def __init__(self, text="", parent=None):
+                super().__init__(parent)
+                assert isinstance(text, str)
+                self._text = text
+
+            def setText(self, t):
+                assert isinstance(t, str), f"QLabel.setText({t!r})"
+                self._text = t
+
+            def text(self):
+                return self._text
+
+            def setWordWrap(self, b):
+                assert isinstance(b, bool)
+
+        class QPushButton(QWidget):
+            def __init__(self, text="", parent=None):
+                super().__init__(parent)
+                self._text = text
+                self.clicked = Signal(self, 1)
+
+            def text(self):
+                return self._text
+
+            def click(self):
+                """The user clicks the button."""
+                self._user()
+                self.clicked.emit(False)
+
+        class QCheckBox(QWidget):
+            def __init__(self, text="", parent=None):
+                super().__init__(parent)
+                self._text, self._checked = text, False
+                self.toggled = Signal(self, 1)
+                self.clicked = Signal(self, 1)
+
+            def text(self):
+                return self._text
+
+            def setChecked(self, b):
+                assert isinstance(b, bool)
+                if b != self._checked:
+                    self._checked = b
+                    self.toggled.emit(b)
+
+            def isChecked(self):
+                return self._checked
+
+            def click(self):
+                """The user clicks the checkbox."""
+                self._user()
+                self.setChecked(not self._checked)
+                self.clicked.emit(self._checked)
+
+        class QSpinBox(QWidget):
+            def __init__(self, parent=None):
+                super().__init__(parent)
+                self._min, self._max, self._value = 0, 99, 0
+                self.valueChanged = Signal(self, 1)
+
+            def _check(self, v):
+                assert isinstance(v, int) and not isinstance(v, bool), f"QSpinBox needs an int, got {v!r}"
+                return v
+
+            def setRange(self, a, b):
+                self._min, self._max = self._check(a), self._check(b)
+                self.setValue(self._value)
+
+            def setValue(self, v):
+                v = min(max(self._check(v), self._min), self._max)
+                if v != self._value:
+                    self._value = v
+                    self.valueChanged.emit(v)
+
+            def value(self):
+                return self._value
+
+            def enter(self, v):
+                """The user types v."""
+                self._user()
+                self.setValue(v)
+
+        class QDoubleSpinBox(QSpinBox):
+            def __init__(self, parent=None):
+                super().__init__(parent)
+                self._min, self._max, self._value, self._decimals = 0.0, 99.99, 0.0, 2
+
+            def _check(self, v):
+                assert isinstance(v, (int, float)) and not isinstance(v, bool), f"QDoubleSpinBox: {v!r}"
+                return round(float(v), self._decimals)
+
+            def setDecimals(self, n):
+                assert isinstance(n, int)
+                self._decimals = n
+                self.setValue(self._value)
+
+        class QLineEdit(QWidget):
+            def __init__(self, text="", parent=None):
+                super().__init__(parent)
+                self._text = text
+                self.textChanged = Signal(self, 1)
+
+            def setText(self, t):
+                assert isinstance(t, str), f"QLineEdit.setText({t!r})"
+                if t != self._text:
+                    self._text = t
+                    self.textChanged.emit(t)
+
+            def text(self):
+                return self._text
+
+            def setPlaceholderText(self, t):
+                assert isinstance(t, str)
+
+            def type_text(self, t):
+                """The user replaces the text with t."""
+                self._user()
+                self.setText(t)
+
+        class QComboBox(QWidget):
+            def __init__(self, parent=None):
+                super().__init__(parent)
+                self._items, self._index = [], -1
+                self.currentIndexChanged = Signal(self, 1)
+
+            def _set(self, i):
+                if i != self._index:
+                    self._index = i
+                    self.currentIndexChanged.emit(i)
+
+            def addItem(self, t):
+                assert isinstance(t, str)
+                self._items.append(t)
+                if self._index < 0:
+                    self._set(0)
+
+            def addItems(self, ts):
+                for t in ts:
+                    self.addItem(t)
+
+            def clear(self):
+                self._items = []
+                self._set(-1)
+
+            def count(self):
+                return len(self._items)
+
+            def itemText(self, i):
+                return self._items[i] if 0 <= i < len(self._items) else ""
+
+            def currentIndex(self):
+                return self._index
+
+            def currentText(self):
+                return self.itemText(self._index)
+
+            def setCurrentIndex(self, i):
+                assert isinstance(i, int)
+                self._set(i if 0 <= i < len(self._items) else -1)
+
+            def choose(self, i):
+                """The user picks item i (0-based)."""
+                self._user()
+                assert 0 <= i < len(self._items)
+                self._set(i)
+
+        class QGroupBox(QWidget):
+            def __init__(self, title="", parent=None):
+                super().__init__(parent)
+                self._title = title
+
+            def title(self):
+                return self._title
+
+        class QTabWidget(QWidget):
+            def __init__(self, parent=None):
+                super().__init__(parent)
+                self._tabs, self._index = [], -1
+                self.currentChanged = Signal(self, 1)
+
+            def addTab(self, w, label):
+                assert isinstance(w, QWidget) and isinstance(label, str) and w._in_layout is None
+                assert all(w is not t[0] for t in self._tabs), "the page is already a tab"
+                self._tabs.append((w, label))
+                if self._index < 0:
+                    self._index = 0
+                    self.currentChanged.emit(0)
+                return len(self._tabs) - 1
+
+            def count(self):
+                return len(self._tabs)
+
+            def tabText(self, i):
+                return self._tabs[i][1] if 0 <= i < len(self._tabs) else ""
+
+            def widget(self, i):
+                return self._tabs[i][0] if 0 <= i < len(self._tabs) else None
+
+            def currentIndex(self):
+                return self._index
+
+            def currentWidget(self):
+                return self.widget(self._index)
+
+            def setCurrentIndex(self, i):
+                assert isinstance(i, int)
+                if 0 <= i < len(self._tabs) and i != self._index:
+                    self._index = i
+                    self.currentChanged.emit(i)
+
+            def click_tab(self, i):
+                """The user clicks tab i."""
+                self._user()
+                self.setCurrentIndex(i)
+
+        def _answer(kind, caption):
+            assert mock.answers, f"{kind} {caption!r} opened, but the test gave no answer"
+            a = mock.answers.pop(0)
+            return "" if a is None else str(a)
+
+        class QFileDialog:
+            @staticmethod
+            def getOpenFileName(parent=None, caption="", dir="", filter=""):
+                return _answer("getOpenFileName", caption), ""
+
+            @staticmethod
+            def getExistingDirectory(parent=None, caption="", dir=""):
+                return _answer("getExistingDirectory", caption)
+
+        class QMessageBox:
+            Ok = 0x400
+
+            @staticmethod
+            def _box(kind, parent, title, text):
+                assert isinstance(title, str) and isinstance(text, str)
+                mock.messages.append((kind, title, text))
+                return QMessageBox.Ok
+
+            @staticmethod
+            def information(parent, title, text):
+                return QMessageBox._box("information", parent, title, text)
+
+            @staticmethod
+            def warning(parent, title, text):
+                return QMessageBox._box("warning", parent, title, text)
+
+            @staticmethod
+            def critical(parent, title, text):
+                return QMessageBox._box("critical", parent, title, text)
+
+        self.QtCore = types.ModuleType("PySide6.QtCore")
+        self.QtCore.QEvent = QEvent
+        self.QtWidgets = types.ModuleType("PySide6.QtWidgets")
+        for c in (QWidget, QDialog, QVBoxLayout, QFormLayout, QLabel, QPushButton, QCheckBox, QSpinBox, QDoubleSpinBox,
+                  QLineEdit, QComboBox, QGroupBox, QTabWidget, QFileDialog, QMessageBox):
+            setattr(self.QtWidgets, c.__name__, c)
+        self.package = types.ModuleType("PySide6")
+        self.package.QtCore, self.package.QtWidgets = self.QtCore, self.QtWidgets
+
+    def install(self, monkeypatch):
+        monkeypatch.setitem(__import__("sys").modules, "PySide6", self.package)
+        monkeypatch.setitem(__import__("sys").modules, "PySide6.QtCore", self.QtCore)
+        monkeypatch.setitem(__import__("sys").modules, "PySide6.QtWidgets", self.QtWidgets)
+        monkeypatch.setitem(__import__("sys").modules, "qtmax", None)      # outside 3ds Max: import fails
+        return self

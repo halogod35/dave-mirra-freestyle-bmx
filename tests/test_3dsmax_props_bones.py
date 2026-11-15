@@ -412,16 +412,20 @@ def test_game_frame_mode_keeps_the_old_bones(tmp_path):
 
 
 def test_dialogs_offer_the_bone_and_flip_options():
+    """Bones on the Models tab, flip normals on the Levels tab (scripts keep flipNormals:/flip_normals= for
+    models; the dialogs are run in tests/test_3dsmax_ui.py)."""
     src = MS.read_text(encoding="utf-8")
-    ui = src[src.index("rollout DaveMirraRollout"):]
-    assert 'dropdownlist ddlBones "Bones" items:#("aim at children", "game frame orientation") selection:1' in ui
-    assert 'checkbox chkFlip "Flip normals to faces (with Exact normals)" checked:false' in ui
-    assert "boneAim:(ddlBones.selection == 1) flipNormals:chkFlip.checked" in ui
-    assert ui.count("flipNormals:chkFlip.checked") == 2
+    ui = src[src.index("============ UI"):]
+    models = ui[ui.index('rollout DM_ModelsTab'):ui.index('rollout DM_LevelsTab')]
+    levels = ui[ui.index('rollout DM_LevelsTab'):ui.index('rollout DaveMirraRollout')]
+    assert 'dropdownlist ddlBones "Bones" items:#("aim at children", "game frame orientation") selection:1' in models
+    assert 'checkbox chkFlip "Flip normals to faces (with Exact normals)" checked:false' in levels
+    assert "boneAim:(ddlBones.selection == 1)" in models and "flipNormals" not in models
+    assert levels.count("flipNormals:chkFlip.checked") == 1
     py = (REPO / "tools" / "3dsmax" / "python" / "dave_mirra_import.py").read_text(encoding="utf-8")
     assert dmi.BONE_MODES == ("aim at children", "game frame orientation")
     assert "bone_aim_children=self.bones.currentIndex() == 0" in py
-    assert py.count("flip_normals=self.flip.isChecked()") == 2
+    assert py.count("flip_normals=self.flip.isChecked()") == 1
 
 
 # ============================================================================ 3. flip normals to faces

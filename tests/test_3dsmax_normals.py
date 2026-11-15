@@ -207,9 +207,9 @@ def test_ms_old_entry_points_still_work(tmp_path):
         f = it.fn(name)
         want = ["exactnormals", "flipnormals"] if name == "DM_ImportLevel" else ["exactnormals", "boneaim", "flipnormals"]
         assert len(f.params) == n and list(f.kwparams) == want
-    ui = src[src.index("rollout DaveMirraRollout"):]
-    assert 'checkbox chkNormals "Exact normals (Edit_Normals, slower)"' in ui
-    assert ui.count("exactNormals:chkNormals.checked") == 2
+    ui = src[src.index("============ UI"):]
+    assert 'checkbox chkNormals "Exact normals (Edit_Normals, slower)"' in ui       # the dialog header
+    assert ui.count("exactNormals:DaveMirraRollout.chkNormals.checked") == 2         # ZMD and level imports
 
 
 # ----------------------------------------------------------------------------- both importers agree

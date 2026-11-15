@@ -302,7 +302,9 @@ def test_interpreter_animate_at_time(tmp_path):
               ')\n', tmp_path, rt)
     m = it.eval(("call", ("name", "matrix3"), [("point3", [("lit", 1), ("lit", 0), ("lit", 0)])] * 4, {}))
     it.fn("f")(m)
-    assert [t for t, _ in it.globals["n1"].keys] == [3, 4]               # keys only inside animate on + at time
+    # keys only inside animate on + at time; the first key at a frame other than 0 also keys frame 0 (Max)
+    assert [t for t, _ in it.globals["n1"].keys] == [0, 3, 4]
+    assert it.globals["n1"].keys[0][1] is m
     for bad in ('fn g = (animate (1))\n', 'fn g = (at 3 (1))\n'):
         with pytest.raises(MXSError):
             _run(bad, tmp_path)

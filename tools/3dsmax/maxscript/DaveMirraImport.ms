@@ -1,9 +1,11 @@
 -- DaveMirraImport.ms : Dave Mirra Freestyle BMX importer for 3ds Max 2017+ (pure MAXScript, no Python)
 -- Drag this file onto the 3ds Max viewport (or Scripting > Run Script...). A dialog opens with
---   Import ZMD...            riders, bikes, shadows, sfx (.zmd); "Motion ids" keys clips from motion.zal
---   Import Level (.ZSD)...   a level folder: world, props, tags (hidden), scene points, panorama
---   "Exact normals" puts the game's vertex normals on the meshes (Edit_Normals modifier; slower)
---   "Real-world size" (default) sets the scale from the scene's System Unit Setup (game units are metres)
+--   a header: "Real-world size" (default; the scale from the scene's System Unit Setup, game units are metres),
+--     Scale, LOD, "Exact normals" (the game's vertex normals, Edit_Normals modifier; slower), Textures folder
+--   Models tab: Import ZMD...  riders, bikes, shadows, sfx (.zmd)
+--               Animation: pick motion.zal, a motion, a start frame, and load it onto a model in the scene
+--               (DM_ImportMotion; by default it starts after the last key, so motions chain back to back)
+--   Levels tab: Import Level (.ZSD)...  a level folder: world, props, tags (hidden), scene points, panorama
 -- Spec: ../../../docs/formats/SPEC.md. The parsing functions below mirror ../parser/dmparse.py line by line; each
 -- one names its Python counterpart in a "mirrors dmparse.<function>" comment. Model data stays in game space; one root
 -- Dummy carries the axis change (game Y-up -> Max Z-up) and the rider upright correction (SPEC 2.5).
@@ -13,7 +15,7 @@
 -- continuations, every call argument on one line, negative numbers in parentheses) so that the test
 -- suite can execute it with a MAXScript-subset interpreter (tests/maxscript_interp.py).
 
-global DM_VERSION = "1.4"
+global DM_VERSION = "1.5"
 
 -- ============================================================================ binary reading (dmparse.Buf)
 
@@ -1484,11 +1486,11 @@ fn DM_channelFrames clip names rider =
     idx
 )
 
--- key one motion clip on the frame nodes, one key per game frame (Max frame k = game frame k).
+-- key one motion clip on the frame nodes, one key per game frame (Max frame start + k = game frame k).
 -- Channel frames get the game's rotation with their bind translation; the others keep their bind.
 -- Returns the number of keys set. Mirrors dave_mirra_import.key_motion.
 -- offsets: per node the constant bone rotation O (DM_boneAim) put in front of every key, or undefined.
-fn DM_keyMotion clip lo names frameNodes rootM scale offsets =
+fn DM_keyMotion clip lo names frameNodes rootM scale offsets start:0 =
 (
     local chanR = DM_channelFrames clip names true
     local chanB = DM_channelFrames clip names false
@@ -1525,7 +1527,7 @@ fn DM_keyMotion clip lo names frameNodes rootM scale offsets =
         )
         animate on
         (
-            at time (k - 1)
+            at time (start + k - 1)
             (
                 for i = 1 to frameNodes.count do
                 (
@@ -1538,6 +1540,55 @@ fn DM_keyMotion clip lo names frameNodes rootM scale offsets =
         )
     )
     n
+)
+
+-- refuse an empty model or a missing LOD
+fn DM_checkModel z path lod =
+(
+    if z.empty then DM_fail ((filenameFromPath path) + " is an empty (0-byte) model; nothing to import")
+    if lod < 0 or lod >= z.lods.count then DM_fail ("LOD " + (lod as string) + " does not exist")
+)
+
+-- the frames of a model as the import builds them, shared by the model import and DM_ImportMotion so that
+-- both key exactly the same matrices: #(lod, names, world, skinned, aim, offsets).
+-- world: each frame's game-space world matrix (scaled); aim: DM_boneAim per frame for a rider with
+-- boneAim, else undefined; offsets: the aim rotations O put in front of every bone transform, else undefined.
+fn DM_modelRig z lod scale boneAim =
+(
+    local lo = z.lods[lod + 1]
+    local names = DM_frameNames z lod
+    local world = #()
+    for i = 1 to lo.frames.count do
+    (
+        local fr = lo.frames[i]
+        local m = DM_frameMatrix fr scale
+        if fr.parent >= 0 and fr.parent < i - 1 then m = m * world[fr.parent + 1]
+        append world m
+    )
+    local skinned = false
+    for a in lo.atomics do (if a.geometry.bones != undefined then skinned = true)
+    local aim = undefined
+    local offsets = undefined
+    if skinned and boneAim then
+    (
+        aim = DM_boneAim lo world
+        offsets = #()
+        for a in aim do append offsets a[1]
+    )
+    #(lo, names, world, skinned, aim, offsets)
+)
+
+-- user properties on the model's root dummy, read back by DM_ImportMotion: the model file, LOD, scale (9
+-- significant digits, the whole 32-bit float), the bone kind ("aim": bones aimed at their children, so the keys
+-- carry the offsets O; "frame": game frame orientation, or a bike's dummies) and whether the root carries the
+-- rider upright correction ("1") or not ("0"). Each frame node gets "dmbmx_frame" = its frame index (from 0).
+fn DM_tagModelRoot root path lod scale aimed uprightRoot =
+(
+    setUserProp root "dmbmx_zmd" path
+    setUserProp root "dmbmx_lod" (lod as string)
+    setUserProp root "dmbmx_scale" (formattedPrint (scale as float) format:".9g")
+    setUserProp root "dmbmx_bones" (if aimed then "aim" else "frame")
+    setUserProp root "dmbmx_upright" (if uprightRoot then "1" else "0")
 )
 
 -- import a .zmd; returns #(root, frameNodes, meshNodes, textureFolder).
@@ -1559,8 +1610,7 @@ fn DM_ImportZmd path scale lod upright texDir exactNormals:false boneAim:true fl
 fn DM_ImportZmdMotion path scale lod upright texDir motionPath motionIds exactNormals:false boneAim:true flipNormals:false =
 (
     local z = DM_readZmd path
-    if z.empty then DM_fail ((filenameFromPath path) + " is an empty (0-byte) model; nothing to import")
-    if lod < 0 or lod >= z.lods.count then DM_fail ("LOD " + (lod as string) + " does not exist")
+    DM_checkModel z path lod
     local folder = DM_textureFolder path texDir
     local texfiles = DM_writeTextures path z.textures folder
     local clips = #()
@@ -1571,30 +1621,19 @@ fn DM_ImportZmdMotion path scale lod upright texDir motionPath motionIds exactNo
     )
     local model = getFilenameFile path
     if z.mdef != undefined and z.mdef.name != "" then model = z.mdef.name
-    local lo = z.lods[lod + 1]
-    local names = DM_frameNames z lod
+    local rig = DM_modelRig z lod scale boneAim
+    local lo = rig[1]
+    local names = rig[2]
+    local world = rig[3]
+    local skinned = rig[4]
+    local aim = rig[5]
+    local offsets = rig[6]
     -- animated riders get no upright correction: the Hips channel stands them up (SPEC 8.4)
-    local rootM = DM_rootMatrix z lod (upright and clips.count == 0)
+    local uprightRoot = upright and clips.count == 0
+    local rootM = DM_rootMatrix z lod uprightRoot
     local root = dummy name:model boxsize:[0.1 * scale, 0.1 * scale, 0.1 * scale]    -- 10 cm helper icon
     root.transform = rootM
-    local world = #()
-    for i = 1 to lo.frames.count do
-    (
-        local fr = lo.frames[i]
-        local m = DM_frameMatrix fr scale
-        if fr.parent >= 0 and fr.parent < i - 1 then m = m * world[fr.parent + 1]
-        append world m
-    )
-    local skinned = false
-    for a in lo.atomics do (if a.geometry.bones != undefined then skinned = true)
-    local aim = undefined
-    local offsets = undefined
-    if skinned and boneAim then
-    (
-        aim = DM_boneAim lo world
-        offsets = #()
-        for a in aim do append offsets a[1]
-    )
+    DM_tagModelRoot root path lod scale (offsets != undefined) uprightRoot
     local frameNodes = #()
     for i = 1 to lo.frames.count do
     (
@@ -1621,6 +1660,7 @@ fn DM_ImportZmdMotion path scale lod upright texDir motionPath motionIds exactNo
         node.transform = wm
         local par = lo.frames[i].parent
         if par >= 0 and par < i - 1 then node.parent = frameNodes[par + 1] else node.parent = root
+        setUserProp node "dmbmx_frame" ((i - 1) as string)
         append frameNodes node
     )
     local meshNodes = #()
@@ -1645,6 +1685,208 @@ fn DM_ImportZmdMotion path scale lod upright texDir motionPath motionIds exactNo
     local keys = 0
     for c in clips do keys += DM_keyMotion c lo names frameNodes rootM scale offsets
     #(root, frameNodes, meshNodes, folder, keys)
+)
+
+-- ============================================================================ a motion onto a model in the scene
+-- Mirrors dave_mirra_import.list_motions / import_motion. The model import tags its root and frame nodes
+-- (DM_tagModelRoot); DM_ImportMotion reads the model file again from there and keys the clip exactly like
+-- DM_ImportZmdMotion, from a start frame on, so clips can be chained back to back on one timeline.
+
+-- what plays each motion id in the game (motion.zal stores no names; see docs ANIM.md sections 7 and 8)
+global DM_MOTION_STATES = #("not used by the game", "coast (standing still)", "not used by the game", "second motion slot (physics only)", "coast / landing", "not used by the game", "not used by the game", "pedal", "not used by the game", "skid (start)", "skid (hold)", "not used by the game", "crouch (start)", "crouch (hold)", "take-off (hop)", "not used by the game", "turnaround", "turnaround (button held)", "manual (enter)", "manual (hold)", "manual (exit)", "landing variant", "air", "air idle")
+global DM_AIR_TRICKS = #("turndown", "can-can", "tabletop", "backflip", "superman", "candy bar", "tailwhip", "front flip", "decade", "no footed can can", "un-turndown", "double tailwhip", "can-can lookdown", "candy bar lookdown", "tobaggan", "superman indian")
+global DM_MODIFIERS = #("barspin", "one footer", "one hander", "x-up", "x-down", "suicide no hander", "seat grab", "no footer", "no hander", "nothing", "one hand one footer", "one hand x-up", "rocket air", "double peg grab", "one handed seat grab", "no footed seat grab", "one footed seat grab", "double seat grab", "switch hander", "no footed x-up", "one footed x-up", "no footed one hander", "no handed one footer", "no handed barspin", "barspin to barspin back", "no footed barspin", "one footed barspin", "rocket x-up", "crotch rocket", "rocket one hander", "rocket no hander", "rocket barspin", "rocket one footer", "indian", "switch footer", "x-up seat grab", "barspin seat grab", "busdriver")
+global DM_TRICK_ROLES = #("start", "hold", "release")
+global DM_GRIND_ROLES = #("enter", "hold", "exit")
+global DM_GRINDS = #("double peg grind", "smith grind", "feeble grind", "toothpick grind", "icepick grind", "lip slide", "luc-e grind", "crooked grind", "sprocket grind", "double peg stall", "toothpick stall", "icepick stall", "nosepick", "tail tap", "disaster", "fast plant", "wall tap")
+
+-- a motion id's description, "" when the id is not one of the game's 238 (mirrors motion_name)
+fn DM_motionName m =
+(
+    if m >= 1 and m <= 24 then return DM_MOTION_STATES[m]
+    if m >= 25 and m <= 72 then return (DM_AIR_TRICKS[(m - 25) / 3 + 1] + " (" + DM_TRICK_ROLES[(m - 25) - 3 * ((m - 25) / 3) + 1] + ")")
+    if m >= 73 and m <= 186 then return (DM_MODIFIERS[(m - 73) / 3 + 1] + " modifier (" + DM_TRICK_ROLES[(m - 73) - 3 * ((m - 73) / 3) + 1] + ")")
+    if m >= 187 and m <= 237 then return (DM_GRINDS[(m - 187) / 3 + 1] + " (" + DM_GRIND_ROLES[(m - 187) - 3 * ((m - 187) / 3) + 1] + ")")
+    if m == 238 then return "not used by the game"
+    ""
+)
+
+-- every motion of a motion archive, in archive order: #(#(id, frames, description), ...). Mirrors list_motions.
+fn DM_ListMotions zalPath =
+(
+    local out = #()
+    for g in (DM_motionGroups zalPath) do
+    (
+        local fr = 0
+        if g.len >= 2 then fr = bit.and (DM_bu16 g.data g.start) 32767
+        append out #(g.id, fr, DM_motionName g.id)
+    )
+    out
+)
+
+-- one DM_ListMotions entry as the dialog lists it: "25: turndown (start), 13 frames" (mirrors motion_label)
+fn DM_motionLabel e =
+(
+    local s = (e[1] as string) + ": "
+    if e[3] != "" then s += e[3] + ", "
+    s + (e[2] as string) + " frames"
+)
+
+-- the root dummy of the imported model a node belongs to (the node itself or the ancestor that carries
+-- "dmbmx_zmd"), else undefined
+fn DM_modelRoot node =
+(
+    local n = node
+    while n != undefined and (getUserProp n "dmbmx_zmd") == undefined do n = n.parent
+    n
+)
+
+-- the model to animate: the one target belongs to (any of its nodes), else the one the selection belongs to,
+-- else the only one in the scene. Refuses none or several.
+fn DM_findTarget target =
+(
+    if target != undefined then
+    (
+        local r = DM_modelRoot target
+        if r == undefined then DM_fail (target.name + " is not part of a model imported by this importer (version 1.5 or later)")
+        return r
+    )
+    local roots = #()
+    for n in selection do
+    (
+        local r = DM_modelRoot n
+        if r != undefined and (findItem roots r) == 0 then append roots r
+    )
+    if roots.count > 1 then DM_fail "the selection belongs to several imported models: select one bone (or the root) of the model to animate"
+    if roots.count == 1 then return roots[1]
+    for n in objects do (if (getUserProp n "dmbmx_zmd") != undefined then append roots n)
+    if roots.count == 0 then DM_fail "no imported rider or bike in the scene: import a model first (Import ZMD, version 1.5 or later)"
+    if roots.count > 1 then DM_fail ("there are " + (roots.count as string) + " imported models in the scene: select one bone (or the root) of the model to animate")
+    roots[1]
+)
+
+-- the frame nodes of the model under root, by their "dmbmx_frame" index: count nodes, every index once
+fn DM_rigNodes root count =
+(
+    local out = #()
+    for i = 1 to count do append out undefined
+    for n in objects do
+    (
+        local v = getUserProp n "dmbmx_frame"
+        if v != undefined and (DM_modelRoot n) == root then
+        (
+            local i = (v as integer) + 1
+            if i < 1 or i > count then DM_fail (root.name + ": " + n.name + " is frame " + (v as string) + ", but the model file has " + (count as string) + " frames (a different model file?)")
+            if out[i] != undefined then DM_fail (root.name + ": " + out[i].name + " and " + n.name + " are both frame " + (v as string))
+            out[i] = n
+        )
+    )
+    for i = 1 to count do (if out[i] == undefined then DM_fail (root.name + ": frame " + ((i - 1) as string) + " of the model is not in the scene (a deleted bone?)"))
+    out
+)
+
+-- two transforms equal to float precision (Max stores a node's transform as position / rotation / scale, so
+-- reading it back can differ in the last bits): rows within 1e-5, positions within 1e-5 game metres
+fn DM_sameTransform a b scale =
+(
+    local ra = #(a.row1, a.row2, a.row3, a.row4)
+    local rb = #(b.row1, b.row2, b.row3, b.row4)
+    local ok = true
+    for r = 1 to 4 do
+    (
+        local d = ra[r] - rb[r]
+        local tol = 1e-5
+        if r == 4 then tol = 1e-5 * scale
+        if (abs d.x) > tol or (abs d.y) > tol or (abs d.z) > tol then ok = false
+    )
+    ok
+)
+
+-- the latest key time (in frames) of a controller and its sub-controllers, undefined when none has keys
+fn DM_lastKeyTime c =
+(
+    if c == undefined then return undefined
+    local r = undefined
+    local n = numKeys c
+    if n > 0 then r = (getKeyTime c n).frame
+    for i = 1 to c.numSubs do
+    (
+        local t = DM_lastKeyTime c[i].controller
+        if t != undefined and (r == undefined or t > r) then r = t
+    )
+    r
+)
+
+-- the frame after the last key of the model under root (any of its frame nodes), 0 when it has no keys
+fn DM_nextFreeFrame root =
+(
+    local last = undefined
+    for n in objects do
+    (
+        if (getUserProp n "dmbmx_frame") != undefined and (DM_modelRoot n) == root then
+        (
+            local t = DM_lastKeyTime n.controller
+            if t != undefined and (last == undefined or t > last) then last = t
+        )
+    )
+    if last == undefined then return 0
+    ((floor last) as integer) + 1
+)
+
+-- grow the scene's animation range to cover frames a..b (it never shrinks); true when it changed
+fn DM_growRange a b =
+(
+    local s = animationRange.start.frame
+    local e = animationRange.end.frame
+    local grow = false
+    if a < s then (s = a; grow = true)
+    if b > e then (e = b; grow = true)
+    if grow then animationRange = interval s e
+    grow
+)
+
+-- key motion motionId of the motion archive zalPath (motion.zal) onto a model in the scene.
+-- target: any node of the model (a bone or its root); undefined: the selection's model, else the only one.
+-- startFrame: the Max frame of the clip's first frame; undefined: the frame after the model's last key (0 when
+-- it has none), so calls chain clips back to back. zmd: the model file, when it has moved since the import.
+-- The keys are DM_ImportZmdMotion's for the same model, LOD, scale, bones and clip, shifted by startFrame. They
+-- are world transforms: the root keeps its own transform (with a rider's upright correction) and the keys
+-- follow it when it has been moved since the import. The animation range grows to cover them.
+-- Returns #(root, startFrame, lastFrame, keyCount). Mirrors dave_mirra_import.import_motion.
+fn DM_ImportMotion zalPath motionId startFrame:undefined target:undefined zmd:undefined =
+(
+    local root = DM_findTarget target
+    local path = zmd
+    if path == undefined then path = getUserProp root "dmbmx_zmd"
+    if not (doesFileExist path) then DM_fail ("the model file of " + root.name + " is not at " + path + " (pass zmd:)")
+    local lod = (getUserProp root "dmbmx_lod") as integer
+    local scale = (getUserProp root "dmbmx_scale") as float
+    local aimed = (getUserProp root "dmbmx_bones") == "aim"
+    local uprightRoot = ((getUserProp root "dmbmx_upright") as integer) == 1
+    local z = DM_readZmd path
+    DM_checkModel z path lod
+    local rig = DM_modelRig z lod scale aimed
+    local lo = rig[1]
+    local names = rig[2]
+    if aimed and rig[6] == undefined then DM_fail (root.name + ": " + (filenameFromPath path) + " has no skinned rider (a different model file?)")
+    local frameNodes = DM_rigNodes root lo.frames.count
+    local clip = DM_motionClip (DM_motionGroups zalPath) motionId
+    local used = 0
+    for i in (DM_channelFrames clip names true) do (if i > 0 then used += 1)
+    for i in (DM_channelFrames clip names false) do (if i > 0 then used += 1)
+    if used == 0 then DM_fail ("motion " + (motionId as string) + " animates riders and bikes, and " + root.name + " has none of their bones")
+    -- DM_ImportZmdMotion's root (no upright correction), moved the way this root has moved since the import
+    local rootM = DM_rootMatrix z lod false
+    local imported = DM_rootMatrix z lod uprightRoot
+    local cur = root.transform
+    if not (DM_sameTransform cur imported scale) then rootM = rootM * (inverse imported) * cur
+    local start = startFrame
+    if start == undefined then start = DM_nextFreeFrame root
+    start = start as integer
+    local keys = DM_keyMotion clip lo names frameNodes rootM scale rig[6] start:start
+    local last = start + keys / frameNodes.count - 1
+    DM_growRange start last
+    #(root, start, last, keys)
 )
 
 -- ============================================================================ levels (dmparse.read_level, SPEC 5)
@@ -2273,27 +2515,184 @@ fn DM_scaleLabel manualScale =
 )
 
 -- ============================================================================ UI
--- (everything below is the dialog; not executed by the test interpreter)
+-- The dialog: a header with the options every import uses (scale, LOD, exact normals, textures), then a Models
+-- tab (ZMD import; a motion from motion.zal onto a model in the scene) and a Levels tab (level import).
+-- The tabs are a .NET TabControl used as a tab strip (a dotNetControl only as tall as its page headers) above a
+-- subRollout. Switching tabs removes the shown tab rollout from the subRollout and adds the other one, so the
+-- pages hold native MAXScript controls, which works the same from 3ds Max 2017 on. A rollout added to a
+-- subRollout starts from its controls' defaults every time, so the tabs keep the user's choices in DM_uiState,
+-- which lasts for the 3ds Max session (the last tab, the textures folder, the motion archive, ...).
+-- The test suite runs this section too, with the interpreter's model of rollouts and controls.
 
+struct DM_DialogState (tab, texDir, upright, bones, zalPath, motion, chain, start, flip)
+global DM_uiState
+if DM_uiState == undefined then DM_uiState = DM_DialogState tab:1 texDir:"" upright:true bones:1 zalPath:"" motion:1 chain:true start:0 flip:false
+
+global DaveMirraRollout
+global DM_ModelsTab
+global DM_LevelsTab
 try (destroyDialog DaveMirraRollout) catch ()
 
-rollout DaveMirraRollout "Dave Mirra Importer" width:340
+rollout DM_ModelsTab "Models"
+(
+    group "Geometry"
+    (
+        checkbox chkUpright "Stand riders upright" checked:true
+        dropdownlist ddlBones "Bones" items:#("aim at children", "game frame orientation") selection:1
+        button btnZmd "Import ZMD..." width:240 height:28
+    )
+    group "Animation"
+    (
+        button btnZal "Motion archive (motion.zal)..." width:240
+        label lblZal "(no motion archive)" align:#left width:300
+        dropdownlist ddlMotion "Motion" items:#() width:300
+        checkbox chkChain "Start after the last key (chain)" checked:true
+        spinner spnStart "Start frame" range:[-100000, 100000, 0] type:#integer enabled:false
+        button btnMotion "Load motion onto the rider" width:240 height:28
+        label lblTarget "Onto the selected model (a bone or its root), or the only one in the scene." align:#left width:300 height:30
+    )
+
+    local motionIds = #()
+
+    -- fill the motion list from the archive's DM_ListMotions entries
+    fn showMotions list =
+    (
+        local labels = #()
+        motionIds = #()
+        for e in list do
+        (
+            append labels (DM_motionLabel e)
+            append motionIds e[1]
+        )
+        ddlMotion.items = labels
+        if DM_uiState.motion >= 1 and DM_uiState.motion <= labels.count then ddlMotion.selection = DM_uiState.motion
+        lblZal.text = DM_uiState.zalPath
+    )
+    -- chain: the spinner shows the frame after the target's last key (when there is one target)
+    fn refreshStart =
+    (
+        spnStart.enabled = not chkChain.checked
+        if chkChain.checked then
+        (
+            try (spnStart.value = DM_nextFreeFrame (DM_findTarget undefined)) catch ()
+            DM_uiState.start = spnStart.value
+        )
+    )
+
+    on DM_ModelsTab open do
+    (
+        chkUpright.checked = DM_uiState.upright
+        ddlBones.selection = DM_uiState.bones
+        chkChain.checked = DM_uiState.chain
+        spnStart.value = DM_uiState.start
+        if DM_uiState.zalPath != "" then
+        (
+            try (showMotions (DM_ListMotions DM_uiState.zalPath))
+            catch
+            (
+                DM_uiState.zalPath = ""
+                lblZal.text = "(no motion archive)"
+            )
+        )
+        refreshStart()
+    )
+    on chkUpright changed state do DM_uiState.upright = state
+    on ddlBones selected i do DM_uiState.bones = i
+    on ddlMotion selected i do DM_uiState.motion = i
+    on chkChain changed state do
+    (
+        DM_uiState.chain = state
+        refreshStart()
+    )
+    on spnStart changed val do DM_uiState.start = val
+    on btnZmd pressed do
+    (
+        local p = getOpenFileName caption:"Dave Mirra model" types:"Dave Mirra model (*.zmd)|*.zmd|All files (*.*)|*.*|"
+        if p != undefined do
+        (
+            DaveMirraRollout.refreshUnits()
+            try
+            (
+                local r = DM_ImportZmd p (DaveMirraRollout.importScale()) (DaveMirraRollout.spnLod.value as integer) chkUpright.checked DaveMirraRollout.edtTex.text exactNormals:DaveMirraRollout.chkNormals.checked boneAim:(ddlBones.selection == 1)
+                DaveMirraRollout.lblInfo.text = "Imported " + r[1].name + ". Textures: " + r[4]
+                refreshStart()
+            )
+            catch (messageBox (getCurrentException()) title:"Dave Mirra")
+        )
+    )
+    on btnZal pressed do
+    (
+        local p = getOpenFileName caption:"Dave Mirra motions (motion.zal)" types:"Dave Mirra motions (*.zal)|*.zal|All files (*.*)|*.*|"
+        if p != undefined do
+        (
+            try
+            (
+                local list = DM_ListMotions p
+                DM_uiState.zalPath = p
+                DM_uiState.motion = 1
+                showMotions list
+                refreshStart()
+            )
+            catch (messageBox (getCurrentException()) title:"Dave Mirra")
+        )
+    )
+    on btnMotion pressed do
+    (
+        if motionIds.count == 0 or ddlMotion.selection < 1 then messageBox "Choose the motion archive (motion.zal) first." title:"Dave Mirra" else
+        (
+            try
+            (
+                local start = undefined
+                if not chkChain.checked then start = spnStart.value
+                local m = motionIds[ddlMotion.selection]
+                local r = DM_ImportMotion DM_uiState.zalPath m startFrame:start
+                if chkChain.checked then spnStart.value = r[3] + 1
+                DM_uiState.start = spnStart.value
+                DaveMirraRollout.lblInfo.text = "Motion " + (m as string) + " on " + r[1].name + ": frames " + (r[2] as string) + " to " + (r[3] as string)
+            )
+            catch (messageBox (getCurrentException()) title:"Dave Mirra")
+        )
+    )
+)
+
+rollout DM_LevelsTab "Levels"
+(
+    checkbox chkFlip "Flip normals to faces (with Exact normals)" checked:false
+    button btnLevel "Import Level (.ZSD)..." width:240 height:28
+
+    on DM_LevelsTab open do chkFlip.checked = DM_uiState.flip
+    on chkFlip changed state do DM_uiState.flip = state
+    on btnLevel pressed do
+    (
+        local d = getSavePath caption:"Level folder (contains the .ZSD)"
+        if d != undefined do
+        (
+            DaveMirraRollout.refreshUnits()
+            try
+            (
+                local r = DM_ImportLevel d (DaveMirraRollout.importScale()) DaveMirraRollout.edtTex.text exactNormals:DaveMirraRollout.chkNormals.checked flipNormals:chkFlip.checked
+                DaveMirraRollout.lblInfo.text = "Level imported. Textures: " + r[7]
+            )
+            catch (messageBox (getCurrentException()) title:"Dave Mirra")
+        )
+    )
+)
+
+rollout DaveMirraRollout "Dave Mirra Importer" width:360
 (
     checkbox chkReal "Real-world size (use scene units)" checked:true
     spinner spnScale "Scale" range:[0.000001, 1000000000, 100] type:#float enabled:false
-    label lblUnits "" align:#left width:320 height:30
+    label lblUnits "" align:#left width:330 height:30
     button btnUnits "Refresh scene units" width:240
     spinner spnLod "LOD" range:[0, 9, 0] type:#integer
-    checkbox chkUpright "Stand riders upright" checked:true
     checkbox chkNormals "Exact normals (Edit_Normals, slower)" checked:false
-    checkbox chkFlip "Flip normals to faces (with Exact normals)" checked:false
-    dropdownlist ddlBones "Bones" items:#("aim at children", "game frame orientation") selection:1
     edittext edtTex "Textures" text:"" labelOnTop:true
     button btnTex "Choose texture folder..." width:240
-    edittext edtMotion "Motion ids (e.g. 1,8,15; needs motion.zal)" text:"" labelOnTop:true
-    button btnZmd "Import ZMD..." width:240 height:28
-    button btnLevel "Import Level (.ZSD)..." width:240 height:28
-    label lblInfo "Textures go to %TEMP% if empty." align:#left
+    dotNetControl tabs "System.Windows.Forms.TabControl" width:340 height:24
+    subRollout subTabs "" width:340 height:390
+    label lblInfo "Textures go to %TEMP% if empty." align:#left width:330 height:30
+
+    local shown = undefined
 
     -- real-world mode: the spinner shows the scene's scale (read-only); manual mode: the spinner is the raw multiplier
     fn refreshUnits =
@@ -2307,49 +2706,40 @@ rollout DaveMirraRollout "Dave Mirra Importer" width:340
         catch (lblUnits.text = getCurrentException())
     )
     fn importScale = (if chkReal.checked then DM_realWorldScale() else spnScale.value)
+    -- show tab i (1 Models, 2 Levels) in the subRollout
+    fn showTab i =
+    (
+        local r = DM_ModelsTab
+        if i == 2 then r = DM_LevelsTab
+        if shown != r then
+        (
+            if shown != undefined then removeSubRollout subTabs shown
+            addSubRollout subTabs r
+            shown = r
+        )
+        DM_uiState.tab = i
+    )
 
-    on DaveMirraRollout open do refreshUnits()
+    on DaveMirraRollout open do
+    (
+        edtTex.text = DM_uiState.texDir
+        refreshUnits()
+        for t in #("Models", "Levels") do tabs.TabPages.Add (dotNetObject "System.Windows.Forms.TabPage" t)
+        tabs.SelectedIndex = DM_uiState.tab - 1
+        showTab DM_uiState.tab
+    )
+    on tabs SelectedIndexChanged s e do showTab (tabs.SelectedIndex + 1)
     on chkReal changed state do refreshUnits()
     on spnScale changed val do refreshUnits()
     on btnUnits pressed do refreshUnits()
+    on edtTex changed txt do DM_uiState.texDir = txt
     on btnTex pressed do
     (
         local d = getSavePath caption:"Folder for the extracted textures"
-        if d != undefined do edtTex.text = d
-    )
-    on btnZmd pressed do
-    (
-        local p = getOpenFileName caption:"Dave Mirra model" types:"Dave Mirra model (*.zmd)|*.zmd|All files (*.*)|*.*|"
-        if p != undefined do
-        (
-            refreshUnits()
-            try
-            (
-                local ids = DM_parseMotionIds edtMotion.text
-                local mpath = undefined
-                if ids.count > 0 then
-                (
-                    mpath = DM_findMotionZal p
-                    if mpath == undefined then mpath = getOpenFileName caption:"motion.zal" types:"Dave Mirra motions (*.zal)|*.zal|All files (*.*)|*.*|"
-                )
-                local r = DM_ImportZmdMotion p (importScale()) (spnLod.value as integer) chkUpright.checked edtTex.text mpath ids exactNormals:chkNormals.checked boneAim:(ddlBones.selection == 1) flipNormals:chkFlip.checked
-                lblInfo.text = "Imported (" + (r[5] as string) + " keys). Textures: " + r[4]
-            )
-            catch (messageBox (getCurrentException()) title:"Dave Mirra")
-        )
-    )
-    on btnLevel pressed do
-    (
-        local d = getSavePath caption:"Level folder (contains the .ZSD)"
         if d != undefined do
         (
-            refreshUnits()
-            try
-            (
-                local r = DM_ImportLevel d (importScale()) edtTex.text exactNormals:chkNormals.checked flipNormals:chkFlip.checked
-                lblInfo.text = "Level imported. Textures: " + r[7]
-            )
-            catch (messageBox (getCurrentException()) title:"Dave Mirra")
+            edtTex.text = d
+            DM_uiState.texDir = d
         )
     )
 )

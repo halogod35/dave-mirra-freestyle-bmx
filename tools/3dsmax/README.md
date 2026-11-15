@@ -34,8 +34,9 @@ python parser/dmparse.py textures "C:\Games\Dave Mirra\assets\DMbike01.zmd" out\
 ## 3ds Max: MAXScript importer (2017+)
 
 1. Drag `maxscript/DaveMirraImport.ms` onto a 3ds Max viewport (or **Scripting → Run Script…**).
-   A **Dave Mirra Importer** dialog opens.
-2. Set the options:
+   A **Dave Mirra Importer** dialog opens: a header with the options every import uses, then two tabs,
+   **Models** and **Levels**.
+2. The header:
    - **Real-world size (use scene units)**: on by default. The scale follows your System Unit Setup, so the
      model comes in at its real size: a rider is about 1.95 m tall in any unit setup (see "Units" below).
      The label under the scale shows the scene's unit setup and the scale it gives;
@@ -43,19 +44,30 @@ python parser/dmparse.py textures "C:\Games\Dave Mirra\assets\DMbike01.zmd" out\
    - **Scale**: the raw multiplier, used when Real-world size is off. Game units are metres, so 100 means
      1 game metre = 100 system units.
    - **LOD**: 0. Only `DaveMirra_shadow.zmd` has a LOD 1.
-   - **Stand riders upright**.
-   - **Textures**: the folder to extract textures to. Empty means `%TEMP%\DaveMirraTextures\<model>`.
-     The importer refuses any folder inside the game installation.
-   - **Motion ids**: optional, e.g. `1,8,15`. The clips are keyed from `motion.zal` (see "Motion clips" below).
    - **Exact normals (Edit_Normals, slower)**: off by default. Puts the game's vertex normals on the meshes,
      for models and levels (see "Exact normals" below).
+   - **Textures**: the folder to extract textures to (type it or **Choose texture folder…**). Empty means
+     `%TEMP%\DaveMirraTextures\<model>`. The importer refuses any folder inside the game installation.
+3. **Models** tab:
+   - **Geometry**: **Stand riders upright**, **Bones** (*aim at children*, the default, or *game frame
+     orientation*, see "Riders" below) and **Import ZMD…**: pick a model from the game's `assets` folder, e.g.
+     `DaveMirra1.ZMD` or `DMbike01.zmd`. It comes in without motion.
+   - **Animation**: loads a motion onto a model that is already in the scene (see "Chaining motions" below).
+     - **Motion archive (motion.zal)…**: pick `assets\motion.zal`. The **Motion** list then shows all its
+       motions as *id: what plays it in the game, frame count*, e.g. `25: turndown (start), 10 frames`.
+     - **Start after the last key (chain)**: on by default. The motion starts on the frame after the model's
+       last key (frame 0 when it has none), so pressing the button again puts the next motion right after it.
+       Untick it to type the **Start frame** yourself.
+     - **Load motion onto the rider**: keys the motion on the selected model (select any of its bones, or its
+       root), or on the only imported model in the scene. Riders and bikes both work.
+4. **Levels** tab:
    - **Flip normals to faces (with Exact normals)**: off by default. Turns each exact normal that points
      against its faces around (see "Exact normals" below). Has no effect without Exact normals.
-   - **Bones**: *aim at children* (default) or *game frame orientation* (see "Riders" below).
-3. Click **Import ZMD…** and pick a model from the game's `assets` folder, e.g. `DaveMirra1.ZMD` or `DMbike01.zmd`.
-   With motion ids, the importer uses `motion.zal` from the model's folder, or asks for it.
-4. **Import Level (.ZSD)…** asks for a level folder, e.g. `assets\AcclaimDirt`. It imports the whole level
-   (see "What you get"). This takes from several seconds to about a minute in MAXScript.
+   - **Import Level (.ZSD)…** asks for a level folder, e.g. `assets\AcclaimDirt`. It imports the whole level
+     (see "What you get"). This takes from several seconds to about a minute in MAXScript.
+
+The dialog remembers the last tab, the textures folder, the motion archive and the tab choices until 3ds Max
+is closed (run the script again to reopen it).
 
 ## 3ds Max: Python importer (2022+)
 
@@ -63,9 +75,10 @@ Keep `dave_mirra_import.py` and `dmparse.py` together in one folder. Then either
 - **Scripting → Run Script…** and pick `dave_mirra_import.py`, or
 - from the MAXScript Listener: `python.ExecuteFile @"C:\path\to\tools\3dsmax\python\dave_mirra_import.py"`.
 
-A Qt dialog opens with the same options as the MAXScript importer (Real-world size, Scale, LOD, upright,
-texture folder, Motion ids, Exact normals, Flip normals to faces, Bones). Its units label also refreshes
-when the dialog gets the focus.
+A Qt dialog opens with the same header and tabs as the MAXScript importer (Real-world size, Scale, LOD, Exact
+normals, texture folder; Models: upright, Bones, Import ZMD, the motion archive, motion list, chain / start frame
+and Load motion; Levels: Flip normals to faces, Import Level). Its units label also refreshes when the dialog
+gets the focus. It remembers the last tab, the textures folder and the motion archive for the session.
 
 Scripted use:
 
@@ -79,12 +92,56 @@ In scripts, `scale` is always the raw multiplier (default 100, as before). For r
 `d.real_world_scale()` (Python) or `DM_realWorldScale()` (MAXScript), e.g.
 `DM_ImportZmd @"C:\Games\Dave Mirra\assets\DaveMirra1.ZMD" (DM_realWorldScale()) 0 true ""`.
 
-`import_zmd` also takes `bone_aim_children=False` (game frame orientation) and `flip_normals=True`;
-`import_level` takes `flip_normals=True`.
+`import_zmd` also takes `bone_aim_children=False` (game frame orientation) and `flip_normals=True` (the
+dialog offers flip normals for levels only); `import_level` takes `flip_normals=True`. `import_zmd` still takes
+`motion_path=` and `motion_ids=[...]` to key clips from frame 0 while importing.
 
 MAXScript entry points (after running the .ms once): `DM_ImportZmd path scale lod upright texDir`,
 `DM_ImportZmdMotion path scale lod upright texDir motionPath motionIds` and `DM_ImportLevel folder scale texDir`,
 each with an optional `exactNormals:true` and `flipNormals:true`; the two ZMD ones also take `boneAim:false`.
+
+### Motions onto a model in the scene
+
+| | MAXScript | Python |
+|---|---|---|
+| List an archive's motions | `DM_ListMotions zalPath` → `#(#(id, frames, description), …)` | `list_motions(zal_path)` → `[{"id", "frames", "name"}, …]` |
+| Key one onto a model | `DM_ImportMotion zalPath motionId startFrame:… target:… zmd:…` → `#(root, startFrame, lastFrame, keyCount)` | `import_motion(zal_path, motion_id, start_frame=None, target=None, zmd_path=None)` → `{"root", "frames", "start", "end", "keys"}` |
+
+- **target**: any node of the model (a bone or its root). Without it: the model the selection belongs to,
+  else the only imported model in the scene. No model, several models, a node that is not part of an imported
+  model, a missing bone, or a model without rider or bike bones (e.g. `rider_shadow.zmd`, `sfx.zmd`) is
+  refused with a message.
+- **startFrame / start_frame**: the Max frame of the motion's first frame. Without it: the frame after the
+  model's last key (0 when it has none).
+- The keys are exactly those of the combined import (`DM_ImportZmdMotion` / `import_zmd(motion_ids=…)`) for the
+  same motion, moved to the start frame: the same bones (aimed at their children or not), the same scale. The
+  model import records what it needs on the root dummy as user properties (`dmbmx_zmd` the model file,
+  `dmbmx_lod`, `dmbmx_scale`, `dmbmx_bones` = `aim` or `frame`, `dmbmx_upright` = `1` when the root carries the
+  rider upright correction) and on each bone or frame dummy (`dmbmx_frame` = its frame index), and the motion
+  import reads the model file again from there. Pass `zmd:` / `zmd_path=` if the file has moved. Models
+  imported by an older version have no such properties: import them again.
+- The **animation range** grows to cover the new keys; it never shrinks.
+
+### Chaining motions
+
+Import a rider without motions, then put motions one after the other on its timeline:
+
+```
+r = DM_ImportZmd @"C:\Games\Dave Mirra\assets\DaveMirra1.ZMD" (DM_realWorldScale()) 0 true ""
+zal = @"C:\Games\Dave Mirra\assets\motion.zal"
+DM_ImportMotion zal 13      -- crouch (start), 5 frames: frames 0-4
+DM_ImportMotion zal 15      -- take-off (hop), 34 frames: 5-38
+DM_ImportMotion zal 25      -- turndown (start), 10 frames: 39-48
+DM_ImportMotion zal 23 startFrame:200 target:r[1]    -- air, 2 frames: 200-201 (the range grows to 201)
+```
+
+```
+python.Execute "import dave_mirra_import as d; d.import_zmd(r'C:\\Games\\Dave Mirra\\assets\\DaveMirra1.ZMD', scale=d.real_world_scale())"
+python.Execute "import dave_mirra_import as d; [d.import_motion(r'C:\\Games\\Dave Mirra\\assets\\motion.zal', m) for m in (13, 15, 25)]"
+```
+
+`DM_ListMotions` / `list_motions` show the ids; the game's names for them come from the trick tables and the
+rider states (docs ANIM.md, sections 7 and 8).
 
 ## Units
 
@@ -164,11 +221,15 @@ With Real-world size off the label says what the chosen scale means, e.g. Scale 
     a vertex's faces disagree, the larger area wins; a vertex in no face (or whose faces cancel exactly)
     keeps its normal. This fixes the floors of ProTourDirt and WoodwardStreet (see Known limits); with it,
     every level's World agrees with the winding on more than 95% of its faces.
-- **Motion clips** (both importers, when you give motion ids): every frame node (bone or dummy) gets one
-  transform key per game frame, from Max frame 0. Channel frames (SPEC §8.4) get the game's rotation with
-  their bind translation; the other frames keep their bind pose. Several ids are keyed one after the other
-  from frame 0, so a later clip overwrites an earlier one's keys (import one clip per model to view it).
-  An animated rider has no upright correction on its root: the Hips channel stands it up.
+- **Motion clips** (both importers: Load motion, `DM_ImportMotion` / `import_motion`, or motion ids in a
+  scripted ZMD import): every frame node (bone or dummy) gets one transform key per game frame, from the start
+  frame (motion ids in a ZMD import: from frame 0). Channel frames (SPEC §8.4) get the game's rotation with
+  their bind translation; the other frames keep their bind pose. The keys are world transforms that need no
+  upright correction: the Hips channel stands the rider up. A rider imported with motion ids has no upright
+  correction on its root; a rider imported without motions keeps it on its root, and the keys of a motion
+  loaded later are the same world transforms (they follow the root if you move it). Several ids in one ZMD
+  import are all keyed from frame 0, so a later clip overwrites an earlier one's keys; load them one after the
+  other instead (see "Chaining motions").
 - Model data keeps the game's coordinates under the root dummy. To export back to the game, use the
   Blender add-on or `dmbmx` (see the main repository): these importers are one-way.
 
@@ -186,6 +247,7 @@ With Real-world size off the label says what the chosen scale means, e.g. Scale 
 | LOD choice | yes | yes |
 | Axis conversion + rider upright | yes | yes |
 | Motion clips from motion.zal as keyframes | yes | yes (riders: both drop the upright root rotation, see SPEC §8.4) |
+| A motion onto a model in the scene, chained on the timeline | yes | yes |
 | Level world mesh + Mat._sd textures, colour key as opacity | yes | yes |
 | Level props as placed/rotated instances of their PropDef models | yes (yaw fixed in v1.3) | yes (yaw fixed in v1.2) |
 | Level tag faces (hidden, one mesh per tag code) | yes | yes |
@@ -204,13 +266,18 @@ With Real-world size off the label says what the chosen scale means, e.g. Scale 
   bone hierarchy and skin weights, and every vertex lands at the game's world position (checked against
   the main library). Real-Max behaviour (Skin modifier evaluation, Edit_Normals, Qt dialog, bone display)
   is a manual test in 3ds Max (passed), and another one for exact normals.
+- **The tabbed dialogs and the motion import onto a model in the scene** are run by the tests (MAXScript:
+  the interpreter also runs the dialog, with a model of rollouts, a .NET TabControl and subRollouts; Python:
+  a Qt mock), not yet in a real 3ds Max. Key times are read from the sub-controllers of each bone's transform
+  controller (`numKeys` / `getKeyTime`), so keys you add by hand count for the next start frame too.
 - **Bones** aim at their main child by default (see "Riders"). The joint positions are exact, and the skin
   and motion are unchanged: every vertex lands where it does with game-frame bones, at the bind pose and at
   every key (tested). The bone orientation and length are cosmetic, and a different main-child rule would
   give a different but equally valid rig. With *game frame orientation* the bones point along their
   frame's X axis, which is the game's own bind orientation.
 - **Motion keys** have one key per game frame at 34 ms, keyed on integer Max frames (about 29.4 game fps on
-  a 30 fps timeline). Root motion (translation) is not imported. The animation range is not changed: the
+  a 30 fps timeline). Root motion (translation) is not imported. A ZMD import with motion ids does not change
+  the animation range (Load motion / `DM_ImportMotion` grows it): the
   clips are 2-43 frames long, inside Max's default 0-100.
 - **MAXScript motion** decodes `motion.zal` itself (its own LZO1X decompressor, 142 KB → 202 KB, then the
   clip decoder). The first motion import of a 3ds Max session takes a few seconds [I]; the decoded bank is
@@ -250,4 +317,6 @@ With Real-world size off the label says what the chosen scale means, e.g. Scale 
 | `tests/test_3dsmax_normals.py` | exact normals: the Edit_Normals mock's rules, both importers on a synthetic mesh (missing / zero / non-unit normals) and on real models and a level (same normals), the level-normal facts. The every-model and every-level imports above run with exact normals on (`max_checks.check_normals`: right vertices, unit length, = dmparse in Max world space, winding kept face by face) |
 | `tests/test_3dsmax_props_bones.py` | The prop rotation pinned to the exe (the mirrored quaternion converter) and to the game's prop collision boxes on all 12 levels; glTF prop matrices; bones aimed at children (rule, both importers, joints/skin/keys identical to game-frame bones at every key); the createBone/Skin mock rules; "flip normals to faces" (rule, every level, MAXScript = Python) |
 | `tests/test_3dsmax_maxscript_motion.py` | the MAXScript motion path: LZO1X/ZAL/clip decoder = dmparse on all 238 clips frame by frame, and keyed rider/bike imports = the Python importer's keys |
+| `tests/test_3dsmax_motion_import.py` | a motion onto a model in the scene: chained motions = the combined import's keys shifted, key by key and bone by bone (riders with both bone kinds, bikes; both importers, and each importer on the other's models), the default start frame, the frame-0 key 3ds Max adds, the animation range, moved roots, wrong targets refused, the motion list and names, the controller / user property / animation range rules of the mocks |
+| `tests/test_3dsmax_ui.py` | the dialogs as a user drives them: header, Models / Levels tabs, choices kept across tab switches and for the session, imports with the header options, motions chained from the dialog (MAXScript through the interpreter's rollout model: dotNet TabControl, subRollout, controls; Python through the Qt mock) |
 | `tests/test_3dsmax_units.py` | real-world size: the System Unit Setup in the pymxs mock and the MAXScript interpreter (never more permissive than 3ds Max), the real-world scale and the label for every unit type at scales 1, 5 and 0.1 (both importers, same text), real-world = manual scale in both importers, everything (meshes, bones, dummies, props, scene points, motion keys) scaling together, the GreenvilleDirt `Ebox` at 2.02 m |
